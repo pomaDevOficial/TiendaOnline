@@ -6,29 +6,13 @@ export const EstadoGeneral = {
 
     ACTIVO: 6,
     INACTIVO: 7,
-    // Estados específicos de pedidos
-    PEDIDO_PENDIENTE: 3,
-    PEDIDO_CONFIRMADO: 4,
-    PEDIDO_ENTREGADO: 5,
-    PEDIDO_CANCELADO: 6,
     
-    // Estados específicos de ventas
-    VENTA_PENDIENTE: 7,
-    VENTA_CONFIRMADA: 8,
-    VENTA_ANULADA: 9,
-    
-    // Estados de movimiento de lotes
-    MOVIMIENTO_ENTRADA: 10,
-    MOVIMIENTO_SALIDA: 11,
-    
-    // Tipos de persona
-    PERSONA_NATURAL: 12,
-    PERSONA_JURIDICA: 13,
-    
-    // Estados de comprobantes
-    COMPROBANTE_EMITIDO: 14,
-    COMPROBANTE_ANULADO: 15
   } as const;
+   export const LoteEstado = {
+    DISPONIBLE: 1,
+    AGOTADO: 2,
+    ELIMINADO: 3
+  } 
   
   export const TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',
@@ -36,7 +20,7 @@ export const EstadoGeneral = {
     AJUSTE: 'AJUSTE'
   } as const;
   
-  export const GeneroProducto = {
+  export const GeneroLote = {
     MASCULINO: 1,
     FEMENINO: 2,
     UNISEX: 3,

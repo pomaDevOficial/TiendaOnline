@@ -14,6 +14,10 @@ import MarcaRouter from './routes/marca.router';
 import TallaRouter from './routes/talla.router';
 import RolesRouter from './routes/rol.router';
 import PersonaRouter from './routes/persona.router';
+import RouterDni from './routes/apidni.router';
+import routerRUC from './routes/apiruc.router';
+import LoteRouter from './routes/lote.router';
+import LoteTallaRouter from './routes/lote_talla.router';
 
 class Server {
     private app: Application;
@@ -69,6 +73,10 @@ class Server {
        this.app.use('/api/v1/tallas', TallaRouter);
        this.app.use('/api/v1/roles', RolesRouter);
        this.app.use('/api/v1/personas', PersonaRouter);
+       this.app.use('/api/v1/dni', RouterDni);
+       this.app.use('/api/v1/ruc', routerRUC);
+       this.app.use('/api/v1/lotes', LoteRouter);
+       this.app.use('/api/v1/lotetallas', LoteTallaRouter);
 
   
     }
