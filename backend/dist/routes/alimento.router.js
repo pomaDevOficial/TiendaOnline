@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const alimento_controller_1 = require("../controllers/alimento.controller");
+const AlimentosRouter = (0, express_1.Router)();
+AlimentosRouter.post('/', alimento_controller_1.createAlimento);
+AlimentosRouter.get('/', alimento_controller_1.getAlimentos);
+AlimentosRouter.get('/:idAlimento', alimento_controller_1.getAlimentoById);
+AlimentosRouter.put('/:idAlimento', alimento_controller_1.updateAliemnto);
+AlimentosRouter.delete('/:idAlimento', alimento_controller_1.deleteAlimento);
+exports.default = AlimentosRouter;

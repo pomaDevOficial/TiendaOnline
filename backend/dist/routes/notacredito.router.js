@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const notacredito_controller_1 = require("../controllers/notacredito.controller");
+const NotaCreditoRouter = (0, express_1.Router)();
+NotaCreditoRouter.post('/', notacredito_controller_1.createNotaCredito);
+NotaCreditoRouter.get('/', notacredito_controller_1.getNotasCredito);
+NotaCreditoRouter.get('/:idNotaCredito', notacredito_controller_1.getNotaCreditoById);
+NotaCreditoRouter.put('/:idNotaCredito', notacredito_controller_1.updateNotaCredito);
+NotaCreditoRouter.delete('/:idNotaCredito', notacredito_controller_1.deleteNotaCredito);
+exports.default = NotaCreditoRouter;
