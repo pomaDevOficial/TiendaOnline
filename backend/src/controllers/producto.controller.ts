@@ -2,19 +2,18 @@ import { Request, Response } from 'express';
 import Producto from '../models/producto.model';
 import Categoria from '../models/categoria.model';
 import Marca from '../models/marca.model';
-import Talla from '../models/talla.model';
 import Estado from '../models/estado.model';
 import { EstadoGeneral } from '../estadosTablas/estados.constans';
 
 // CREATE - Insertar nuevo producto
 export const createProducto = async (req: Request, res: Response): Promise<void> => {
-  const { nombre, idcategoria, idmarca, idtalla } = req.body;
+  const { nombre, idcategoria, idmarca } = req.body;
 
   try {
     // Validaciones
-    if (!nombre || !idcategoria || !idmarca || !idtalla) {
+    if (!nombre || !idcategoria || !idmarca) {
       res.status(400).json({ 
-        msg: 'Los campos nombre, idcategoria, idmarca e idtalla son obligatorios' 
+        msg: 'Los campos nombre, idcategoria e idmarca son obligatorios' 
       });
       return;
     }
@@ -24,13 +23,12 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
       where: { 
         nombre,
         idcategoria,
-        idmarca,
-        idtalla
+        idmarca
       } 
     });
     if (existingProducto) {
       res.status(400).json({ 
-        msg: 'Ya existe un producto con el mismo nombre, categoría, marca y talla' 
+        msg: 'Ya existe un producto con el mismo nombre, categoría y marca' 
       });
       return;
     }
@@ -48,18 +46,11 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const talla = await Talla.findByPk(idtalla);
-    if (!talla) {
-      res.status(400).json({ msg: 'La talla no existe' });
-      return;
-    }
-
     // Crear nuevo producto
     const nuevoProducto: any = await Producto.create({
       nombre,
       idcategoria,
       idmarca,
-      idtalla,
       idestado: EstadoGeneral.REGISTRADO
     });
 
@@ -74,11 +65,6 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
         { 
           model: Marca, 
           as: 'Marca',
-          attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
           attributes: ['id', 'nombre'] 
         },
         { 
@@ -102,7 +88,7 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
 // UPDATE - Actualizar producto (CORREGIDO)
 export const updateProducto = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { nombre, idcategoria, idmarca, idtalla } = req.body;
+  const { nombre, idcategoria, idmarca } = req.body;
 
   try {
     if (!id) {
@@ -117,25 +103,23 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
     }
 
     // Validar si ya existe otro producto con la misma combinación
-    if (nombre || idcategoria || idmarca || idtalla) {
+    if (nombre || idcategoria || idmarca) {
       const nombreToCheck = nombre || producto.nombre;
       const categoriaToCheck = idcategoria || producto.idcategoria;
       const marcaToCheck = idmarca || producto.idmarca;
-      const tallaToCheck = idtalla || producto.idtalla;
 
       const existingProducto = await Producto.findOne({ 
         where: { 
           nombre: nombreToCheck,
           idcategoria: categoriaToCheck,
-          idmarca: marcaToCheck,
-          idtalla: tallaToCheck
+          idmarca: marcaToCheck
         } 
       });
 
       // Si existe otro producto con la misma combinación y no es el mismo que estamos editando
       if (existingProducto && existingProducto.id !== parseInt(id)) {
         res.status(400).json({ 
-          msg: 'Ya existe otro producto con la misma combinación de nombre, categoría, marca y talla' 
+          msg: 'Ya existe otro producto con la misma combinación de nombre, categoría y marca' 
         });
         return;
       }
@@ -158,19 +142,10 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
       }
     }
 
-    if (idtalla) {
-      const talla = await Talla.findByPk(idtalla);
-      if (!talla) {
-        res.status(400).json({ msg: 'La talla no existe' });
-        return;
-      }
-    }
-
     // Actualizar campos
     if (nombre) producto.nombre = nombre;
     if (idcategoria) producto.idcategoria = idcategoria;
     if (idmarca) producto.idmarca = idmarca;
-    if (idtalla) producto.idtalla = idtalla;
     
     // Cambiar estado a ACTUALIZADO
     producto.idestado = EstadoGeneral.ACTUALIZADO;
@@ -188,11 +163,6 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
         { 
           model: Marca, 
           as: 'Marca',
-          attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
           attributes: ['id', 'nombre'] 
         },
         { 
@@ -216,12 +186,12 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
 
 // READ - Verificar si existe un producto con la misma combinación
 export const verificarProductoCompleto = async (req: Request, res: Response): Promise<void> => {
-  const { nombre, idcategoria, idmarca, idtalla } = req.params;
+  const { nombre, idcategoria, idmarca } = req.params;
 
   try {
-    if (!nombre || !idcategoria || !idmarca || !idtalla) {
+    if (!nombre || !idcategoria || !idmarca) {
       res.status(400).json({ 
-        msg: 'Todos los parámetros (nombre, idcategoria, idmarca, idtalla) son requeridos' 
+        msg: 'Todos los parámetros (nombre, idcategoria, idmarca) son requeridos' 
       });
       return;
     }
@@ -230,8 +200,7 @@ export const verificarProductoCompleto = async (req: Request, res: Response): Pr
       where: { 
         nombre,
         idcategoria: parseInt(idcategoria),
-        idmarca: parseInt(idmarca),
-        idtalla: parseInt(idtalla)
+        idmarca: parseInt(idmarca)
       },
       include: [
         { 
@@ -242,11 +211,6 @@ export const verificarProductoCompleto = async (req: Request, res: Response): Pr
         { 
           model: Marca, 
           as: 'Marca',
-          attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
           attributes: ['id', 'nombre'] 
         },
         { 
@@ -275,8 +239,6 @@ export const verificarProductoCompleto = async (req: Request, res: Response): Pr
   }
 };
 
-// El resto de las funciones permanecen igual (getProductos, getProductoById, deleteProducto, etc.)
-
 // READ - Listar todos los productos
 export const getProductos = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -290,11 +252,6 @@ export const getProductos = async (req: Request, res: Response): Promise<void> =
         { 
           model: Marca, 
           as: 'Marca',
-          attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
           attributes: ['id', 'nombre'] 
         },
         { 
@@ -333,11 +290,6 @@ export const getProductosRegistrados = async (req: Request, res: Response): Prom
           model: Marca, 
           as: 'Marca',
           attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
-          attributes: ['id', 'nombre'] 
         }
       ],
       order: [['nombre', 'ASC']]
@@ -368,11 +320,6 @@ export const getProductoById = async (req: Request, res: Response): Promise<void
         { 
           model: Marca, 
           as: 'Marca',
-          attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
           attributes: ['id', 'nombre'] 
         },
         { 
@@ -439,11 +386,6 @@ export const getProductosEliminados = async (req: Request, res: Response): Promi
           model: Marca, 
           as: 'Marca',
           attributes: ['id', 'nombre'] 
-        },
-        { 
-          model: Talla, 
-          as: 'Talla',
-          attributes: ['id', 'nombre'] 
         }
       ],
       order: [['nombre', 'ASC']]
@@ -471,7 +413,7 @@ export const restaurarProducto = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Cambiar estado a REGISTRADO
+    // Cambiar estado to REGISTRADO
     producto.idestado = EstadoGeneral.REGISTRADO;
     await producto.save();
 

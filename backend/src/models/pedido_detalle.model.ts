@@ -1,12 +1,13 @@
+// ==================== MODELO PEDIDO_DETALLE ====================
 import { DataTypes, Model, Optional } from "sequelize";
 import db from "../db/connection.db";
 import Pedido from "./pedido.model";
-import Lote from "./lote.model";
+import LoteTalla from "./lote_talla.model";
 
 export interface PedidoDetalleAttributes {
   id: number;
   idpedido?: number | null;
-  idlote?: number | null;
+  idlote_talla?: number | null;
   cantidad?: number | null;
   precio?: number | null;
   subtotal?: number | null;
@@ -18,20 +19,20 @@ class PedidoDetalle extends Model<PedidoDetalleAttributes, PedidoDetalleCreation
   implements PedidoDetalleAttributes {
   public id!: number;
   public idpedido!: number | null;
-  public idlote!: number | null;
+  public idlote_talla!: number | null;
   public cantidad!: number | null;
   public precio!: number | null;
   public subtotal!: number | null;
-
+  
   public readonly Pedido?: Pedido;
-  public readonly Lote?: Lote;
+  public readonly LoteTalla?: LoteTalla;
 }
 
 PedidoDetalle.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     idpedido: { type: DataTypes.INTEGER, allowNull: true },
-    idlote: { type: DataTypes.INTEGER, allowNull: true },
+    idlote_talla: { type: DataTypes.INTEGER, allowNull: true },
     cantidad: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     precio: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     subtotal: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
@@ -41,6 +42,6 @@ PedidoDetalle.init(
 
 // Relaciones
 PedidoDetalle.belongsTo(Pedido, { foreignKey: 'idpedido', as: 'Pedido' });
-PedidoDetalle.belongsTo(Lote, { foreignKey: 'idlote', as: 'Lote' });
+PedidoDetalle.belongsTo(LoteTalla, { foreignKey: 'idlote_talla', as: 'LoteTalla' });
 
 export default PedidoDetalle;

@@ -1,0 +1,32 @@
+import { Router } from "express";
+import {
+    createLoteTalla,
+    getLotesTalla,
+    getLoteTallaById,
+    updateLoteTalla,
+    deleteLoteTalla,
+    getLotesTallaDisponibles,
+    getLotesTallaEliminados,
+    restaurarLoteTalla,
+    getLotesTallaByLote,
+    cambiarEstadoLoteTalla,
+    getProductosDisponiblesPorTalla,
+    getProductosDisponibles
+} from '../controllers/lote_talla.controller';
+
+const LoteTallaRouter = Router();
+
+LoteTallaRouter.post('/', createLoteTalla); // Crear un nuevo lote_talla
+LoteTallaRouter.get('/', getLotesTalla); // Obtener la lista de todos los lotes_talla
+LoteTallaRouter.get('/disponibles', getLotesTallaDisponibles); // Obtener solo lotes_talla disponibles
+LoteTallaRouter.get('/eliminados', getLotesTallaEliminados); // Obtener solo lotes_talla eliminados
+LoteTallaRouter.get('/lote/:idlote', getLotesTallaByLote); // Obtener lotes_talla por lote
+LoteTallaRouter.get('/catalogo/talla', getProductosDisponiblesPorTalla); // Obtener productos disponibles por talla (para catálogo)
+LoteTallaRouter.get('/catalogo/productos', getProductosDisponibles); // Obtener productos disponibles con filtros (para página de ventas)
+LoteTallaRouter.get('/:id', getLoteTallaById); // Obtener un lote_talla por ID
+LoteTallaRouter.put('/:id', updateLoteTalla); // Actualizar un lote_talla por ID
+LoteTallaRouter.patch('/:id/estado', cambiarEstadoLoteTalla); // Cambiar estado del lote_talla (disponible/agotado)
+LoteTallaRouter.patch('/:id/eliminar', deleteLoteTalla); // Eliminar lógicamente un lote_talla (cambiar estado a eliminado)
+LoteTallaRouter.patch('/:id/restaurar', restaurarLoteTalla); // Restaurar un lote_talla eliminado
+
+export default LoteTallaRouter;
