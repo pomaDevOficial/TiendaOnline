@@ -1,33 +1,28 @@
 import { Router } from "express";
 import {
-    crearVenta,
-    obtenerVentas,
-    obtenerVentasPorEstado,
-    obtenerVentaPorId,
-    actualizarVenta,
-    cambiarEstadoVenta,
-    eliminarVenta,
-    obtenerVentasPorUsuario,
-    obtenerVentasEliminadas
+    createVenta,
+    getVentas,
+    getVentaById,
+    updateVenta,
+    anularVenta,
+    restaurarVenta,
+    getVentasRegistradas,
+    getVentasAnuladas,
+    getVentasByUsuario,
+    getVentasByPedido
 } from '../controllers/venta.controller';
 
-const VentasRouter = Router();
+const VentaRouter = Router();
 
-// CREATE
-VentasRouter.post('/', crearVenta); // Crear una nueva venta
+VentaRouter.post('/', createVenta); // Crear una nueva venta
+VentaRouter.get('/', getVentas); // Obtener todas las ventas
+VentaRouter.get('/registradas', getVentasRegistradas); // Obtener ventas registradas
+VentaRouter.get('/anuladas', getVentasAnuladas); // Obtener ventas anuladas
+VentaRouter.get('/usuario/:idusuario', getVentasByUsuario); // Obtener ventas por usuario
+VentaRouter.get('/pedido/:idpedido', getVentasByPedido); // Obtener ventas por pedido
+VentaRouter.get('/:id', getVentaById); // Obtener una venta por ID
+VentaRouter.put('/:id', updateVenta); // Actualizar una venta por ID
+VentaRouter.patch('/:id/anular', anularVenta); // Anular una venta
+VentaRouter.patch('/:id/restaurar', restaurarVenta); // Restaurar una venta anulada
 
-// READ
-VentasRouter.get('/', obtenerVentas); // Obtener todas las ventas (excluye eliminadas)
-VentasRouter.get('/eliminadas', obtenerVentasEliminadas); // Obtener ventas eliminadas
-VentasRouter.get('/estado/:idestado', obtenerVentasPorEstado); // Obtener ventas por estado
-VentasRouter.get('/usuario/:idusuario', obtenerVentasPorUsuario); // Obtener ventas por usuario
-VentasRouter.get('/:id', obtenerVentaPorId); // Obtener una venta por ID
-
-// UPDATE
-VentasRouter.put('/:id', actualizarVenta); // Actualizar una venta completa por ID
-VentasRouter.patch('/:id/estado', cambiarEstadoVenta); // Cambiar solo el estado de una venta
-
-// DELETE
-VentasRouter.delete('/:id', eliminarVenta); // Eliminar (marcar como eliminada) una venta por ID
-
-export default VentasRouter;
+export default VentaRouter;

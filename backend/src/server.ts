@@ -18,6 +18,11 @@ import RouterDni from './routes/apidni.router';
 import routerRUC from './routes/apiruc.router';
 import LoteRouter from './routes/lote.router';
 import LoteTallaRouter from './routes/lote_talla.router';
+import PedidoRouter from './routes/pedido.router';
+import PedidoDetalleRouter from './routes/pedido_detalle.router';
+import VentaRouter from './routes/venta.router';
+import DetalleVentaRouter from './routes/detalleventa.router';
+import ComprobanteRouter from './routes/comprobante.router';
 
 class Server {
     private app: Application;
@@ -77,6 +82,11 @@ class Server {
        this.app.use('/api/v1/ruc', routerRUC);
        this.app.use('/api/v1/lotes', LoteRouter);
        this.app.use('/api/v1/lotetallas', LoteTallaRouter);
+       this.app.use('/api/v1/pedidos', PedidoRouter);
+       this.app.use('/api/v1/pedidodetalle', PedidoDetalleRouter);
+       this.app.use('/api/v1/ventas', VentaRouter);
+       this.app.use('/api/v1/detalleventa', DetalleVentaRouter);
+       this.app.use('/api/v1/comprobantes', ComprobanteRouter);
 
   
     }
