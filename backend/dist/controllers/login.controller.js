@@ -97,13 +97,13 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!jwtSecret) {
             throw new Error('JWT_SECRET no está configurado en las variables de entorno');
         }
-        // ✅ Definir opciones tipadas
+        // ✅ CORRECCIÓN: expiresIn debe ser número (segundos)
         const options = {
             expiresIn: process.env.JWT_EXPIRES_IN
-                ? Number(process.env.JWT_EXPIRES_IN)
-                : "8h"
+                ? Number(process.env.JWT_EXPIRES_IN) // Convertir a número
+                : 28800 // 8 horas en segundos (8 * 60 * 60)
         };
-        // Generar token JWT sin error de TS
+        // Generar token JWT
         const token = jsonwebtoken_1.default.sign(payload, jwtSecret, options);
         // Respuesta exitosa
         res.json({
@@ -142,7 +142,6 @@ const verifyToken = (req, res) => {
         return;
     }
     try {
-        // ✅ SOLUCIÓN: Asegurar que JWT_SECRET sea string
         const jwtSecret = process.env.JWT_SECRET;
         if (!jwtSecret) {
             res.status(500).json({

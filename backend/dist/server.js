@@ -16,8 +16,19 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const http_1 = __importDefault(require("http")); // Importa el módulo http de Node.js
 const socket_io_1 = require("socket.io"); // Importa Server y Socket de socket.io
+const usuario_router_1 = __importDefault(require("./routes/usuario.router"));
 const connection_db_1 = __importDefault(require("./db/connection.db"));
 const login_router_1 = __importDefault(require("./routes/login.router"));
+const producto_router_1 = __importDefault(require("./routes/producto.router"));
+const categoria_router_1 = __importDefault(require("./routes/categoria.router"));
+const marca_router_1 = __importDefault(require("./routes/marca.router"));
+const talla_router_1 = __importDefault(require("./routes/talla.router"));
+const rol_router_1 = __importDefault(require("./routes/rol.router"));
+const persona_router_1 = __importDefault(require("./routes/persona.router"));
+const apidni_router_1 = __importDefault(require("./routes/apidni.router"));
+const apiruc_router_1 = __importDefault(require("./routes/apiruc.router"));
+const lote_router_1 = __importDefault(require("./routes/lote.router"));
+const lote_talla_router_1 = __importDefault(require("./routes/lote_talla.router"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -52,6 +63,17 @@ class Server {
             });
         });
         this.app.use('/api/v1/login', login_router_1.default);
+        this.app.use('/api/v1/usuarios', usuario_router_1.default);
+        this.app.use('/api/v1/productos', producto_router_1.default);
+        this.app.use('/api/v1/categorias', categoria_router_1.default);
+        this.app.use('/api/v1/marcas', marca_router_1.default);
+        this.app.use('/api/v1/tallas', talla_router_1.default);
+        this.app.use('/api/v1/roles', rol_router_1.default);
+        this.app.use('/api/v1/personas', persona_router_1.default);
+        this.app.use('/api/v1/dni', apidni_router_1.default);
+        this.app.use('/api/v1/ruc', apiruc_router_1.default);
+        this.app.use('/api/v1/lotes', lote_router_1.default);
+        this.app.use('/api/v1/lotetallas', lote_talla_router_1.default);
     }
     dbConnect() {
         return __awaiter(this, void 0, void 0, function* () {
