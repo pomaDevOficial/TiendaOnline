@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const unidadmedida_controller_1 = require("../controllers/unidadmedida.controller");
+const UnidadMedidaRouter = (0, express_1.Router)();
+UnidadMedidaRouter.post('/', unidadmedida_controller_1.createUnidadMedida);
+UnidadMedidaRouter.get('/', unidadmedida_controller_1.getUnidadesMedida);
+UnidadMedidaRouter.get('/:idUnidadMedida', unidadmedida_controller_1.getUnidadMedidaById);
+UnidadMedidaRouter.put('/:idUnidadMedida', unidadmedida_controller_1.updateUnidadMedida);
+UnidadMedidaRouter.delete('/:idUnidadMedida', unidadmedida_controller_1.deleteUnidadMedida);
+exports.default = UnidadMedidaRouter;

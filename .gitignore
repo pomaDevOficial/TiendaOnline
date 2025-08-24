@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.idea/
+.vscode/
+.DS_Store
+/frontend/.angular/cache/19.0.2/frontendv
+/frontend/.angular/cache/19.0.2/frontendv
+/frontend/.angular/cache/19.0.2/frontendv
+/frontend/.angular/cache/19.0.2/frontendv
+/frontend/.angular/cache/19.0.2/frontendv
+/frontend/.angular/cache
