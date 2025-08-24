@@ -7,6 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { GlobalService } from '../../shared/services/Global.service';
+import { NotificationService } from '../../shared/services/Notification.service';
+import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-login',
     imports: [
@@ -25,10 +28,20 @@ export class LoginComponent implements OnInit {
   form: FormGroup;
   hide = signal(true);
 
-  constructor(private fb: FormBuilder, private router: Router) {
-  this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+  constructor(
+    private fb: FormBuilder, 
+    private router: Router, 
+    private authService: AuthService,
+    private globalService: GlobalService,
+    private notify: NotificationService,) {
+
+  // this.form = this.fb.group({
+  //     email: ['', [Validators.required, Validators.email]],
+  //     password: ['', [Validators.required, Validators.minLength(6)]]
+  //   });
+    this.form = this.globalService.fb.group({
+      email: ['', GlobalService.required()],
+      password: ['', GlobalService.required()],
     });
   }
 
@@ -39,9 +52,10 @@ export class LoginComponent implements OnInit {
 
   onLogin() {
     if (this.form.valid) {
-      console.log('Datos:', this.form.value);
-      // Aquí iría la llamada a tu servicio de autenticación
-        this.router.navigate(['/Admin/dashboard']);
+      const { email, password } = this.form.value;
+      this.authService.login(email, password).subscribe();
+    } else {
+      this.notify.showWarning('Por favor, complete los campos correctamente');
     }
   }
 

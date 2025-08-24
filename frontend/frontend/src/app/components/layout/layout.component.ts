@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { CommonModule , isPlatformBrowser} from '@angular/common';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { PanelMenuModule, PanelMenuSub } from 'primeng/panelmenu'; 
@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { AuthService } from '../../services/auth.service'
 
 @Component({
   selector: 'app-layout',
@@ -39,7 +40,7 @@ export class LayoutComponent implements OnInit {
 
   // DECLARA LA PROPIEDAD AQUÍ
   menuLateral: { label: string; icon: string; link: string }[] = [];
-   constructor(private router: Router) {
+   constructor(private router: Router, private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object,) {
 
    }
   ngOnInit() {
@@ -52,6 +53,14 @@ export class LayoutComponent implements OnInit {
 
   logout() {
     console.log('Cerrando sesión...');
-      this.router.navigate(['/login']);
+
+       this.authService.logout();
+  }
+
+  isRutaActiva(rutas: string[]): boolean {
+    return rutas.some(ruta => this.router.url.startsWith(ruta));
   }
 }
+
+
+
