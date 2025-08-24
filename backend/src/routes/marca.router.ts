@@ -1,18 +1,26 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-  createMarca,
-  getMarcas,
-  getMarcaById,
-  updateMarca,
-  deleteMarca
+    createMarca,
+    getMarcas,
+    getMarcaById,
+    updateMarca,
+    deleteMarca,
+    getMarcasRegistradas,
+    getMarcasEliminadas,
+    restaurarMarca,
+    verificarNombreMarca
 } from '../controllers/marca.controller';
 
-const MarcasRouter = Router();
+const MarcaRouter = Router();
 
-MarcasRouter.post('/', createMarca); // Crear una nueva marca
-MarcasRouter.get('/', getMarcas); // Obtener todas las marcas
-MarcasRouter.get('/:idMarca', getMarcaById); // Obtener una marca por ID
-MarcasRouter.put('/:idMarca', updateMarca); // Actualizar una marca por ID
-MarcasRouter.delete('/:idMarca', deleteMarca); // Eliminar una marca por ID
+MarcaRouter.post('/', createMarca); // Crear una nueva marca
+MarcaRouter.get('/', getMarcas); // Obtener la lista de todas las marcas
+MarcaRouter.get('/registradas', getMarcasRegistradas); // Obtener solo marcas registradas/actualizadas
+MarcaRouter.get('/eliminadas', getMarcasEliminadas); // Obtener solo marcas eliminadas
+MarcaRouter.get('/verificar-nombre/:nombre', verificarNombreMarca); // Verificar si existe una marca con el nombre
+MarcaRouter.get('/:id', getMarcaById); // Obtener una marca por ID
+MarcaRouter.put('/:id', updateMarca); // Actualizar una marca por ID
+MarcaRouter.patch('/:id/eliminar', deleteMarca); // Eliminar lógicamente una marca (cambiar estado a eliminado)
+MarcaRouter.patch('/:id/restaurar', restaurarMarca); // Restaurar una marca eliminada
 
-export default MarcasRouter;
+export default MarcaRouter;

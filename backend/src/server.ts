@@ -7,6 +7,13 @@ import Loginrouter from './routes/login.router';
 import Usuariorouter from './routes/usuario.router';
 import db from './db/connection.db';
 import authRouter from './routes/login.router';
+import ProductoRouter from './routes/producto.router';
+import CategoriaRouter from './routes/categoria.router';
+import Marca from './models/marca.model';
+import MarcaRouter from './routes/marca.router';
+import TallaRouter from './routes/talla.router';
+import RolesRouter from './routes/rol.router';
+import PersonaRouter from './routes/persona.router';
 
 class Server {
     private app: Application;
@@ -56,6 +63,12 @@ class Server {
       
        this.app.use('/api/v1/login', authRouter);
        this.app.use('/api/v1/usuarios', Usuariorouter);
+       this.app.use('/api/v1/productos', ProductoRouter);
+       this.app.use('/api/v1/categorias', CategoriaRouter);
+       this.app.use('/api/v1/marcas', MarcaRouter);
+       this.app.use('/api/v1/tallas', TallaRouter);
+       this.app.use('/api/v1/roles', RolesRouter);
+       this.app.use('/api/v1/personas', PersonaRouter);
 
   
     }
