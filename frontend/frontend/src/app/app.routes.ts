@@ -10,26 +10,24 @@ import { MarcaComponent } from './components/admin/marca/marca.component';
 import { HomeComponent } from './components/client/home/home.component';
 
 export const routes: Routes = [
-  // Login de administración
+  // Login
   { path: 'login', component: LoginComponent, canActivate: [LoginGuard] },
-
-  // Administración
+  
   {
     path: 'Admin',
     component: LayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', component: DashboardComponent },           // /Admin → Dashboard
+      { path: '', component: DashboardComponent },  // ruta master
       { path: 'inventario/talla', component: TallaComponent },
       { path: 'inventario/categoria', component: CategoriaComponent },
       { path: 'inventario/marca', component: MarcaComponent },
-      // Cualquier ruta desconocida dentro de Admin → redirige a /Admin
-      { path: '**', redirectTo: '', pathMatch: 'full' }      
+      // Si la ruta hija no existe → redirigir a master de Admin
+      { path: '**', redirectTo: '', pathMatch: 'full' }
     ]
   },
 
-  // Cliente
-  {
+{
     path: 'cliente',
     children: [
       { path: '', component: HomeComponent },              // /cliente → Home
@@ -40,8 +38,6 @@ export const routes: Routes = [
     // Redirección raíz → si no hay ruta, ir a Login o Admin según necesidad
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 
-  // Cualquier otra ruta fuera de Admin/Cliente → redirige al Login
   { path: '**', redirectTo: '/login', pathMatch: 'full' }
 
 ];
-
