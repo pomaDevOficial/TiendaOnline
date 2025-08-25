@@ -2,18 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const venta_controller_1 = require("../controllers/venta.controller");
-const VentasRouter = (0, express_1.Router)();
-// CREATE
-VentasRouter.post('/', venta_controller_1.crearVenta); // Crear una nueva venta
-// READ
-VentasRouter.get('/', venta_controller_1.obtenerVentas); // Obtener todas las ventas (excluye eliminadas)
-VentasRouter.get('/eliminadas', venta_controller_1.obtenerVentasEliminadas); // Obtener ventas eliminadas
-VentasRouter.get('/estado/:idestado', venta_controller_1.obtenerVentasPorEstado); // Obtener ventas por estado
-VentasRouter.get('/usuario/:idusuario', venta_controller_1.obtenerVentasPorUsuario); // Obtener ventas por usuario
-VentasRouter.get('/:id', venta_controller_1.obtenerVentaPorId); // Obtener una venta por ID
-// UPDATE
-VentasRouter.put('/:id', venta_controller_1.actualizarVenta); // Actualizar una venta completa por ID
-VentasRouter.patch('/:id/estado', venta_controller_1.cambiarEstadoVenta); // Cambiar solo el estado de una venta
-// DELETE
-VentasRouter.delete('/:id', venta_controller_1.eliminarVenta); // Eliminar (marcar como eliminada) una venta por ID
-exports.default = VentasRouter;
+const VentaRouter = (0, express_1.Router)();
+VentaRouter.post('/', venta_controller_1.createVenta); // Crear una nueva venta
+VentaRouter.get('/', venta_controller_1.getVentas); // Obtener todas las ventas
+VentaRouter.get('/registradas', venta_controller_1.getVentasRegistradas); // Obtener ventas registradas
+VentaRouter.get('/anuladas', venta_controller_1.getVentasAnuladas); // Obtener ventas anuladas
+VentaRouter.get('/usuario/:idusuario', venta_controller_1.getVentasByUsuario); // Obtener ventas por usuario
+VentaRouter.get('/pedido/:idpedido', venta_controller_1.getVentasByPedido); // Obtener ventas por pedido
+VentaRouter.get('/:id', venta_controller_1.getVentaById); // Obtener una venta por ID
+VentaRouter.put('/:id', venta_controller_1.updateVenta); // Actualizar una venta por ID
+VentaRouter.patch('/:id/anular', venta_controller_1.anularVenta); // Anular una venta
+VentaRouter.patch('/:id/restaurar', venta_controller_1.restaurarVenta); // Restaurar una venta anulada
+exports.default = VentaRouter;

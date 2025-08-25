@@ -1,20 +1,16 @@
-<!-- Navbar moderno -->
-<mat-toolbar color="primary" class="mat-elevation-z4">
+<!-- <mat-toolbar color="primary" class="mat-elevation-z4">
   <span class="logo">FULLMODA</span>
   <span class="spacer"></span>
 
-  <!-- Botón de ajustes -->
   <button mat-icon-button [matMenuTriggerFor]="userMenu">
     <mat-icon>settings</mat-icon>
   </button>
 
-  <!-- Menu de usuario -->
   <mat-menu #userMenu="matMenu">
     <button mat-menu-item>
       <mat-icon>person</mat-icon>
       <span>Perfil</span>
     </button>
-    <!-- Ejecuta logout al hacer click -->
     <button mat-menu-item (click)="logout()">
       <mat-icon>logout</mat-icon>
       <span>Salir</span>
@@ -22,9 +18,7 @@
   </mat-menu>
 </mat-toolbar>
 
-<!-- Layout con sidebar y contenido -->
 <mat-sidenav-container class="layout-container">
-  <!-- Sidebar -->
   <mat-sidenav mode="side" opened class="sidebar mat-elevation-z4">
     <mat-nav-list>
       <a mat-list-item *ngFor="let item of menuLateral" [routerLink]="item.link">
@@ -34,8 +28,93 @@
     </mat-nav-list>
   </mat-sidenav>
 
-  <!-- Contenido principal -->
   <mat-sidenav-content class="content">
     <router-outlet></router-outlet>
   </mat-sidenav-content>
-</mat-sidenav-container>
+</mat-sidenav-container> -->
+
+<!-- Sidebar -->
+<nav class="sidebar d-flex flex-column p-3">
+  <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+<img src="f2.png" alt="Logo FULLMODA" style="width: 90%;">
+
+  </a>
+  <hr>
+
+  <div class="menu-title">MENÚ PRINCIPAL</div>
+  <ul class="nav nav-pills flex-column mb-auto">
+
+    <!-- Inventario -->
+    <li class="nav-item">
+      <a class="nav-link text-white d-flex align-items-center" data-bs-toggle="collapse" href="#inventarioMenu" role="button" aria-expanded="false" aria-controls="inventarioMenu">
+        <i class="bx bx-archive me-2"></i> Inventario
+        <i class="bx bx-chevron-down toggle-icon"></i>
+      </a>
+      <div class="collapse" [ngClass]="{'show': isRutaActiva(['/Admin/inventario/marca','/Admin/inventario/talla','/Admin/inventario/categoria','/Admin/inventario/producto'])}" id="inventarioMenu">
+        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
+          <li><a href="#" class="nav-link text-white 1" [routerLink]="['/Admin/inventario/marca']" routerLinkActive="active"><i class="bx bx-cube me-1"></i> Marca</a></li>
+          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/inventario/talla']" routerLinkActive="active"><i class="bx bx-ruler me-1"></i> Talla</a></li>
+          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/inventario/categoria']" routerLinkActive="active"><i class="bx bx-category me-1"></i> Categoría</a></li>
+          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/inventario/prtoducto']" routerLinkActive="active"><i class="bx bx-package me-1"></i> Producto</a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Ventas -->
+    <li class="nav-item">
+      <a class="nav-link text-white d-flex align-items-center" data-bs-toggle="collapse" href="#ventasMenu" role="button" aria-expanded="false" aria-controls="ventasMenu">
+        <i class="bx bx-cart me-2"></i> Ventas
+        <i class="bx bx-chevron-down toggle-icon"></i>
+      </a>
+      <div class="collapse" id="ventasMenu">
+        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
+          <li><a href="#" class="nav-link text-white"><i class="bx bx-user me-1"></i> Clientes</a></li>
+          <li><a href="#" class="nav-link text-white"><i class="bx bx-credit-card me-1"></i> Facturas</a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Reportes (vacío) -->
+    <li class="nav-item">
+      <a class="nav-link text-white d-flex align-items-center" data-bs-toggle="collapse" href="#reportesMenu" role="button" aria-expanded="false" aria-controls="reportesMenu">
+        <i class="bx bx-bar-chart-alt-2 me-2"></i> Reportes
+        <i class="bx bx-chevron-down toggle-icon"></i>
+      </a>
+      <div class="collapse" id="reportesMenu">
+        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
+          <!-- Vacío -->
+        </ul>
+      </div>
+    </li>
+
+  </ul>
+</nav>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"></a>
+
+    <!-- Dropdown de configuración -->
+    <div class="dropdown ms-auto">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bx bx-cog"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+        <li><a class="dropdown-item" href="#"><i class="bx bx-user me-2"></i> Ver información</a></li>
+        <li><a class="dropdown-item" href="#"><i class="bx bx-cog me-2"></i> Configuración</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="#" (click)="logout()"><i class="bx bx-log-out me-2" ></i> Cerrar sesión</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Contenido principal -->
+<div class="content">
+    <router-outlet></router-outlet>
+  <!-- <div class="card-content">
+    <h1>Dashboard</h1>
+    <p>Contenido principal del dashboard va aquí...</p>
+  </div> -->
+</div>
