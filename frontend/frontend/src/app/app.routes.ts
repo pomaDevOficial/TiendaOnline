@@ -27,7 +27,7 @@ export const routes: Routes = [
     ]
   },
 
-{
+  {
     path: 'cliente',
     children: [
       { path: '', component: HomeComponent },              // /cliente → Home

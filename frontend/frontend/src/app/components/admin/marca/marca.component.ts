@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Marca } from '../../../interfaces/marca.interface';
+import { Marca } from '../../../interfaces/interfaces.interface';
 import { CommonModule } from '@angular/common';
 import { MarcaServicio } from '../../../services/Marca.service';
 import {Table, TableModule } from 'primeng/table'

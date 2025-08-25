@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Marca } from '../interfaces/marca.interface';
+import { Marca } from '../interfaces/interfaces.interface';
 import { environment } from '../enviroments/environment';
 
 @Injectable({

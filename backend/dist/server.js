@@ -29,6 +29,11 @@ const apidni_router_1 = __importDefault(require("./routes/apidni.router"));
 const apiruc_router_1 = __importDefault(require("./routes/apiruc.router"));
 const lote_router_1 = __importDefault(require("./routes/lote.router"));
 const lote_talla_router_1 = __importDefault(require("./routes/lote_talla.router"));
+const pedido_router_1 = __importDefault(require("./routes/pedido.router"));
+const pedido_detalle_router_1 = __importDefault(require("./routes/pedido_detalle.router"));
+const venta_router_1 = __importDefault(require("./routes/venta.router"));
+const detalleventa_router_1 = __importDefault(require("./routes/detalleventa.router"));
+const comprobante_router_1 = __importDefault(require("./routes/comprobante.router"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -74,6 +79,11 @@ class Server {
         this.app.use('/api/v1/ruc', apiruc_router_1.default);
         this.app.use('/api/v1/lotes', lote_router_1.default);
         this.app.use('/api/v1/lotetallas', lote_talla_router_1.default);
+        this.app.use('/api/v1/pedidos', pedido_router_1.default);
+        this.app.use('/api/v1/pedidodetalle', pedido_detalle_router_1.default);
+        this.app.use('/api/v1/ventas', venta_router_1.default);
+        this.app.use('/api/v1/detalleventa', detalleventa_router_1.default);
+        this.app.use('/api/v1/comprobantes', comprobante_router_1.default);
     }
     dbConnect() {
         return __awaiter(this, void 0, void 0, function* () {
