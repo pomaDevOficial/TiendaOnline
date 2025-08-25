@@ -13,7 +13,19 @@ export const EstadoGeneral = {
     AGOTADO: 2,
     ELIMINADO: 3
   } 
-  
+  export const PedidoEstado = {
+    EN_ESPERA: 1,
+    PAGADO: 2,
+    CANCELADO: 3
+  }
+   export const VentaEstado = {
+    REGISTRADO: 1,
+    ANULADO: 2,
+  }  
+  export const ComprobanteEstado = {
+    REGISTRADO: 1,
+    ANULADO: 2,
+  }
   export const TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',
     SALIDA: 'SALIDA',
