@@ -9,22 +9,22 @@ export const EstadoGeneral = {
     
   } as const;
    export const LoteEstado = {
-    DISPONIBLE: 1,
-    AGOTADO: 2,
-    ELIMINADO: 3
+    DISPONIBLE: 9,
+    AGOTADO: 10,
+    ELIMINADO: 11
   } 
   export const PedidoEstado = {
-    EN_ESPERA: 1,
-    PAGADO: 2,
-    CANCELADO: 3
+    EN_ESPERA: 13,
+    PAGADO: 14,
+    CANCELADO: 15
   }
    export const VentaEstado = {
-    REGISTRADO: 1,
-    ANULADO: 2,
+    REGISTRADO: 17,
+    ANULADO: 18,
   }  
   export const ComprobanteEstado = {
-    REGISTRADO: 1,
-    ANULADO: 2,
+    REGISTRADO: 17,
+    ANULADO: 18,
   }
   export const TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',

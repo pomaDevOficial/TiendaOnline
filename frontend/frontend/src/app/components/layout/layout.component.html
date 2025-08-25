@@ -86,6 +86,22 @@
         </ul>
       </div>
     </li>
+   <!-- Configuracion -->
+<li class="nav-item">
+  <a class="nav-link text-white d-flex align-items-center" 
+     data-bs-toggle="collapse" href="#configMenu" role="button" 
+     aria-expanded="false" aria-controls="configMenu">
+    <i class="bx bx-cog me-2"></i> Configuración
+    <i class="bx bx-chevron-down toggle-icon"></i>
+  </a>
+  <div class="collapse" id="configMenu">
+    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
+      <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/persona']" routerLinkActive="active"><i class="bx bx-id-card me-1" ></i> Persona</a></li>
+      <li><a href="#" class="nav-link text-white"><i class="bx bx-group me-1"></i> Usuarios</a></li>
+    </ul>
+  </div>
+</li>
+
 
   </ul>
 </nav>
@@ -101,8 +117,7 @@
         <i class="bx bx-cog"></i>
       </button>
       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-        <li><a class="dropdown-item" href="#"><i class="bx bx-user me-2"></i> Ver información</a></li>
-        <li><a class="dropdown-item" href="#"><i class="bx bx-cog me-2"></i> Configuración</a></li>
+        <li><a class="dropdown-item" href="#"><i class="bx bx-user me-2"></i> Mi información</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item text-danger" href="#" (click)="logout()"><i class="bx bx-log-out me-2" ></i> Cerrar sesión</a></li>
       </ul>

@@ -74,7 +74,7 @@ export const createDetalleVenta = async (req: Request, res: Response): Promise<v
                     {
                       model: PedidoDetalle.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
                       as: 'Producto',
-                      attributes: ['id', 'nombre']
+                      attributes: ['id', 'nombre','imagen']
                     }
                   ]
                 },

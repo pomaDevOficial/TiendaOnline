@@ -7,7 +7,7 @@ import { EstadoGeneral } from '../estadosTablas/estados.constans';
 
 // CREATE - Insertar nuevo producto
 export const createProducto = async (req: Request, res: Response): Promise<void> => {
-  const { nombre, idcategoria, idmarca } = req.body;
+  const { nombre, imagen,idcategoria, idmarca } = req.body;
 
   try {
     // Validaciones
@@ -49,6 +49,7 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
     // Crear nuevo producto
     const nuevoProducto: any = await Producto.create({
       nombre,
+      imagen,
       idcategoria,
       idmarca,
       idestado: EstadoGeneral.REGISTRADO
@@ -88,7 +89,7 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
 // UPDATE - Actualizar producto (CORREGIDO)
 export const updateProducto = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { nombre, idcategoria, idmarca } = req.body;
+  const { nombre,imagen, idcategoria, idmarca } = req.body;
 
   try {
     if (!id) {
@@ -103,7 +104,7 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
     }
 
     // Validar si ya existe otro producto con la misma combinación
-    if (nombre || idcategoria || idmarca) {
+    if (nombre || imagen || idcategoria || idmarca) {
       const nombreToCheck = nombre || producto.nombre;
       const categoriaToCheck = idcategoria || producto.idcategoria;
       const marcaToCheck = idmarca || producto.idmarca;
@@ -146,7 +147,8 @@ export const updateProducto = async (req: Request, res: Response): Promise<void>
     if (nombre) producto.nombre = nombre;
     if (idcategoria) producto.idcategoria = idcategoria;
     if (idmarca) producto.idmarca = idmarca;
-    
+    if (imagen) producto.imagen = imagen;
+
     // Cambiar estado a ACTUALIZADO
     producto.idestado = EstadoGeneral.ACTUALIZADO;
 

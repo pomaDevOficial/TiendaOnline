@@ -8,6 +8,7 @@ import Estado from "./estado.model";
 export interface ProductoAttributes {
   id: number;
   nombre?: string | null;
+  imagen?: string | null;
   idcategoria?: number | null;
   idmarca?: number | null;
   idestado?: number | null;
@@ -19,6 +20,7 @@ class Producto extends Model<ProductoAttributes, ProductoCreationAttributes>
   implements ProductoAttributes {
   public id!: number;
   public nombre!: string | null;
+  public imagen!: string | null;
   public idcategoria!: number | null;
   public idmarca!: number | null;
   public idestado!: number | null;
@@ -32,6 +34,7 @@ Producto.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     nombre: { type: DataTypes.STRING(255), allowNull: true },
+    imagen: { type: DataTypes.STRING(255), allowNull: true },
     idcategoria: { type: DataTypes.INTEGER, allowNull: true },
     idmarca: { type: DataTypes.INTEGER, allowNull: true },
     idestado: { type: DataTypes.INTEGER, allowNull: true },
