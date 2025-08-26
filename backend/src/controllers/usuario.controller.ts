@@ -96,7 +96,6 @@ export const getUsuarios = async (req: Request, res: Response): Promise<void> =>
           attributes: ['id', 'nombre'] 
         }
       ],
-      attributes: { exclude: ['contrasenia'] }, // No retornar contraseñas
       order: [['id', 'ASC']]
     });
 

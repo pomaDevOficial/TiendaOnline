@@ -9,6 +9,7 @@ import { CategoriaComponent } from './components/admin/categoria/categoria.compo
 import { MarcaComponent } from './components/admin/marca/marca.component';
 import { HomeComponent } from './components/client/home/home.component';
 import { PersonaComponent } from './components/admin/persona/persona.component';
+import { UsuarioComponent } from './components/admin/usuario/usuario.component';
 
 export const routes: Routes = [
   // Login
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'inventario/categoria', component: CategoriaComponent },
       { path: 'inventario/marca', component: MarcaComponent },
       { path: 'persona', component: PersonaComponent },
+      { path: 'usuario', component: UsuarioComponent },
 
       // Si la ruta hija no existe → redirigir a master de Admin
       { path: '**', redirectTo: '', pathMatch: 'full' }
