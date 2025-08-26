@@ -103,7 +103,6 @@ const getUsuarios = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     attributes: ['id', 'nombre']
                 }
             ],
-            attributes: { exclude: ['contrasenia'] }, // No retornar contraseñas
             order: [['id', 'ASC']]
         });
         res.json({

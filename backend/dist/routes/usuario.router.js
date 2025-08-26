@@ -8,6 +8,7 @@ UsuariosRouter.post('/', usuario_controller_1.createUsuario); // Crear un nuevo 
 UsuariosRouter.get('/', usuario_controller_1.getUsuarios); // Obtener la lista de usuarios
 UsuariosRouter.get('/:id', usuario_controller_1.getUsuarioById); // Obtener un usuario por ID
 UsuariosRouter.put('/:id', usuario_controller_1.updateUsuario); // Actualizar un usuario por ID
-UsuariosRouter.patch('/:idUsuario/estado', usuario_controller_1.deleteUsuario); // Cambia el estado del usuario
-UsuariosRouter.patch('/:idUsuario/activar', usuario_controller_1.activarUsuario); // Cambia el estado del usuario
+UsuariosRouter.patch('/:id/estado', usuario_controller_1.deleteUsuario); // Cambia el estado del usuario
+UsuariosRouter.patch('/:id/activar', usuario_controller_1.activarUsuario); // Cambia el estado del usuario
+UsuariosRouter.patch('/:id/desactivar', usuario_controller_1.desactivarUsuario); // Cambia el estado del usuario
 exports.default = UsuariosRouter;
