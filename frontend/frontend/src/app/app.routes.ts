@@ -30,14 +30,14 @@ export const routes: Routes = [
     ]
   },
 
-  {
-    path: 'cliente',
-    children: [
-      { path: '', component: HomeComponent },              // /cliente → Home
-      // Cualquier ruta desconocida dentro de cliente → redirige a /cliente
-      { path: '**', redirectTo: '', pathMatch: 'full' }    
-    ]
-  },
+  // {
+  //   path: 'cliente',
+  //   children: [
+  //     { path: '', component: HomeComponent },              // /cliente → Home
+  //     // Cualquier ruta desconocida dentro de cliente → redirige a /cliente
+  //     { path: '**', redirectTo: '', pathMatch: 'full' }    
+  //   ]
+  // },
     // Redirección raíz → si no hay ruta, ir a Login o Admin según necesidad
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 
