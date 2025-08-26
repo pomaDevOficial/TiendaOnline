@@ -14,7 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Persona } from '../../../interfaces/interfaces.interface';
-import { PersonaServicio } from '../../../services/persona.service';
+import { PersonaServicio } from '../../../services/Persona.service';
 
 @Component({
   selector: 'app-persona',
@@ -57,7 +57,6 @@ export class PersonaComponent implements OnInit {
     idtipoidentidad: [null, Validators.required],   
       correo: ['', [Validators.email]],
       telefono: [''],
-      idestado: [1, Validators.required] // por defecto Registrado
     });
   }
 
@@ -104,6 +103,7 @@ export class PersonaComponent implements OnInit {
     }
 
     const personaData: Persona = this.personaForm.value;
+    personaData.idestado = 2;
 
     this.personaService.createPersona(personaData).subscribe({
       next: (nuevaPersona: Persona) => {
@@ -120,7 +120,7 @@ export class PersonaComponent implements OnInit {
     if (this.personaForm.invalid) return;
 
     const personaData: Persona = this.personaForm.value;
-
+    personaData.idestado = 3;
     this.personaService.updatePersona(personaData.id!, personaData)
       .subscribe({
         next: (res) => {

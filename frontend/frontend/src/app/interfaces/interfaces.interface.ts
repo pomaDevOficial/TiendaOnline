@@ -1,6 +1,12 @@
+
   export interface Estado {
   id: number;
   nombre: string;
+}
+  export interface Rol {
+  id: number;
+  nombre?: string | null;
+  Estado?: Estado; // Relación 
 }
 export interface Marca {
     id?: number;
@@ -34,4 +40,16 @@ export interface Persona {
   telefono?: string | null;
   idestado?: number | null;
   Estado?: Estado; // Relación 
+}
+export interface Usuario {
+  id: number;
+  idrol?: number | null;
+  idpersona?: number | null;
+  usuario?: string | null;
+  contrasenia?: string | null;
+  idestado?: number | null;
+  
+  Rol?: Rol;          // Relación
+  Persona?: Persona;  // Relación
+  Estado?: Estado;    // Relación
 }
