@@ -10,22 +10,22 @@ exports.EstadoGeneral = {
     INACTIVO: 7,
 };
 exports.LoteEstado = {
-    DISPONIBLE: 1,
-    AGOTADO: 2,
-    ELIMINADO: 3
+    DISPONIBLE: 9,
+    AGOTADO: 10,
+    ELIMINADO: 11
 };
 exports.PedidoEstado = {
-    EN_ESPERA: 1,
-    PAGADO: 2,
-    CANCELADO: 3
+    EN_ESPERA: 13,
+    PAGADO: 14,
+    CANCELADO: 15
 };
 exports.VentaEstado = {
-    REGISTRADO: 1,
-    ANULADO: 2,
+    REGISTRADO: 17,
+    ANULADO: 18,
 };
 exports.ComprobanteEstado = {
-    REGISTRADO: 1,
-    ANULADO: 2,
+    REGISTRADO: 17,
+    ANULADO: 18,
 };
 exports.TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',

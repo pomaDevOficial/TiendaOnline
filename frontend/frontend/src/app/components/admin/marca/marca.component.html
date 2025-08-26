@@ -67,7 +67,9 @@
                     {{ marca.nombre }}
                 </td>
                 <td>
-                    {{ marca.Estado?.nombre  }}
+                     <span class="badge bg-{{ marca.idestado === 1 ? 'success' : 'secondary' }}">
+                      {{ marca.Estado?.nombre}}
+                    </span>
                 </td>
                 <td>
                   <button pButton 
