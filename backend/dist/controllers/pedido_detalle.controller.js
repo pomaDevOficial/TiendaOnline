@@ -403,7 +403,7 @@ const getDetallesByPedido = (req, res) => __awaiter(void 0, void 0, void 0, func
                                 {
                                     model: lote_talla_model_1.default.associations.Lote.target.associations.Producto.target,
                                     as: 'Producto',
-                                    attributes: ['id', 'nombre', 'descripcion']
+                                    attributes: ['id', 'nombre', 'imagen', 'descripcion']
                                 }
                             ]
                         },

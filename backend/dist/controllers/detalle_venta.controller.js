@@ -81,7 +81,7 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
                                         {
                                             model: pedido_detalle_model_1.default.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
                                             as: 'Producto',
-                                            attributes: ['id', 'nombre']
+                                            attributes: ['id', 'nombre', 'imagen']
                                         }
                                     ]
                                 },

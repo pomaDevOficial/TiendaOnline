@@ -12,13 +12,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.updateLote = exports.createLote = void 0;
+exports.createLoteCompleto = exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.updateLote = exports.createLote = void 0;
 const lote_model_1 = __importDefault(require("../models/lote.model"));
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const categoria_model_1 = __importDefault(require("../models/categoria.model"));
 const marca_model_1 = __importDefault(require("../models/marca.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
+const talla_model_1 = __importDefault(require("../models/talla.model"));
+const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
+const sequelize_1 = require("sequelize");
 // CREATE - Insertar nuevo lote
 const createLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idproducto, proveedor, fechaingreso } = req.body;
@@ -34,6 +38,19 @@ const createLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const producto = yield producto_model_1.default.findByPk(idproducto);
         if (!producto) {
             res.status(400).json({ msg: 'El producto no existe' });
+            return;
+        }
+        // Verificar si ya existe un lote activo para este producto
+        const loteExistente = yield lote_model_1.default.findOne({
+            where: {
+                idproducto,
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.LoteEstado.ELIMINADO }
+            }
+        });
+        if (loteExistente) {
+            res.status(400).json({
+                msg: 'Ya existe un lote para este producto'
+            });
             return;
         }
         // Crear nuevo lote
@@ -436,3 +453,193 @@ const restaurarLote = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.restaurarLote = restaurarLote;
+// CREATE - Insertar lote completo con detalles y movimientos
+const createLoteCompleto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { idproducto, proveedor, fechaingreso, detalles } = req.body;
+    try {
+        // Validaciones
+        if (!idproducto || !proveedor) {
+            res.status(400).json({
+                msg: 'Los campos idproducto y proveedor son obligatorios'
+            });
+            return;
+        }
+        if (!detalles || !Array.isArray(detalles) || detalles.length === 0) {
+            res.status(400).json({
+                msg: 'El campo detalles es obligatorio y debe ser un array no vacío'
+            });
+            return;
+        }
+        // Verificar si existe el producto
+        const producto = yield producto_model_1.default.findByPk(idproducto);
+        if (!producto) {
+            res.status(400).json({ msg: 'El producto no existe' });
+            return;
+        }
+        // Verificar si ya existe un lote activo para este producto
+        const loteExistente = yield lote_model_1.default.findOne({
+            where: {
+                idproducto,
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.LoteEstado.ELIMINADO }
+            }
+        });
+        if (loteExistente) {
+            res.status(400).json({
+                msg: 'Ya existe un lote activo para este producto'
+            });
+            return;
+        }
+        // Crear nuevo lote
+        const nuevoLote = yield lote_model_1.default.create({
+            idproducto,
+            proveedor,
+            fechaingreso: fechaingreso || new Date(),
+            idestado: estados_constans_1.LoteEstado.DISPONIBLE
+        });
+        const detallesCreados = [];
+        const movimientosCreados = [];
+        // Crear detalles de lote_talla
+        for (const detalle of detalles) {
+            const { idtalla, stock, esGenero, preciocosto, precioventa } = detalle;
+            // Validaciones para cada detalle
+            if (!idtalla || stock === undefined || esGenero === undefined) {
+                res.status(400).json({
+                    msg: 'Cada detalle debe tener idtalla, stock y esGenero'
+                });
+                return;
+            }
+            // Verificar si existe la talla
+            const talla = yield talla_model_1.default.findByPk(idtalla);
+            if (!talla) {
+                res.status(400).json({ msg: `La talla con id ${idtalla} no existe` });
+                return;
+            }
+            // Verificar si ya existe un registro con el mismo idlote, idtalla y esGenero
+            const loteTallaExistente = yield lote_talla_model_1.default.findOne({
+                where: {
+                    idlote: nuevoLote.id,
+                    idtalla,
+                    esGenero,
+                    idestado: { [sequelize_1.Op.ne]: estados_constans_1.LoteEstado.ELIMINADO }
+                }
+            });
+            if (loteTallaExistente) {
+                res.status(400).json({
+                    msg: `Ya existe un registro con la talla ${idtalla} y género ${esGenero} para este lote`
+                });
+                return;
+            }
+            // Crear nuevo lote_talla
+            const nuevoLoteTalla = yield lote_talla_model_1.default.create({
+                idlote: nuevoLote.id,
+                idtalla,
+                stock,
+                esGenero,
+                preciocosto: preciocosto || 0,
+                precioventa: precioventa || 0,
+                idestado: estados_constans_1.LoteEstado.DISPONIBLE
+            });
+            // Obtener el lote_talla creado con sus relaciones
+            const loteTallaCreado = yield lote_talla_model_1.default.findByPk(nuevoLoteTalla.id, {
+                include: [
+                    {
+                        model: talla_model_1.default,
+                        as: 'Talla',
+                        attributes: ['id', 'nombre']
+                    },
+                    {
+                        model: estado_model_1.default,
+                        as: 'Estado',
+                        attributes: ['id', 'nombre']
+                    }
+                ]
+            });
+            detallesCreados.push(loteTallaCreado);
+            // Crear movimiento de ingreso para este detalle
+            const nuevoMovimiento = yield movimiento_lote_model_1.default.create({
+                idlote_talla: nuevoLoteTalla.id,
+                tipomovimiento: 'INGRESO',
+                cantidad: stock,
+                fechamovimiento: new Date(),
+                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+            });
+            // Obtener el movimiento creado con sus relaciones
+            const movimientoCreado = yield movimiento_lote_model_1.default.findByPk(nuevoMovimiento.id, {
+                include: [
+                    {
+                        model: lote_talla_model_1.default,
+                        as: 'LoteTalla',
+                        attributes: ['id', 'stock', 'esGenero', 'preciocosto', 'precioventa'],
+                        include: [
+                            {
+                                model: talla_model_1.default,
+                                as: 'Talla',
+                                attributes: ['id', 'nombre']
+                            }
+                        ]
+                    },
+                    {
+                        model: estado_model_1.default,
+                        as: 'Estado',
+                        attributes: ['id', 'nombre']
+                    }
+                ]
+            });
+            movimientosCreados.push(movimientoCreado);
+        }
+        // Obtener el lote creado con todas sus relaciones
+        const loteCompleto = yield lote_model_1.default.findByPk(nuevoLote.id, {
+            include: [
+                {
+                    model: producto_model_1.default,
+                    as: 'Producto',
+                    attributes: ['id', 'nombre', 'imagen'],
+                    include: [
+                        {
+                            model: categoria_model_1.default,
+                            as: 'Categoria',
+                            attributes: ['id', 'nombre']
+                        },
+                        {
+                            model: marca_model_1.default,
+                            as: 'Marca',
+                            attributes: ['id', 'nombre']
+                        }
+                    ]
+                },
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
+                    attributes: ['id', 'nombre']
+                },
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTallas',
+                    include: [
+                        {
+                            model: talla_model_1.default,
+                            as: 'Talla',
+                            attributes: ['id', 'nombre']
+                        },
+                        {
+                            model: estado_model_1.default,
+                            as: 'Estado',
+                            attributes: ['id', 'nombre']
+                        }
+                    ]
+                }
+            ]
+        });
+        res.status(201).json({
+            msg: 'Lote completo creado exitosamente',
+            data: {
+                lote: loteCompleto
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error en createLoteCompleto:', error);
+        res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
+    }
+});
+exports.createLoteCompleto = createLoteCompleto;
