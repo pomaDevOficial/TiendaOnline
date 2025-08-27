@@ -23,6 +23,7 @@ import PedidoDetalleRouter from './routes/pedido_detalle.router';
 import VentaRouter from './routes/venta.router';
 import DetalleVentaRouter from './routes/detalleventa.router';
 import ComprobanteRouter from './routes/comprobante.router';
+import routerWsp from './routes/wsp.router';
 
 class Server {
     private app: Application;
@@ -87,7 +88,7 @@ class Server {
        this.app.use('/api/v1/ventas', VentaRouter);
        this.app.use('/api/v1/detalleventa', DetalleVentaRouter);
        this.app.use('/api/v1/comprobantes', ComprobanteRouter);
-
+       this.app.use('/api/v1/wsp', routerWsp); //  Esto está bien
   
     }
   
