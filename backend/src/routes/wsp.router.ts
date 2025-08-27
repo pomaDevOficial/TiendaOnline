@@ -1,9 +1,10 @@
 // routes/wsp.ts
 import { Router } from 'express';
-import { sendWhatsAppMessage } from '../controllers/wsp.controller';
+import { sendFileWhatsApp, sendWhatsAppMessage } from '../controllers/wsp.controller';
 
 const routerWsp = Router();
 
 routerWsp.post('/sendmsg', sendWhatsAppMessage);
+routerWsp.post('/sendfile', sendFileWhatsApp);
 
 export default routerWsp;
