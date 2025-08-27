@@ -14,6 +14,7 @@ class Producto extends sequelize_1.Model {
 Producto.init({
     id: { type: sequelize_1.DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     nombre: { type: sequelize_1.DataTypes.STRING(255), allowNull: true },
+    imagen: { type: sequelize_1.DataTypes.STRING(255), allowNull: true },
     idcategoria: { type: sequelize_1.DataTypes.INTEGER, allowNull: true },
     idmarca: { type: sequelize_1.DataTypes.INTEGER, allowNull: true },
     idestado: { type: sequelize_1.DataTypes.INTEGER, allowNull: true },

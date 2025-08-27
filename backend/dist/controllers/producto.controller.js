@@ -20,7 +20,7 @@ const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 // CREATE - Insertar nuevo producto
 const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, idcategoria, idmarca } = req.body;
+    const { nombre, imagen, idcategoria, idmarca } = req.body;
     try {
         // Validaciones
         if (!nombre || !idcategoria || !idmarca) {
@@ -57,6 +57,7 @@ const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
         // Crear nuevo producto
         const nuevoProducto = yield producto_model_1.default.create({
             nombre,
+            imagen,
             idcategoria,
             idmarca,
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
@@ -95,7 +96,7 @@ exports.createProducto = createProducto;
 // UPDATE - Actualizar producto (CORREGIDO)
 const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { nombre, idcategoria, idmarca } = req.body;
+    const { nombre, imagen, idcategoria, idmarca } = req.body;
     try {
         if (!id) {
             res.status(400).json({ msg: "El ID del producto es obligatorio" });
@@ -107,7 +108,7 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             return;
         }
         // Validar si ya existe otro producto con la misma combinación
-        if (nombre || idcategoria || idmarca) {
+        if (nombre || imagen || idcategoria || idmarca) {
             const nombreToCheck = nombre || producto.nombre;
             const categoriaToCheck = idcategoria || producto.idcategoria;
             const marcaToCheck = idmarca || producto.idmarca;
@@ -148,6 +149,8 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             producto.idcategoria = idcategoria;
         if (idmarca)
             producto.idmarca = idmarca;
+        if (imagen)
+            producto.imagen = imagen;
         // Cambiar estado a ACTUALIZADO
         producto.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
         yield producto.save();

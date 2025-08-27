@@ -111,6 +111,7 @@
   [style]="{width: '500px', maxWidth: '90vw'}"
   [draggable]="false"
   [resizable]="false"
+  [dismissableMask]="true"
   (onHide)="cerrarDialogoUsuario()">
 
   <form [formGroup]="usuarioForm">
@@ -227,6 +228,7 @@
   [style]="{width: '600px', maxWidth: '95vw'}"
   [draggable]="false"
   [resizable]="false"
+  [dismissableMask]="true"
   (onHide)="cerrarDialogoPersona()">
 
   <form [formGroup]="personaForm">

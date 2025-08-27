@@ -167,5 +167,12 @@ export class MarcaComponent implements OnInit {
       }
     });
   }
+  getEstadoBadgeClass(idestado: number): string {
+      switch (idestado) {
+        case 6: return 'bg-success';
+        case 7: return 'bg-secondary';
+        default: return 'bg-secondary';
+      }
+    }
 
 }
