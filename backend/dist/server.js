@@ -34,6 +34,7 @@ const pedido_detalle_router_1 = __importDefault(require("./routes/pedido_detalle
 const venta_router_1 = __importDefault(require("./routes/venta.router"));
 const detalleventa_router_1 = __importDefault(require("./routes/detalleventa.router"));
 const comprobante_router_1 = __importDefault(require("./routes/comprobante.router"));
+const wsp_router_1 = __importDefault(require("./routes/wsp.router"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -84,6 +85,7 @@ class Server {
         this.app.use('/api/v1/ventas', venta_router_1.default);
         this.app.use('/api/v1/detalleventa', detalleventa_router_1.default);
         this.app.use('/api/v1/comprobantes', comprobante_router_1.default);
+        this.app.use('/api/v1/wsp', wsp_router_1.default); //  Esto está bien
     }
     dbConnect() {
         return __awaiter(this, void 0, void 0, function* () {
