@@ -4,6 +4,174 @@ import Categoria from '../models/categoria.model';
 import Marca from '../models/marca.model';
 import Estado from '../models/estado.model';
 import { EstadoGeneral } from '../estadosTablas/estados.constans';
+import { Op } from "sequelize";
+
+// CREATE - Crear producto con imagen
+export const crearProductoConImagen = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { nombre, idcategoria, idmarca } = req.body;
+    const file = req.file;
+
+    // Validaciones
+    if (!nombre || !idcategoria || !idmarca) {
+      res.status(400).json({ msg: "Los campos nombre, idcategoria e idmarca son obligatorios" });
+      return;
+    }
+
+    if (!file) {
+      res.status(400).json({ msg: "La imagen es obligatoria" });
+      return;
+    }
+
+    // Verificar duplicado (mismo nombre, misma categoría, misma marca y no eliminado)
+    const existeProducto = await Producto.findOne({ 
+      where: { 
+        nombre, 
+        idcategoria, 
+        idmarca,
+        idestado: { [Op.ne]: EstadoGeneral.ELIMINADO }
+      } 
+    });
+    
+    if (existeProducto) {
+      res.status(400).json({ msg: "Ya existe un producto con el mismo nombre, categoría y marca" });
+      return;
+    }
+
+    // Verificar relaciones
+    const categoria = await Categoria.findByPk(idcategoria);
+    if (!categoria) {
+      res.status(400).json({ msg: "La categoría no existe" });
+      return;
+    }
+
+    const marca = await Marca.findByPk(idmarca);
+    if (!marca) {
+      res.status(400).json({ msg: "La marca no existe" });
+      return;
+    }
+
+    // Ruta pública final de la imagen
+    const imagePath = `${file.filename}`;
+
+    // Crear producto
+    const nuevoProducto: any = await Producto.create({
+      nombre,
+      imagen: imagePath,
+      idcategoria,
+      idmarca,
+      idestado: EstadoGeneral.REGISTRADO,
+    });
+
+    // Traer con relaciones
+    const productoCreado = await Producto.findByPk(nuevoProducto.id, {
+      include: [
+        { model: Categoria, as: "Categoria", attributes: ["id", "nombre"] },
+        { model: Marca, as: "Marca", attributes: ["id", "nombre"] },
+        { model: Estado, as: "Estado", attributes: ["id", "nombre"] },
+      ],
+    });
+
+    res.status(201).json({
+      msg: "Producto creado con imagen exitosamente",
+      data: productoCreado,
+    });
+  } catch (error) {
+    console.error("Error en crearProductoConImagen:", error);
+    res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+  }
+};
+
+// UPDATE - Actualizar producto con imagen opcional
+export const actualizarProductoConImagen = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { nombre, idcategoria, idmarca } = req.body;
+    const file = req.file;
+
+    if (!id) {
+      res.status(400).json({ msg: "El ID del producto es obligatorio" });
+      return;
+    }
+
+    const producto: any = await Producto.findByPk(id);
+    if (!producto) {
+      res.status(404).json({ msg: `No existe un producto con el id ${id}` });
+      return;
+    }
+
+    // Verificar duplicado (excluyendo el producto actual)
+    if (nombre && nombre !== producto.nombre) {
+      const existeProducto = await Producto.findOne({ 
+        where: { 
+          nombre, 
+          idcategoria: idcategoria || producto.idcategoria, 
+          idmarca: idmarca || producto.idmarca,
+          id: { [Op.ne]: id },
+          idestado: { [Op.ne]: EstadoGeneral.ELIMINADO }
+        } 
+      });
+      
+      if (existeProducto) {
+        res.status(400).json({ msg: "Ya existe otro producto con el mismo nombre, categoría y marca" });
+        return;
+      }
+    }
+
+    // Verificar relaciones si se están actualizando
+    if (idcategoria) {
+      const categoria = await Categoria.findByPk(idcategoria);
+      if (!categoria) {
+        res.status(400).json({ msg: "La categoría no existe" });
+        return;
+      }
+    }
+
+    if (idmarca) {
+      const marca = await Marca.findByPk(idmarca);
+      if (!marca) {
+        res.status(400).json({ msg: "La marca no existe" });
+        return;
+      }
+    }
+
+    // Actualizar campos
+    if (nombre) producto.nombre = nombre;
+    if (idcategoria) producto.idcategoria = idcategoria;
+    if (idmarca) producto.idmarca = idmarca;
+    
+    // Actualizar imagen si se proporciona una nueva
+    if (file) {
+      producto.imagen = `${file.filename}`;
+    }
+
+    // Cambiar estado a ACTUALIZADO si no está eliminado
+    if (producto.idestado !== EstadoGeneral.ELIMINADO) {
+      producto.idestado = EstadoGeneral.ACTUALIZADO;
+    }
+
+    await producto.save();
+
+    // Obtener el producto actualizado con relaciones
+    const productoActualizado = await Producto.findByPk(id, {
+      include: [
+        { model: Categoria, as: "Categoria", attributes: ["id", "nombre"] },
+        { model: Marca, as: "Marca", attributes: ["id", "nombre"] },
+        { model: Estado, as: "Estado", attributes: ["id", "nombre"] },
+      ],
+    });
+
+    res.json({
+      msg: "Producto actualizado con éxito",
+      data: productoActualizado,
+    });
+
+  } catch (error) {
+    console.error("Error en actualizarProductoConImagen:", error);
+    res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+  }
+};
+
 
 // CREATE - Insertar nuevo producto
 export const createProducto = async (req: Request, res: Response): Promise<void> => {
@@ -428,3 +596,5 @@ export const restaurarProducto = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ msg: 'Error al restaurar el producto' });
   }
 };
+
+
