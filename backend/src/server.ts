@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import http from 'http'; // Importa el módulo http de Node.js
 import { Server as SocketIOServer, Socket } from 'socket.io'; // Importa Server y Socket de socket.io
+import path from "path";
 
 import Loginrouter from './routes/login.router';
 import Usuariorouter from './routes/usuario.router';
@@ -57,8 +58,10 @@ class Server {
       this.app.use(express.json());
       this.app.use(cors({
         // origin: 'http://161.132.49.58:5200',
-        origin: 'http://localhost:4200',
-        
+        origin: [
+    'http://localhost:4200',   // frontend cliente
+    'http://localhost:4300'    // frontend admin
+      ],
         credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
       }));
     }
@@ -70,7 +73,8 @@ class Server {
         });
       });
   
-      
+       // 👀 Rutas públicas para servir imágenes del catálogo
+       this.app.use("/uploads/productos", express.static(path.join(__dirname, "../uploads/productos")));
        this.app.use('/api/v1/login', authRouter);
        this.app.use('/api/v1/usuarios', Usuariorouter);
        this.app.use('/api/v1/productos', ProductoRouter);
