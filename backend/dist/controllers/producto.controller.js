@@ -12,12 +12,161 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarProducto = exports.getProductosEliminados = exports.deleteProducto = exports.getProductoById = exports.getProductosRegistrados = exports.getProductos = exports.verificarProductoCompleto = exports.updateProducto = exports.createProducto = void 0;
+exports.restaurarProducto = exports.getProductosEliminados = exports.deleteProducto = exports.getProductoById = exports.getProductosRegistrados = exports.getProductos = exports.verificarProductoCompleto = exports.updateProducto = exports.createProducto = exports.actualizarProductoConImagen = exports.crearProductoConImagen = void 0;
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const categoria_model_1 = __importDefault(require("../models/categoria.model"));
 const marca_model_1 = __importDefault(require("../models/marca.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const sequelize_1 = require("sequelize");
+// CREATE - Crear producto con imagen
+const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { nombre, idcategoria, idmarca } = req.body;
+        const file = req.file;
+        // Validaciones
+        if (!nombre || !idcategoria || !idmarca) {
+            res.status(400).json({ msg: "Los campos nombre, idcategoria e idmarca son obligatorios" });
+            return;
+        }
+        if (!file) {
+            res.status(400).json({ msg: "La imagen es obligatoria" });
+            return;
+        }
+        // Verificar duplicado (mismo nombre, misma categoría, misma marca y no eliminado)
+        const existeProducto = yield producto_model_1.default.findOne({
+            where: {
+                nombre,
+                idcategoria,
+                idmarca,
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
+            }
+        });
+        if (existeProducto) {
+            res.status(400).json({ msg: "Ya existe un producto con el mismo nombre, categoría y marca" });
+            return;
+        }
+        // Verificar relaciones
+        const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+        if (!categoria) {
+            res.status(400).json({ msg: "La categoría no existe" });
+            return;
+        }
+        const marca = yield marca_model_1.default.findByPk(idmarca);
+        if (!marca) {
+            res.status(400).json({ msg: "La marca no existe" });
+            return;
+        }
+        // Ruta pública final de la imagen
+        const imagePath = `${file.filename}`;
+        // Crear producto
+        const nuevoProducto = yield producto_model_1.default.create({
+            nombre,
+            imagen: imagePath,
+            idcategoria,
+            idmarca,
+            idestado: estados_constans_1.EstadoGeneral.REGISTRADO,
+        });
+        // Traer con relaciones
+        const productoCreado = yield producto_model_1.default.findByPk(nuevoProducto.id, {
+            include: [
+                { model: categoria_model_1.default, as: "Categoria", attributes: ["id", "nombre"] },
+                { model: marca_model_1.default, as: "Marca", attributes: ["id", "nombre"] },
+                { model: estado_model_1.default, as: "Estado", attributes: ["id", "nombre"] },
+            ],
+        });
+        res.status(201).json({
+            msg: "Producto creado con imagen exitosamente",
+            data: productoCreado,
+        });
+    }
+    catch (error) {
+        console.error("Error en crearProductoConImagen:", error);
+        res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+    }
+});
+exports.crearProductoConImagen = crearProductoConImagen;
+// UPDATE - Actualizar producto con imagen opcional
+const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { nombre, idcategoria, idmarca } = req.body;
+        const file = req.file;
+        if (!id) {
+            res.status(400).json({ msg: "El ID del producto es obligatorio" });
+            return;
+        }
+        const producto = yield producto_model_1.default.findByPk(id);
+        if (!producto) {
+            res.status(404).json({ msg: `No existe un producto con el id ${id}` });
+            return;
+        }
+        // Verificar duplicado (excluyendo el producto actual)
+        if (nombre && nombre !== producto.nombre) {
+            const existeProducto = yield producto_model_1.default.findOne({
+                where: {
+                    nombre,
+                    idcategoria: idcategoria || producto.idcategoria,
+                    idmarca: idmarca || producto.idmarca,
+                    id: { [sequelize_1.Op.ne]: id },
+                    idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
+                }
+            });
+            if (existeProducto) {
+                res.status(400).json({ msg: "Ya existe otro producto con el mismo nombre, categoría y marca" });
+                return;
+            }
+        }
+        // Verificar relaciones si se están actualizando
+        if (idcategoria) {
+            const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+            if (!categoria) {
+                res.status(400).json({ msg: "La categoría no existe" });
+                return;
+            }
+        }
+        if (idmarca) {
+            const marca = yield marca_model_1.default.findByPk(idmarca);
+            if (!marca) {
+                res.status(400).json({ msg: "La marca no existe" });
+                return;
+            }
+        }
+        // Actualizar campos
+        if (nombre)
+            producto.nombre = nombre;
+        if (idcategoria)
+            producto.idcategoria = idcategoria;
+        if (idmarca)
+            producto.idmarca = idmarca;
+        // Actualizar imagen si se proporciona una nueva
+        if (file) {
+            producto.imagen = `${file.filename}`;
+        }
+        // Cambiar estado a ACTUALIZADO si no está eliminado
+        if (producto.idestado !== estados_constans_1.EstadoGeneral.ELIMINADO) {
+            producto.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
+        }
+        yield producto.save();
+        // Obtener el producto actualizado con relaciones
+        const productoActualizado = yield producto_model_1.default.findByPk(id, {
+            include: [
+                { model: categoria_model_1.default, as: "Categoria", attributes: ["id", "nombre"] },
+                { model: marca_model_1.default, as: "Marca", attributes: ["id", "nombre"] },
+                { model: estado_model_1.default, as: "Estado", attributes: ["id", "nombre"] },
+            ],
+        });
+        res.json({
+            msg: "Producto actualizado con éxito",
+            data: productoActualizado,
+        });
+    }
+    catch (error) {
+        console.error("Error en actualizarProductoConImagen:", error);
+        res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+    }
+});
+exports.actualizarProductoConImagen = actualizarProductoConImagen;
 // CREATE - Insertar nuevo producto
 const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, imagen, idcategoria, idmarca } = req.body;
@@ -289,6 +438,11 @@ const getProductosRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, 
                 {
                     model: marca_model_1.default,
                     as: 'Marca',
+                    attributes: ['id', 'nombre']
+                },
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
                     attributes: ['id', 'nombre']
                 }
             ],

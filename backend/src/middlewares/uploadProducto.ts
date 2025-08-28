@@ -4,7 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 
 // Crear directorio si no existe
-const uploadDir = path.join(__dirname, "../uploads/productos");
+const uploadDir = path.join(__dirname, "../../dist/uploads/productos");
+//const uploadDir = path.resolve(__dirname, "..", "..", "backend/dist/uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

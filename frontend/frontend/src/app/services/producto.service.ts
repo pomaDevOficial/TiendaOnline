@@ -19,7 +19,7 @@ export class ProductoServicio {
   }
   
   createProducto(producto: FormData): Observable<Producto> {
-    return this.http.post<Producto>(this.apiUrl, producto);
+    return this.http.post<Producto>(`${this.apiUrl}/con-imagen`, producto);
   }
 
   updateProducto(id: number, producto: Producto): Observable<Producto> {

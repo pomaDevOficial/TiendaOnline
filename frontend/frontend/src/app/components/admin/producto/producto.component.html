@@ -44,9 +44,10 @@
       <ng-template #header>
         <tr>
           <th>ID</th>
-          <th>Usuario</th>
-          <th>Rol</th>
-          <th>Persona</th>
+          <th>Nombre</th>
+          <th>Categoria</th>
+          <th>Marca</th>
+          <th>Imagen</th>
           <th>Estado</th>
           <th class="text-center">Acciones</th>
         </tr>
@@ -56,10 +57,19 @@
       <ng-template #body let-productos>
         <tr>
           <td>{{ productos.id }}</td>
-          <td>{{ productos.usuario }}</td>
-          <td>{{ productos.Rol?.nombre || 'Sin rol' }}</td>
+          <td>{{ productos.nombre }}</td>
+          <td>{{ productos.Categoria?.nombre}}</td>
+          <td>{{ productos.Marca?.nombre}}</td>
           <td>
-             <span class="badge bg-{{ productos.idestado === 1 ? 'success' : 'secondary' }}">
+        <img 
+          *ngIf="productos?.imagen" 
+          [src]="rutaUrl + productos.imagen" 
+          alt="{{ productos.nombre }}" 
+          width="40" height="40" 
+          style="object-fit: cover; border-radius: 4px;">
+      </td>
+          <td>
+             <span class="badge bg-{{ productos.Estado.idestado === 1 ? 'success' : 'secondary' }}">
                       {{ productos.Estado?.nombre}}
                     </span>
           </td>

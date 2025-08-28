@@ -18,6 +18,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProductoServicio } from '../../../services/producto.service';
+import { environment } from '../../../enviroments/environment';
 
 @Component({
   selector: 'app-producto',
@@ -32,6 +33,7 @@ import { ProductoServicio } from '../../../services/producto.service';
 export class ProductoComponent implements OnInit {
 
   loading: boolean = true;
+  rutaUrl : string = environment.endpoint+"uploads/productos/"
   editarProducto: boolean = false;
   abrirModalProducto: boolean = false;
   abrirModalMarca: boolean = false;

@@ -460,6 +460,11 @@ export const getProductosRegistrados = async (req: Request, res: Response): Prom
           model: Marca, 
           as: 'Marca',
           attributes: ['id', 'nombre'] 
+        },
+        { 
+          model: Estado, 
+          as: 'Estado',
+          attributes: ['id', 'nombre'] 
         }
       ],
       order: [['nombre', 'ASC']]

@@ -16,6 +16,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const http_1 = __importDefault(require("http")); // Importa el módulo http de Node.js
 const socket_io_1 = require("socket.io"); // Importa Server y Socket de socket.io
+const path_1 = __importDefault(require("path"));
 const usuario_router_1 = __importDefault(require("./routes/usuario.router"));
 const connection_db_1 = __importDefault(require("./db/connection.db"));
 const login_router_1 = __importDefault(require("./routes/login.router"));
@@ -35,6 +36,8 @@ const venta_router_1 = __importDefault(require("./routes/venta.router"));
 const detalleventa_router_1 = __importDefault(require("./routes/detalleventa.router"));
 const comprobante_router_1 = __importDefault(require("./routes/comprobante.router"));
 const wsp_router_1 = __importDefault(require("./routes/wsp.router"));
+const sharp_1 = __importDefault(require("sharp"));
+const morgan_1 = __importDefault(require("morgan"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -56,9 +59,31 @@ class Server {
     }
     middlewares() {
         this.app.use(express_1.default.json());
+        this.app.use((0, morgan_1.default)('dev'));
+        //  const imagesFolder = path.join(__dirname, "../../dist/uploads/productos");
+        //  console.log(imagesFolder)
+        //  // 👀 Rutas públicas para servir imágenes del catálogo
+        // //  this.app.use("/uploads/productos", express.static(path.join(__dirname, "../uploads/productos")));
+        // this.app.use("/uploads/productos", (req, res, next) => {
+        //     const rutaImagen = path.join(imagesFolder, req.url); // ej: /ejemplo.png → uploads/productos/ejemplo.png
+        //     console.log(rutaImagen)
+        //     sharp(rutaImagen)
+        //       .resize(800) // redimensiona a 800px de ancho
+        //       .toBuffer((err, buffer) => {
+        //         if (err) {
+        //           console.error("❌ Error procesando imagen:", err);
+        //           return next(); // si falla, pasa al siguiente middleware
+        //         }
+        //         res.setHeader("Content-Type", "image/jpeg");
+        //         res.send(buffer);
+        //       });
+        //   });
         this.app.use((0, cors_1.default)({
             // origin: 'http://161.132.49.58:5200',
-            origin: 'http://localhost:4200',
+            origin: [
+                'http://localhost:4200', // frontend cliente
+                'http://localhost:4300' // frontend admin
+            ],
             credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
         }));
     }
@@ -66,6 +91,21 @@ class Server {
         this.app.get('/', (req, res) => {
             res.json({
                 msg: 'API Working'
+            });
+        });
+        const imagesFolder = path_1.default.resolve(__dirname, "..", "..", "backend/dist/uploads");
+        this.app.use("/uploads", (req, res, next) => {
+            const rutaImagen = path_1.default.join(imagesFolder, req.url);
+            console.log("📂 Buscando imagen en:", rutaImagen);
+            (0, sharp_1.default)(rutaImagen)
+                .resize(800)
+                .toBuffer((err, buffer) => {
+                if (err) {
+                    console.error("❌ Error procesando imagen:", err.message);
+                    return res.status(404).send("Imagen no encontrada");
+                }
+                res.setHeader("Content-Type", "image/jpeg");
+                res.send(buffer);
             });
         });
         this.app.use('/api/v1/login', login_router_1.default);

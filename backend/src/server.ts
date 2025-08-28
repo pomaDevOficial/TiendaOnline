@@ -25,6 +25,8 @@ import VentaRouter from './routes/venta.router';
 import DetalleVentaRouter from './routes/detalleventa.router';
 import ComprobanteRouter from './routes/comprobante.router';
 import routerWsp from './routes/wsp.router';
+import sharp from "sharp";
+import morgan from "morgan";
 
 class Server {
     private app: Application;
@@ -56,6 +58,25 @@ class Server {
   
     private middlewares() {
       this.app.use(express.json());
+      this.app.use(morgan('dev'));
+      //  const imagesFolder = path.join(__dirname, "../../dist/uploads/productos");
+      //  console.log(imagesFolder)
+      //  // 👀 Rutas públicas para servir imágenes del catálogo
+      // //  this.app.use("/uploads/productos", express.static(path.join(__dirname, "../uploads/productos")));
+      // this.app.use("/uploads/productos", (req, res, next) => {
+      //     const rutaImagen = path.join(imagesFolder, req.url); // ej: /ejemplo.png → uploads/productos/ejemplo.png
+      //     console.log(rutaImagen)
+      //     sharp(rutaImagen)
+      //       .resize(800) // redimensiona a 800px de ancho
+      //       .toBuffer((err, buffer) => {
+      //         if (err) {
+      //           console.error("❌ Error procesando imagen:", err);
+      //           return next(); // si falla, pasa al siguiente middleware
+      //         }
+      //         res.setHeader("Content-Type", "image/jpeg");
+      //         res.send(buffer);
+      //       });
+      //   });
       this.app.use(cors({
         // origin: 'http://161.132.49.58:5200',
         origin: [
@@ -72,9 +93,24 @@ class Server {
           msg: 'API Working'
         });
       });
-  
-       // 👀 Rutas públicas para servir imágenes del catálogo
-       this.app.use("/uploads/productos", express.static(path.join(__dirname, "../uploads/productos")));
+     
+      const imagesFolder = path.resolve(__dirname, "..", "..", "backend/dist/uploads");
+
+    this.app.use("/uploads", (req: Request, res: Response, next) => {
+      const rutaImagen = path.join(imagesFolder, req.url);
+      console.log("📂 Buscando imagen en:", rutaImagen);
+
+      sharp(rutaImagen)
+        .resize(800)
+        .toBuffer((err, buffer) => {
+          if (err) {
+            console.error("❌ Error procesando imagen:", err.message);
+            return res.status(404).send("Imagen no encontrada");
+          }
+          res.setHeader("Content-Type", "image/jpeg");
+          res.send(buffer);
+        });
+    });
        this.app.use('/api/v1/login', authRouter);
        this.app.use('/api/v1/usuarios', Usuariorouter);
        this.app.use('/api/v1/productos', ProductoRouter);
