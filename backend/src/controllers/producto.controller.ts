@@ -194,7 +194,7 @@ export const createProducto = async (req: Request, res: Response): Promise<void>
         idmarca
       } 
     });
-    if (existingProducto) {
+    if(existingProducto) {
       res.status(400).json({ 
         msg: 'Ya existe un producto con el mismo nombre, categoría y marca' 
       });
@@ -459,6 +459,11 @@ export const getProductosRegistrados = async (req: Request, res: Response): Prom
         { 
           model: Marca, 
           as: 'Marca',
+          attributes: ['id', 'nombre'] 
+        },
+        { 
+          model: Estado, 
+          as: 'Estado',
           attributes: ['id', 'nombre'] 
         }
       ],

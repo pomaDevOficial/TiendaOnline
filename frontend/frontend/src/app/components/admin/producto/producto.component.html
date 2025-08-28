@@ -1,0 +1,361 @@
+<div class="mt-5 mb-2">
+  <!-- Encabezado -->
+  <div class="flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">Producto</h2>
+    <div class="flex gap-2">
+      <p-button 
+        (click)="abrirRegistroProducto()" 
+        label="Registrar Producto" 
+        icon="pi pi-plus" 
+        styleClass="p-button-success">
+      </p-button>
+
+      <p-button 
+        (click)="cargarProductos()" 
+        label="Actualizar" 
+        icon="pi pi-refresh" 
+        styleClass="p-button-info">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Tabla Usuarios -->
+  <div class="card shadow-2 border-round">
+    <p-table #dt1 [value]="productos" dataKey="id" [rows]="10" 
+             [rowsPerPageOptions]="[10,25,50]" [loading]="loading" 
+             [paginator]="true" 
+             [globalFilterFields]="['id','usuario','Persona.nombres','Persona.apellidos','Rol.nombre']">
+
+      <!-- Buscador -->
+      <ng-template #caption>
+        <div class="flex justify-content-end">
+          <p-iconfield iconPosition="left">
+            <p-inputicon>
+              <i class="pi pi-search"></i>
+            </p-inputicon>
+            <input pInputText #globalFilterInput type="text" 
+                   (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
+                   placeholder="Buscar usuario..." />
+          </p-iconfield>
+        </div>
+      </ng-template>
+
+      <!-- Encabezado -->
+      <ng-template #header>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Categoria</th>
+          <th>Marca</th>
+          <th>Imagen</th>
+          <th>Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Cuerpo -->
+      <ng-template #body let-productos>
+        <tr>
+          <td>{{ productos.id }}</td>
+          <td>{{ productos.nombre }}</td>
+          <td>{{ productos.Categoria?.nombre}}</td>
+          <td>{{ productos.Marca?.nombre}}</td>
+          <td>
+        <img 
+          *ngIf="productos?.imagen" 
+          [src]="rutaUrl + productos.imagen" 
+          alt="{{ productos.nombre }}" 
+          width="40" height="40" 
+          style="object-fit: cover; border-radius: 4px;">
+      </td>
+          <td>
+             <span class="badge bg-{{ productos.Estado.idestado === 1 ? 'success' : 'secondary' }}">
+                      {{ productos.Estado?.nombre}}
+                    </span>
+          </td>
+          <td class="text-center">
+            <div class="flex justify-content-center gap-2">
+              <button pButton type="button" icon="pi pi-pencil" 
+                      class="p-button-rounded p-button-warning p-button-sm" 
+                      (click)="EditarProductos(productos)"
+                      tooltip="Editar usuario" tooltipPosition="top">
+              </button>
+              
+              <!-- Activar -->
+              <button pButton type="button" icon="pi pi-check" 
+                      class="p-button-rounded p-button-success p-button-sm" 
+                      (click)="Eliminar(productos.id)"
+                      tooltip="Activar usuario" tooltipPosition="top">
+              </button>
+
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Mensaje vacío -->
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="text-center text-500 py-4">No se encontraron usuarios.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+
+<!-- ================== DIALOG PRODUCTO ================== -->
+<p-dialog 
+  [header]="editarProducto ? 'Editar Producto' : 'Registrar Producto'"
+  [(visible)]="abrirModalProducto" 
+  [modal]="true" 
+  [style]="{width: '500px', maxWidth: '90vw'}"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  (onHide)="cerrarDialogoProducto()">
+
+  <form [formGroup]="productoForm" class="p-fluid">
+    <div class="dialog-content">
+
+      <!-- Nombre -->
+      <div class="form-field">
+        <label for="nombre" class="form-label">Nombre *</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          pInputText 
+          formControlName="nombre"
+           class="form-input"
+          placeholder="Ingrese el nombre del producto"
+          [class.input-error]="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched">
+        <small class="error-message" *ngIf="productoForm.get('nombre')?.invalid && productoForm.get('nombre')?.touched">
+          Nombre es requerido
+        </small>
+      </div>
+
+      <!-- Imagen
+      <div class="form-field">
+        <label for="imagen" class="form-label">Imagen *</label>
+        <input 
+          type="file" 
+          id="imagen" 
+          (change)="onFileChange($event)" 
+          accept="image/*">
+        <small class="error-message" *ngIf="productoForm.get('imagen')?.invalid && productoForm.get('imagen')?.touched">
+          Imagen es requerida
+        </small>
+      </div> -->
+      <!-- Imagen -->
+<!-- Imagen -->
+<p-fileUpload 
+  name="imagen"
+  mode="advanced"
+  [auto]="false"
+  [customUpload]="true"
+  [showUploadButton]="false"
+  [showCancelButton]="false"
+  accept="image/*"
+  maxFileSize="2000000"
+  chooseLabel="Seleccionar"
+  (onSelect)="onFileSelect($event)">
+   <ng-template #empty>
+        <div>Agregar imagen para el producto </div>
+    </ng-template>
+  
+</p-fileUpload>
+
+
+      <!-- Marca -->
+      <div class="form-field">
+        <div class="form-label-container">
+          <label for="idmarca" class="form-label">Marca *</label>
+          <p-button 
+            icon="pi pi-plus" 
+            styleClass="p-button-sm p-button-text p-button-info add-person-btn"
+            (click)="abrirRegistroMarca()" 
+            tooltip="Registrar nueva marca"
+            tooltipPosition="top">
+          </p-button>
+        </div>
+        <p-dropdown 
+          id="idmarca"
+          [options]="marcas" 
+          formControlName="idmarca" 
+          optionLabel="nombre" 
+          optionValue="id"
+          placeholder="Seleccione una Marca"
+          [showClear]="true"
+          appendTo="body" 
+          [virtualScroll]="false"
+          [style]="{ width: '100%' }"        
+          [panelStyle]="{ width: '100%' }" 
+          styleClass="form-dropdown"
+          [class.input-error]="productoForm.get('idmarca')?.invalid && productoForm.get('idmarca')?.touched">
+        </p-dropdown>
+        <small class="error-message" *ngIf="productoForm.get('idmarca')?.invalid && productoForm.get('idmarca')?.touched">
+          Marca es requerida
+        </small>
+      </div>
+
+      <!-- Categoría -->
+      <div class="form-field">
+        <div class="form-label-container">
+          <label for="idcategoria" class="form-label">Categoría *</label>
+          <p-button 
+            icon="pi pi-plus" 
+            styleClass="p-button-sm p-button-text p-button-info add-person-btn"
+            (click)="abrirRegistroCategoria()" 
+            tooltip="Registrar nueva categoría"
+            tooltipPosition="top">
+          </p-button>
+        </div>
+        <p-dropdown 
+          id="idcategoria"
+          [options]="categorias" 
+          formControlName="idcategoria" 
+          optionLabel="nombre" 
+          optionValue="id" 
+          styleClass="form-dropdown"
+          placeholder="Seleccione una Categoría" 
+          [showClear]="true"
+          [appendTo]="'body'" 
+           [virtualScroll]="false"
+          [style]="{ width: '100%' }"        
+          [panelStyle]="{ width: '100%' }" 
+          [class.input-error]="productoForm.get('idcategoria')?.invalid && productoForm.get('idcategoria')?.touched">
+          <ng-template let-categoria pTemplate="item">
+            <div class="categoria-item">
+              <div class="categoria-nombre">{{ categoria.nombre }}</div>
+            </div>
+          </ng-template>
+        </p-dropdown>
+        <small class="error-message" *ngIf="productoForm.get('idcategoria')?.invalid && productoForm.get('idcategoria')?.touched">
+          Categoría es requerida
+        </small>
+      </div>
+
+      <!-- Botones -->
+      <div class="dialog-buttons">
+        <p-button 
+          label="Cancelar" 
+          icon="pi pi-times" 
+          styleClass="p-button-text p-button-secondary" 
+          (click)="cerrarDialogoProducto()">
+        </p-button>
+        <p-button 
+          [label]="editarProducto ? 'Guardar Cambios' : 'Guardar'" 
+          [icon]="editarProducto ? 'pi pi-save' : 'pi pi-check'" 
+          styleClass="p-button-primary"
+          (click)="guardarProducto()">
+        </p-button>
+      </div>
+
+    </div>
+  </form>
+</p-dialog>
+
+
+<!-- ================== DIALOG CATEGORIA ================== -->
+<p-dialog 
+  header="Registrar Categoria"
+  [(visible)]="abrirModalCategoria" 
+  [modal]="true" 
+  [style]="{width: '500px', maxWidth: '90vw'}"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  (onHide)="cerrarDialogoCategoria()">
+
+  <form [formGroup]="categoriaForm" class="p-fluid">
+    <div class="dialog-content">
+
+      <!-- Nombre -->
+      <div class="form-field">
+        <label for="nombre" class="form-label">Nombre *</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          pInputText 
+          formControlName="nombre"
+           class="form-input"
+          placeholder="Ingrese el nombre de la Categoria"
+          [class.input-error]="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched">
+        <small class="error-message" *ngIf="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched">
+          Nombre es requerido
+        </small>
+      </div>
+
+      <!-- Botones -->
+      <div class="dialog-buttons">
+        <p-button 
+          label="Cancelar" 
+          icon="pi pi-times" 
+          styleClass="p-button-text p-button-secondary" 
+          (click)="cerrarDialogoCategoria()">
+        </p-button>
+        <p-button 
+          [label]="editarProducto ? 'Guardar Cambios' : 'Guardar'" 
+          [icon]="editarProducto ? 'pi pi-save' : 'pi pi-check'" 
+          styleClass="p-button-primary"
+          (click)="guardarCategoria()">
+        </p-button>
+      </div>
+
+    </div>
+  </form>
+</p-dialog>
+
+
+<!-- ================== DIALOG MARCA ================== -->
+<p-dialog 
+  header="Registrar Categoria"
+  [(visible)]="abrirModalMarca" 
+  [modal]="true" 
+  [style]="{width: '500px', maxWidth: '90vw'}"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  (onHide)="cerrarDialogoMarca()">
+
+  <form [formGroup]="marcaForm" class="p-fluid">
+    <div class="dialog-content">
+
+      <!-- Nombre -->
+      <div class="form-field">
+        <label for="nombre" class="form-label">Nombre *</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          pInputText 
+          formControlName="nombre"
+           class="form-input"
+          placeholder="Ingrese el nombre de la Marca"
+          [class.input-error]="marcaForm.get('nombre')?.invalid && marcaForm.get('nombre')?.touched">
+        <small class="error-message" *ngIf="marcaForm.get('nombre')?.invalid && marcaForm.get('nombre')?.touched">
+          Nombre es requerido
+        </small>
+      </div>
+
+      <!-- Botones -->
+      <div class="dialog-buttons">
+        <p-button 
+          label="Cancelar" 
+          icon="pi pi-times" 
+          styleClass="p-button-text p-button-secondary" 
+          (click)="cerrarDialogoCategoria()">
+        </p-button>
+        <p-button 
+          [label]="editarProducto ? 'Guardar Cambios' : 'Guardar'" 
+          [icon]="editarProducto ? 'pi pi-save' : 'pi pi-check'" 
+          styleClass="p-button-primary"
+          (click)="guardarMarca()">
+        </p-button>
+      </div>
+
+    </div>
+  </form>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

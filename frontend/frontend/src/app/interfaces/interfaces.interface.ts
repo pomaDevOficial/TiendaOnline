@@ -53,3 +53,15 @@ export interface Usuario {
   Persona?: Persona;  // Relación
   Estado?: Estado;    // Relación
 }
+export interface Producto{
+  id: number;
+  nombre: string | null;
+  imagen: string | null;
+  idcategoria?: number | null;
+  idmarca?: number | null;
+  idestado?: number | null;
+
+  Categoria?: Categoria;
+  Marca?: Marca;
+  Estado?: Estado;
+}
