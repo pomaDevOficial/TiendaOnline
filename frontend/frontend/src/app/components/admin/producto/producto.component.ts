@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Categoria, Marca, Producto } from '../../../interfaces/interfaces.interface';
 import { MarcaServicio } from '../../../services/Marca.service';
 import { CategoriaServicio } from '../../../services/Categoria.service';
@@ -16,7 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ProductoServicio } from '../../../services/producto.service';
 import { environment } from '../../../enviroments/environment';
 
@@ -38,6 +38,8 @@ export class ProductoComponent implements OnInit {
   abrirModalProducto: boolean = false;
   abrirModalMarca: boolean = false;
   abrirModalCategoria: boolean = false;
+  imagenUrl: string |  null = "";
+   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   marcas: Marca[] = [];
   productos: Producto[] = [];
@@ -160,6 +162,8 @@ cargarProductos(){
   abrirRegistroProducto() {
     this.abrirModalProducto = true;
     this.productoForm.reset({ idestado: 1 });
+    this.imagenUrl = null;        // quitar preview
+    this.fileUpload?.clear(); 
   }
 
   abrirRegistroCategoria() {
@@ -172,9 +176,16 @@ cargarProductos(){
     this.marcaForm.reset({ idestado: 1 });
   }
   EditarProductos(producto: Producto){
+    this.imagenUrl = null;        // quitar preview
+    this.fileUpload?.clear(); 
     this.editarProducto = true;
     this.abrirModalProducto = true;
+    this.imagenUrl = this.rutaUrl + producto.imagen;
     this.productoForm.patchValue(producto);
+  }
+   onFileRemove() {
+    this.imagenUrl = null;        // quitar preview
+    this.fileUpload?.clear();          // limpiar uploader
   }
   cerrarDialogoProducto() {
     this.abrirModalProducto = false;
@@ -232,10 +243,10 @@ guardarMarca() {
   }
   Eliminar(id: number){
       this.confirmationService.confirm({
-      message: '¿Seguro que deseas desactivar este usuario?',
+      message: '¿Seguro que deseas eliminar este producto?',
       header: 'Confirmación',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, desactivar',
+      acceptLabel: 'Aceptar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger p-button-sm',
       rejectButtonStyleClass: 'p-button-secondary p-button-sm',
@@ -245,8 +256,8 @@ guardarMarca() {
             this.cargarProductos();
             this.messageService.add({
               severity: 'success',
-              summary: 'Desactivado',
-              detail: 'El usuario fue desactivado correctamente'
+              summary: 'Eliminado',
+              detail: 'El producto fue eliminado correctamente'
             });
           },
           error: (err) => {
@@ -265,6 +276,7 @@ guardarMarca() {
     this.imagenPreview = null;
     this.productoForm.patchValue({ imagen: null });
   }
+ 
   guardarProducto() {
     if (this.productoForm.invalid) {
       this.messageService.add({
@@ -287,7 +299,31 @@ guardarMarca() {
   if (imagenFile) {
     formData.append('imagen', imagenFile);
   }
-
+if(this.editarProducto){
+  this.producto.updateProducto(this.productoForm.get('id')?.value,formData).subscribe({
+      next: (nuevoProducto: Producto) => {
+        this.cargarProductos();   // refresca la lista
+        this.cerrarDialogoProducto();     // cierra el modal/dialogo
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Producto Actualizado correctamente'
+        });
+        this.imagenUrl = null;        // quitar preview
+        this.fileUpload?.clear();   
+      },
+      error: (err) => {
+        console.error('Error al registrar el producto', err);
+         this.imagenUrl = null;        // quitar preview
+        this.fileUpload?.clear(); 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo registrar el producto'
+        });
+      }
+    });
+}else{
   this.producto.createProducto(formData).subscribe({
     next: (nuevoProducto: Producto) => {
       this.cargarProductos();   // refresca la lista
@@ -307,6 +343,8 @@ guardarMarca() {
       });
     }
   });
+
+}
 }
 
 

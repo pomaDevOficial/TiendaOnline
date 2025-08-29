@@ -11,6 +11,8 @@ import { HomeComponent } from './components/client/home/home.component';
 import { PersonaComponent } from './components/admin/persona/persona.component';
 import { UsuarioComponent } from './components/admin/usuario/usuario.component';
 import { ProductoComponent } from './components/admin/producto/producto.component';
+import { MovimientoComponent } from './components/admin/movimiento/movimiento.component';
+import { LoteComponent } from './components/admin/lote/lote.component';
 
 export const routes: Routes = [
   // Login
@@ -26,6 +28,8 @@ export const routes: Routes = [
       { path: 'inventario/categoria', component: CategoriaComponent },
       { path: 'inventario/marca', component: MarcaComponent },
       { path: 'inventario/producto', component: ProductoComponent },
+      { path: 'inventario/movimiento', component: MovimientoComponent },
+      { path: 'inventario/lote', component: LoteComponent },
       { path: 'persona', component: PersonaComponent },
       { path: 'usuario', component: UsuarioComponent },
 

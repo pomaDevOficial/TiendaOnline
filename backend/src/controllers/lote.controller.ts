@@ -166,6 +166,56 @@ export const updateLote = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+export const getLoteObtenerInformacion = async (req: Request, res: Response): Promise<void> =>{
+    const { id } = req.params;
+
+  try {
+    const lote = await Lote.findByPk(id, {
+      include: [
+        { 
+          model: Producto, 
+          as: 'Producto',
+          attributes: ['id', 'nombre'],
+          include: [
+            {
+              model: Categoria,
+              as: 'Categoria',
+              attributes: ['id', 'nombre']
+            },
+            {
+              model: Marca,
+              as: 'Marca',
+              attributes: ['id', 'nombre']
+            }
+          ]
+        },
+        { 
+          model: Estado, 
+          as: 'Estado',
+          attributes: ['id', 'nombre'] 
+        },
+         
+      ]
+    });
+
+    if (!lote) {
+      res.status(404).json({ msg: 'Lote no encontrado' });
+      return;
+    }
+    const detalles = await LoteTalla.findAll({
+      where: { idlote: id },
+    });
+    res.json({
+      msg: 'Lote obtenido exitosamente',
+      data: lote,
+      detalles
+    });
+  } catch (error) {
+    console.error('Error en getLoteById:', error);
+    res.status(500).json({ msg: 'Error al obtener el lote' });
+  }
+
+}
 // READ - Listar todos los lotes
 export const getLotes = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -229,9 +279,15 @@ export const getLotesDisponibles = async (req: Request, res: Response): Promise<
               model: Marca,
               as: 'Marca',
               attributes: ['id', 'nombre']
-            }
+            },
+            
           ]
-        }
+        },
+        { 
+          model: Estado, 
+          as: 'Estado',
+          attributes: ['id', 'nombre'] 
+        },
       ],
       order: [['fechaingreso', 'DESC']]
     });
@@ -274,7 +330,8 @@ export const getLoteById = async (req: Request, res: Response): Promise<void> =>
           model: Estado, 
           as: 'Estado',
           attributes: ['id', 'nombre'] 
-        }
+        },
+         
       ]
     });
 

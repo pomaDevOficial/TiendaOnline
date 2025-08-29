@@ -22,8 +22,8 @@ export class ProductoServicio {
     return this.http.post<Producto>(`${this.apiUrl}/con-imagen`, producto);
   }
 
-  updateProducto(id: number, producto: Producto): Observable<Producto> {
-    return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto);
+  updateProducto(id: number, producto: FormData): Observable<Producto> {
+    return this.http.put<Producto>(`${this.apiUrl}/${id}/con-imagen`, producto);
   }
   eliminarProducto(id: number, producto:any): Observable<Producto> {
     return this.http.patch<Producto>(`${this.apiUrl}/${id}/eliminar`, producto);
