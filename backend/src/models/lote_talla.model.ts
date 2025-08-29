@@ -28,6 +28,7 @@ class LoteTalla extends Model<LoteTallaAttributes, LoteTallaCreationAttributes>
   public preciocosto!: number | null;
   public precioventa!: number | null;
   public idestado!: number | null;
+
   
   public readonly Lote?: Lote;
   public readonly Talla?: Talla;
@@ -52,5 +53,6 @@ LoteTalla.init(
 LoteTalla.belongsTo(Lote, { foreignKey: 'idlote', as: 'Lote' });
 LoteTalla.belongsTo(Talla, { foreignKey: 'idtalla', as: 'Talla' });
 LoteTalla.belongsTo(Estado, { foreignKey: 'idestado', as: 'Estado' });
+
 
 export default LoteTalla;

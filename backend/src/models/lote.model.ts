@@ -3,6 +3,7 @@ import { DataTypes, Model, Optional } from "sequelize";
 import db from "../db/connection.db";
 import Producto from "./producto.model";
 import Estado from "./estado.model";
+import LoteTalla from "./lote_talla.model";
 
 export interface LoteAttributes {
   id: number;
@@ -10,6 +11,7 @@ export interface LoteAttributes {
   proveedor?: string | null;
   fechaingreso?: Date | null;
   idestado?: number | null;
+  idRelacionado?: number | null;
 }
 
 export type LoteCreationAttributes = Optional<LoteAttributes, "id">;
@@ -21,7 +23,6 @@ class Lote extends Model<LoteAttributes, LoteCreationAttributes>
   public proveedor!: string | null;
   public fechaingreso!: Date | null;
   public idestado!: number | null;
-  
   public readonly Producto?: Producto;
   public readonly Estado?: Estado;
 }
@@ -40,5 +41,4 @@ Lote.init(
 // Relaciones
 Lote.belongsTo(Producto, { foreignKey: 'idproducto', as: 'Producto' });
 Lote.belongsTo(Estado, { foreignKey: 'idestado', as: 'Estado' });
-
 export default Lote;

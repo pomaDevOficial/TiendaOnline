@@ -10,7 +10,8 @@ import {
     restaurarLote,
     getLotesByProducto,
     cambiarEstadoLote,
-    createLoteCompleto
+    createLoteCompleto,
+    getLoteObtenerInformacion
 } from '../controllers/lote.controller';
 
 const LoteRouter = Router();
@@ -18,6 +19,7 @@ const LoteRouter = Router();
 LoteRouter.post('/', createLote); // Crear un nuevo lote
 LoteRouter.post('/completo', createLoteCompleto); // Crear lote completo con detalles y movimientos ← Nueva ruta
 LoteRouter.get('/', getLotes); // Obtener la lista de todos los lotes
+LoteRouter.get('/:id/info', getLoteObtenerInformacion); // Obtener la lista de todos los lotes
 LoteRouter.get('/disponibles', getLotesDisponibles); // Obtener solo lotes disponibles
 LoteRouter.get('/eliminados', getLotesEliminados); // Obtener solo lotes eliminados
 LoteRouter.get('/producto/:idproducto', getLotesByProducto); // Obtener lotes por producto
