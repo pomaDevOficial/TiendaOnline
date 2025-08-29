@@ -658,53 +658,162 @@ export const getProductosDisponiblesPorTalla = async (req: Request, res: Respons
   }
 };
 
-// READ - Listar productos disponibles con filtros (para página de ventas)
+// // READ - Listar productos disponibles con filtros (para página de ventas)
+// export const getProductosDisponibles = async (req: Request, res: Response): Promise<void> => {
+//   const { idcategoria, idmarca, esGenero, idtalla } = req.query;
+
+//   try {
+//     // Construir condiciones para lote_talla
+//     const whereLoteTallaConditions: any = {
+//       idestado: LoteEstado.DISPONIBLE,
+//       stock: { [Op.gt]: 0 } // Solo productos con stock disponible
+//     };
+
+//     if (esGenero !== undefined) whereLoteTallaConditions.esGenero = esGenero;
+//     if (idtalla) whereLoteTallaConditions.idtalla = idtalla;
+
+//     // Construir condiciones para las relaciones
+//     const includeLoteConditions: any = {
+//       model: Lote,
+//       as: 'Lote',
+//       where: { idestado: LoteEstado.DISPONIBLE },
+//       include: [
+//         {
+//           model: Producto,
+//           as: 'Producto',
+//           include: [
+//             {
+//               model: Categoria,
+//               as: 'Categoria',
+//               where: idcategoria ? { id: idcategoria } : undefined,
+//               attributes: ['id', 'nombre'],
+//               required: !!idcategoria
+//             },
+//             {
+//               model: Marca,
+//               as: 'Marca',
+//               where: idmarca ? { id: idmarca } : undefined,
+//               attributes: ['id', 'nombre'],
+//               required: !!idmarca
+//             }
+//           ]
+//         }
+//       ]
+//     };
+
+//     const lotesTalla = await LoteTalla.findAll({
+//       where: whereLoteTallaConditions,
+//       include: [
+//         includeLoteConditions,
+//         { 
+//           model: Talla, 
+//           as: 'Talla',
+//           attributes: ['id', 'nombre'] 
+//         }
+//       ],
+//       order: [
+//         [{ model: Lote, as: 'Lote' }, { model: Producto, as: 'Producto' }, 'nombre', 'ASC'],
+//         ['idtalla', 'ASC']
+//       ]
+//     });
+
+//     res.json({
+//       msg: 'Productos disponibles obtenidos exitosamente',
+//       data: lotesTalla
+//     });
+//   } catch (error) {
+//     console.error('Error en getProductosDisponibles:', error);
+//     res.status(500).json({ msg: 'Error al obtener productos disponibles' });
+//   }
+// };
+
+// READ - Listar productos disponibles con filtros (OPTIMIZADO)
 export const getProductosDisponibles = async (req: Request, res: Response): Promise<void> => {
-  const { idcategoria, idmarca, esGenero, idtalla } = req.query;
+  const { idcategoria, idmarca, esGenero, idtalla, nombre, minPrecio, maxPrecio, page = 1, limit = 12 } = req.query;
 
   try {
-    // Construir condiciones para lote_talla
-    const whereLoteTallaConditions: any = {
+    const pageNumber = parseInt(page as string);
+    const limitNumber = parseInt(limit as string);
+    const offset = (pageNumber - 1) * limitNumber;
+
+    // Construir condiciones
+    const whereConditions: any = {
       idestado: LoteEstado.DISPONIBLE,
-      stock: { [Op.gt]: 0 } // Solo productos con stock disponible
+      stock: { [Op.gt]: 0 }
     };
 
-    if (esGenero !== undefined) whereLoteTallaConditions.esGenero = esGenero;
-    if (idtalla) whereLoteTallaConditions.idtalla = idtalla;
+    if (minPrecio) whereConditions.precioventa = { ...whereConditions.precioventa, [Op.gte]: parseFloat(minPrecio as string) };
+    if (maxPrecio) whereConditions.precioventa = { ...whereConditions.precioventa, [Op.lte]: parseFloat(maxPrecio as string) };
+    if (esGenero !== undefined) whereConditions.esGenero = esGenero;
+    if (idtalla) whereConditions.idtalla = idtalla;
 
-    // Construir condiciones para las relaciones
-    const includeLoteConditions: any = {
-      model: Lote,
-      as: 'Lote',
-      where: { idestado: LoteEstado.DISPONIBLE },
+    // Primero obtener los IDs de productos que cumplen con los filtros
+    const lotesTallaIds = await LoteTalla.findAll({
+      where: whereConditions,
       include: [
         {
-          model: Producto,
-          as: 'Producto',
+          model: Lote,
+          as: 'Lote',
+          where: { idestado: LoteEstado.DISPONIBLE },
           include: [
             {
-              model: Categoria,
-              as: 'Categoria',
-              where: idcategoria ? { id: idcategoria } : undefined,
-              attributes: ['id', 'nombre'],
-              required: !!idcategoria
-            },
-            {
-              model: Marca,
-              as: 'Marca',
-              where: idmarca ? { id: idmarca } : undefined,
-              attributes: ['id', 'nombre'],
-              required: !!idmarca
+              model: Producto,
+              as: 'Producto',
+              where: nombre ? { nombre: { [Op.like]: `%${nombre}%` } } : undefined,
+              include: [
+                {
+                  model: Categoria,
+                  as: 'Categoria',
+                  where: idcategoria ? { id: idcategoria } : undefined,
+                  required: !!idcategoria
+                },
+                {
+                  model: Marca,
+                  as: 'Marca',
+                  where: idmarca ? { id: idmarca } : undefined,
+                  required: !!idmarca
+                }
+              ]
             }
           ]
         }
-      ]
-    };
+      ],
+      attributes: ['id'],
+      limit: limitNumber,
+      offset: offset
+    });
 
+    const ids = lotesTallaIds.map(item => item.id);
+
+    // Ahora obtener los datos completos solo para esos IDs
     const lotesTalla = await LoteTalla.findAll({
-      where: whereLoteTallaConditions,
+      where: {
+        id: { [Op.in]: ids },
+        ...whereConditions
+      },
       include: [
-        includeLoteConditions,
+        {
+          model: Lote,
+          as: 'Lote',
+          include: [
+            {
+              model: Producto,
+              as: 'Producto',
+              include: [
+                {
+                  model: Categoria,
+                  as: 'Categoria',
+                  attributes: ['id', 'nombre']
+                },
+                {
+                  model: Marca,
+                  as: 'Marca',
+                  attributes: ['id', 'nombre']
+                }
+              ]
+            }
+          ]
+        },
         { 
           model: Talla, 
           as: 'Talla',
@@ -717,12 +826,165 @@ export const getProductosDisponibles = async (req: Request, res: Response): Prom
       ]
     });
 
+    // Obtener total para paginación
+    const total = await LoteTalla.count({
+      where: whereConditions,
+      include: [
+        {
+          model: Lote,
+          as: 'Lote',
+          where: { idestado: LoteEstado.DISPONIBLE },
+          include: [
+            {
+              model: Producto,
+              as: 'Producto',
+              where: nombre ? { nombre: { [Op.like]: `%${nombre}%` } } : undefined,
+              include: [
+                {
+                  model: Categoria,
+                  as: 'Categoria',
+                  where: idcategoria ? { id: idcategoria } : undefined,
+                  required: !!idcategoria
+                },
+                {
+                  model: Marca,
+                  as: 'Marca',
+                  where: idmarca ? { id: idmarca } : undefined,
+                  required: !!idmarca
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      distinct: true,
+      col: 'LoteTalla.id'
+    });
+
+    // Transformar datos
+    const productosTransformados = lotesTalla.map(item => ({
+      id: item.id,
+      producto_id: item.Lote?.Producto?.id,
+      nombre: item.Lote?.Producto?.nombre,
+      imagen: item.Lote?.Producto?.imagen,
+      categoria: item.Lote?.Producto?.Categoria,
+      marca: item.Lote?.Producto?.Marca,
+      talla: item.Talla,
+      genero: item.esGenero,
+      precio: item.precioventa,
+      stock: item.stock,
+    }));
+
     res.json({
       msg: 'Productos disponibles obtenidos exitosamente',
-      data: lotesTalla
+      data: productosTransformados,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        totalItems: total,
+        itemsPerPage: limitNumber
+      }
     });
   } catch (error) {
     console.error('Error en getProductosDisponibles:', error);
     res.status(500).json({ msg: 'Error al obtener productos disponibles' });
+  }
+};
+
+
+// GET - Obtener tallas disponibles para un producto específico (Versión simplificada)
+export const getTallasDisponibles = async (req: Request, res: Response): Promise<void> => {
+  const { productoId, genero } = req.query;
+
+  try {
+    // Validaciones
+    if (!productoId || typeof productoId !== 'string') {
+      res.status(400).json({ msg: 'El ID del producto es requerido' });
+      return;
+    }
+
+    const productoIdNumero = parseInt(productoId);
+    if (isNaN(productoIdNumero)) {
+      res.status(400).json({ msg: 'El ID del producto debe ser un número válido' });
+      return;
+    }
+
+    // Construir objeto where de forma explícita
+    const whereOptions: any = {
+      idestado: LoteEstado.DISPONIBLE,
+      stock: { [Op.gt]: 0 }
+    };
+
+    // Agregar filtro de género si está presente
+    if (genero && typeof genero === 'string' && !isNaN(parseInt(genero))) {
+      whereOptions.esGenero = parseInt(genero);
+    }
+
+    const tallas = await LoteTalla.findAll({
+      where: whereOptions,
+      include: [
+        {
+          model: Lote,
+          as: 'Lote',
+          where: { 
+            idproducto: productoIdNumero,
+            idestado: LoteEstado.DISPONIBLE 
+          },
+          include: [
+            {
+              model: Producto,
+              as: 'Producto',
+              attributes: ['id', 'nombre','imagen'] // Solo los atributos necesarios
+            }
+          ]
+        },
+        {
+          model: Talla,
+          as: 'Talla',
+          attributes: ['id', 'nombre'] // Solo los atributos necesarios
+        }
+      ],
+      attributes: ['id', 'stock', 'precioventa'],
+      order: [[{ model: Talla, as: 'Talla' }, 'nombre', 'ASC']]
+    });
+
+    res.json({
+      msg: 'Tallas disponibles obtenidas exitosamente',
+      data: tallas
+    });
+  } catch (error) {
+    console.error('Error en getTallasDisponibles:', error);
+    res.status(500).json({ msg: 'Error al obtener tallas disponibles' });
+  }
+};
+
+// GET - Verificar stock en tiempo real
+export const verificarStock = async (req: Request, res: Response): Promise<void> => {
+  const { loteTallaId, cantidad } = req.query;
+
+  try {
+    const loteTalla = await LoteTalla.findByPk(loteTallaId as string, {
+      attributes: ['id', 'stock', 'precioventa']
+    });
+
+    if (!loteTalla) {
+      res.status(404).json({ msg: 'Producto no encontrado' });
+      return;
+    }
+
+    const stockDisponible = loteTalla.stock || 0;
+    const cantidadSolicitada = parseInt(cantidad as string) || 1;
+
+    res.json({
+      msg: 'Stock verificado exitosamente',
+      data: {
+        disponible: stockDisponible >= cantidadSolicitada,
+        stockActual: stockDisponible,
+        puedeComprar: stockDisponible >= cantidadSolicitada
+      }
+    });
+  } catch (error) {
+    console.error('Error en verificarStock:', error);
+    res.status(500).json({ msg: 'Error al verificar stock' });
   }
 };

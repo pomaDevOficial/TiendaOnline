@@ -9,12 +9,14 @@ import {
     getPedidosByPersona,
     cambiarEstadoPedido,
     getPedidosCancelados,
-    restaurarPedido
+    restaurarPedido,
+    aprobarPedido
 } from '../controllers/pedido.controller';
 
 const PedidoRouter = Router();
 
 PedidoRouter.post('/', createPedido); // Crear un nuevo pedido
+PedidoRouter.post('/aprobar/:id', aprobarPedido); // Aprobar un nuevo pedido
 PedidoRouter.get('/', getPedidos); // Obtener todos los pedidos
 PedidoRouter.get('/cancelados', getPedidosCancelados); // Obtener pedidos cancelados
 PedidoRouter.get('/estado/:estado', getPedidosByEstado); // Obtener pedidos por estado

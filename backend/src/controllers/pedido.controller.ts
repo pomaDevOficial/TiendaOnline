@@ -3,8 +3,20 @@ import Pedido from '../models/pedido.model';
 import Persona from '../models/persona.model';
 import MetodoPago from '../models/metodo_pago.model';
 import Estado from '../models/estado.model';
-import { PedidoEstado } from '../estadosTablas/estados.constans';
+import { ComprobanteEstado, EstadoGeneral, LoteEstado, PedidoEstado, TipoMovimientoLote, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
+import Comprobante from '../models/comprobante.model';
+import TipoComprobante from '../models/tipo_comprobante.model';
+import TipoSerie from '../models/tiposerie.model';
+import Venta from '../models/venta.model';
+import Talla from '../models/talla.model';
+import Producto from '../models/producto.model';
+import Lote from '../models/lote.model';
+import LoteTalla from '../models/lote_talla.model';
+import PedidoDetalle from '../models/pedido_detalle.model';
+import DetalleVenta from '../models/detalle_venta.model';
+import MovimientoLote from '../models/movimiento_lote.model';
+import db from '../db/connection.db';
 
 // CREATE - Insertar nuevo pedido
 export const createPedido = async (req: Request, res: Response): Promise<void> => {
@@ -419,4 +431,240 @@ export const restaurarPedido = async (req: Request, res: Response): Promise<void
     console.error('Error en restaurarPedido:', error);
     res.status(500).json({ msg: 'Error al restaurar el pedido' });
   }
+};
+
+export const aprobarPedido = async (req: Request, res: Response): Promise<void> => {
+  const { idPedido } = req.body;
+
+  try {
+    // Validaciones
+    if (!idPedido) {
+      res.status(400).json({ msg: 'El ID del pedido es obligatorio' });
+      return;
+    }
+
+    // Buscar el pedido por ID con la persona
+    const pedido = await Pedido.findByPk(idPedido, {
+      include: [
+        {
+          model: Persona,
+          as: 'Persona'
+        }
+      ]
+    });
+
+    if (!pedido) {
+      res.status(400).json({ msg: 'El pedido no existe' });
+      return;
+    }
+
+    // Verificar que el pedido esté en estado EN_ESPERA
+    if (pedido.idestado !== PedidoEstado.EN_ESPERA) {
+      res.status(400).json({ 
+        msg: `El pedido no puede ser aprobado. Estado actual: ${pedido.idestado}` 
+      });
+      return;
+    }
+
+    // Obtener los detalles del pedido
+    const detallesPedido = await PedidoDetalle.findAll({
+      where: { idpedido: idPedido },
+      include: [
+        {
+          model: LoteTalla,
+          as: 'LoteTalla'
+        }
+      ]
+    });
+
+    if (!detallesPedido || detallesPedido.length === 0) {
+      res.status(400).json({ msg: 'El pedido no tiene detalles' });
+      return;
+    }
+
+    // Iniciar transacción
+    const transaction = await db.transaction();
+
+    try {
+      // 1. Actualizar estado del pedido a PAGADO
+      await pedido.update({
+        idestado: PedidoEstado.PAGADO
+      }, { transaction });
+
+      // 2. Crear la venta
+      const nuevaVenta = await Venta.create({
+        fechaventa: new Date(),
+        idusuario: (req as any).user?.id,
+        idpedido: pedido.id,
+        idestado: VentaEstado.REGISTRADO
+      }, { transaction });
+
+      // 3. Crear detalles de venta y actualizar stock
+      for (const detallePedido of detallesPedido) {
+        // Crear detalle de venta
+        await DetalleVenta.create({
+          idpedidodetalle: detallePedido.id,
+          idventa: nuevaVenta.id,
+          precio_venta_real: detallePedido.precio,
+          subtotal_real: detallePedido.subtotal,
+          idestado: EstadoGeneral.REGISTRADO
+        }, { transaction });
+
+        // Actualizar stock solo si tiene lote_talla válido
+        if (detallePedido.idlote_talla && detallePedido.cantidad) {
+          const loteTalla = await LoteTalla.findByPk(detallePedido.idlote_talla, { transaction });
+          
+          if (loteTalla && loteTalla.stock !== null) {
+            const nuevoStock = Number(loteTalla.stock) - Number(detallePedido.cantidad);
+            
+            await loteTalla.update({
+              stock: nuevoStock,
+              idestado: nuevoStock > 0 ? LoteEstado.DISPONIBLE : LoteEstado.AGOTADO
+            }, { transaction });
+
+            // Registrar movimiento de lote
+            await MovimientoLote.create({
+              idlote_talla: detallePedido.idlote_talla,
+              tipomovimiento: TipoMovimientoLote.SALIDA,
+              cantidad: detallePedido.cantidad,
+              fechamovimiento: new Date(),
+              idestado: EstadoGeneral.REGISTRADO
+            }, { transaction });
+          }
+        }
+      }
+
+      // 4. Determinar el tipo de comprobante
+      let idTipoComprobante: number;
+      
+      if (pedido.Persona && pedido.Persona.idtipopersona === 2) {
+        idTipoComprobante = 2; // FACTURA
+      } else {
+        idTipoComprobante = 1; // BOLETA
+      }
+
+      // 5. Crear comprobante
+      const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, { transaction });
+      
+      if (!tipoComprobante) {
+        throw new Error('Tipo de comprobante no encontrado');
+      }
+
+      // Calcular IGV (18% del total)
+      const total = Number(pedido.totalimporte) || 0;
+      const igv = total * 0.18;
+
+      const nuevoComprobante = await Comprobante.create({
+        idventa: nuevaVenta.id,
+        igv: igv,
+        descuento: 0,
+        total: total,
+        idtipocomprobante: tipoComprobante.id,
+        numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
+        idestado: ComprobanteEstado.REGISTRADO
+      }, { transaction });
+
+      // Confirmar transacción
+      await transaction.commit();
+
+      // Obtener datos completos para respuesta
+      const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
+        include: [
+          {
+            model: Pedido,
+            as: 'Pedido',
+            include: [
+              {
+                model: Persona,
+                as: 'Persona'
+              }
+            ]
+          }
+        ]
+      });
+
+      const comprobanteCompleto = await Comprobante.findByPk(nuevoComprobante.id, {
+        include: [
+          {
+            model: TipoComprobante,
+            as: 'TipoComprobante'
+          },
+          {
+            model: Venta,
+            as: 'Venta'
+          }
+        ]
+      });
+
+      const detallesVenta = await DetalleVenta.findAll({
+        where: { idventa: nuevaVenta.id },
+        include: [
+          {
+            model: PedidoDetalle,
+            as: 'PedidoDetalle',
+            include: [
+              {
+                model: LoteTalla,
+                as: 'LoteTalla'
+              }
+            ]
+          }
+        ]
+      });
+
+      res.status(200).json({
+        msg: 'Pedido aprobado exitosamente',
+        data: {
+          pedido: pedido,
+          venta: ventaCompleta,
+          comprobante: comprobanteCompleto,
+          detallesVenta: detallesVenta
+        }
+      });
+
+    } catch (error) {
+      // Revertir transacción en caso de error
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error en aprobarPedido:', error);
+    res.status(500).json({ 
+      msg: 'Ocurrió un error al aprobar el pedido', 
+      error: (error as Error).message 
+    });
+  }
+};
+
+// Función para generar número de serie único
+const generarNumeroSerieUnico = async (idTipoComprobante: number, transaction: any): Promise<string> => {
+  const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, {
+    include: [{ model: (db as any).models.TipoSerie, as: 'TipoSerie' }],
+    transaction
+  });
+
+  if (!tipoComprobante || !(tipoComprobante as any).TipoSerie) {
+    throw new Error('Tipo de comprobante o serie no encontrado');
+  }
+
+  // Obtener el último comprobante de este tipo
+  const ultimoComprobante = await Comprobante.findOne({
+    where: { idtipocomprobante: idTipoComprobante },
+    order: [['id', 'DESC']],
+    transaction
+  });
+
+  let siguienteNumero = 1;
+  if (ultimoComprobante && ultimoComprobante.numserie) {
+    // Extraer el número del último comprobante e incrementarlo
+    const partes = ultimoComprobante.numserie!.split('-');
+    if (partes.length > 1) {
+      const ultimoNumero = parseInt(partes[1]) || 0;
+      siguienteNumero = ultimoNumero + 1;
+    }
+  }
+
+  // Formato: [SERIE]-[NÚMERO]
+  return `${(tipoComprobante as any).TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
 };

@@ -3,6 +3,7 @@ import db from "../db/connection.db";
 import Persona from "./persona.model";
 import MetodoPago from "./metodo_pago.model";
 import Estado from "./estado.model";
+import PedidoDetalle from "./pedido_detalle.model";
 
 export interface PedidoAttributes {
   id: number;

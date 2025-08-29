@@ -3,6 +3,7 @@ import db from "../db/connection.db";
 import Usuario from "./usuario.model";
 import Pedido from "./pedido.model";
 import Estado from "./estado.model";
+import DetalleVenta from "./detalle_venta.model";
 
 export interface VentaAttributes {
   id: number;
