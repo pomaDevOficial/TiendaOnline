@@ -65,3 +65,14 @@ export interface Producto{
   Marca?: Marca;
   Estado?: Estado;
 }
+export interface Lote{
+   id: number;
+   idproducto?: number | null;
+   proveedor?: string | null;
+   fechaingreso?: Date | null;
+   idestado?: number | null;
+
+   Producto?: Producto;
+   Estado?: Estado;
+
+}

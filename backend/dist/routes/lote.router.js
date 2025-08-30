@@ -6,6 +6,7 @@ const LoteRouter = (0, express_1.Router)();
 LoteRouter.post('/', lote_controller_1.createLote); // Crear un nuevo lote
 LoteRouter.post('/completo', lote_controller_1.createLoteCompleto); // Crear lote completo con detalles y movimientos ← Nueva ruta
 LoteRouter.get('/', lote_controller_1.getLotes); // Obtener la lista de todos los lotes
+LoteRouter.get('/:id/info', lote_controller_1.getLoteObtenerInformacion); // Obtener la lista de todos los lotes
 LoteRouter.get('/disponibles', lote_controller_1.getLotesDisponibles); // Obtener solo lotes disponibles
 LoteRouter.get('/eliminados', lote_controller_1.getLotesEliminados); // Obtener solo lotes eliminados
 LoteRouter.get('/producto/:idproducto', lote_controller_1.getLotesByProducto); // Obtener lotes por producto

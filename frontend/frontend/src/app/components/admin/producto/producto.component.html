@@ -82,8 +82,8 @@
               </button>
               
               <!-- Activar -->
-              <button pButton type="button" icon="pi pi-check" 
-                      class="p-button-rounded p-button-success p-button-sm" 
+              <button pButton type="button" icon="pi pi-trash" 
+                      class="p-button-rounded p-button-danger p-button-sm" 
                       (click)="Eliminar(productos.id)"
                       tooltip="Activar usuario" tooltipPosition="top">
               </button>
@@ -96,7 +96,7 @@
       <!-- Mensaje vacío -->
       <ng-template #emptymessage>
         <tr>
-          <td colspan="6" class="text-center text-500 py-4">No se encontraron usuarios.</td>
+          <td colspan="7" class="text-center text-500 py-4">No se encontraron productos.</td>
         </tr>
       </ng-template>
     </p-table>
@@ -149,6 +149,7 @@
       <!-- Imagen -->
 <!-- Imagen -->
 <p-fileUpload 
+ #fileUpload
   name="imagen"
   mode="advanced"
   [auto]="false"
@@ -158,9 +159,21 @@
   accept="image/*"
   maxFileSize="2000000"
   chooseLabel="Seleccionar"
-  (onSelect)="onFileSelect($event)">
+  (onSelect)="onFileSelect($event)"
+  (onClear)="onFileRemove()"
+  (onRemove)="onFileRemove()">
    <ng-template #empty>
-        <div>Agregar imagen para el producto </div>
+       <div class="flex flex-col items-center gap-2">
+      <!-- Si ya hay imagen, mostrarla -->
+      <ng-container *ngIf="imagenUrl; else noImage">
+        <img [src]="imagenUrl" alt="Imagen del producto"
+             width="150" height="150" class="rounded shadow" />
+      </ng-container>
+
+      <ng-template #noImage>
+        <div>Agregar imagen para el producto</div>
+      </ng-template>
+    </div>
     </ng-template>
   
 </p-fileUpload>
@@ -224,11 +237,7 @@
           [style]="{ width: '100%' }"        
           [panelStyle]="{ width: '100%' }" 
           [class.input-error]="productoForm.get('idcategoria')?.invalid && productoForm.get('idcategoria')?.touched">
-          <ng-template let-categoria pTemplate="item">
-            <div class="categoria-item">
-              <div class="categoria-nombre">{{ categoria.nombre }}</div>
-            </div>
-          </ng-template>
+          
         </p-dropdown>
         <small class="error-message" *ngIf="productoForm.get('idcategoria')?.invalid && productoForm.get('idcategoria')?.touched">
           Categoría es requerida

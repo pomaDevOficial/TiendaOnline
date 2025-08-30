@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createLoteCompleto = exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.updateLote = exports.createLote = void 0;
+exports.createLoteCompleto = exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.getLoteObtenerInformacion = exports.updateLote = exports.createLote = void 0;
 const lote_model_1 = __importDefault(require("../models/lote.model"));
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
@@ -170,6 +170,54 @@ const updateLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.updateLote = updateLote;
+const getLoteObtenerInformacion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const lote = yield lote_model_1.default.findByPk(id, {
+            include: [
+                {
+                    model: producto_model_1.default,
+                    as: 'Producto',
+                    attributes: ['id', 'nombre'],
+                    include: [
+                        {
+                            model: categoria_model_1.default,
+                            as: 'Categoria',
+                            attributes: ['id', 'nombre']
+                        },
+                        {
+                            model: marca_model_1.default,
+                            as: 'Marca',
+                            attributes: ['id', 'nombre']
+                        }
+                    ]
+                },
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
+                    attributes: ['id', 'nombre']
+                },
+            ]
+        });
+        if (!lote) {
+            res.status(404).json({ msg: 'Lote no encontrado' });
+            return;
+        }
+        const detalles = yield lote_talla_model_1.default.findAll({
+            where: { idlote: id },
+        });
+        res.json({
+            msg: 'Lote obtenido exitosamente',
+            data: lote,
+            detalles
+        });
+    }
+    catch (error) {
+        console.error('Error en getLoteById:', error);
+        res.status(500).json({ msg: 'Error al obtener el lote' });
+    }
+});
+exports.getLoteObtenerInformacion = getLoteObtenerInformacion;
 // READ - Listar todos los lotes
 const getLotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -233,9 +281,14 @@ const getLotesDisponibles = (req, res) => __awaiter(void 0, void 0, void 0, func
                             model: marca_model_1.default,
                             as: 'Marca',
                             attributes: ['id', 'nombre']
-                        }
+                        },
                     ]
-                }
+                },
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
+                    attributes: ['id', 'nombre']
+                },
             ],
             order: [['fechaingreso', 'DESC']]
         });
@@ -277,7 +330,7 @@ const getLoteById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     model: estado_model_1.default,
                     as: 'Estado',
                     attributes: ['id', 'nombre']
-                }
+                },
             ]
         });
         if (!lote) {
