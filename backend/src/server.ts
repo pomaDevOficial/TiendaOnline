@@ -31,6 +31,8 @@ import TipoComprobante from './models/tipo_comprobante.model';
 import TipoSerie from './models/tiposerie.model';
 import TipoComprobanteRouter from './routes/tipo_comprobante.router';
 import TipoSerieRouter from './routes/tiposerie.router';
+import MetodoPago from './models/metodo_pago.model';
+import MetodoPagoRouter from './routes/metodo_pago.router';
 
 class Server {
     private app: Application;
@@ -135,6 +137,7 @@ class Server {
        this.app.use('/api/v1/wsp', routerWsp); //  Esto está bien
        this.app.use('/api/v1/tipocomprobante', TipoComprobanteRouter); //  Esto está bien
        this.app.use('/api/v1/tiposerie', TipoSerieRouter); //  Esto está bien
+       this.app.use('/api/v1/metodopagos', MetodoPagoRouter); //  Esto está bien
 
     }
   

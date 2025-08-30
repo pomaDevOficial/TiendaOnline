@@ -3,6 +3,13 @@
   id: number;
   nombre: string;
 }
+export interface MetodoPago {
+  id: number;
+  nombre: string;
+  idestado: number;
+
+  Estado?: Estado;
+}
   export interface Rol {
   id: number;
   nombre?: string | null;
@@ -75,4 +82,44 @@ export interface Lote{
    Producto?: Producto;
    Estado?: Estado;
 
+}
+export interface LoteTalla {
+  id: number;
+  idlote?: number | null;
+  idtalla?: number | null;
+  stock?: number | null;
+  esGenero?: number | null;
+  preciocosto?: number | null;
+  precioventa?: number | null;
+  idestado?: number | null;
+
+  Lote?: Lote;
+  Talla?: Talla;
+  Estado?: Estado;
+}
+export interface Pedido {
+  id: number;
+  idpersona?: number | null;
+  idmetodopago?: number | null;
+  fechaoperacion?: Date | null;
+  idestado?: number | null;
+  totalimporte?: number | null;
+  adjunto?: string | null;
+
+  Persona?: Persona;
+  MetodoPago?: MetodoPago;
+  Estado?: Estado;
+  Detalles?: PedidoDetalle[]; // Añade esta línea
+}
+
+export interface PedidoDetalle {
+  id: number;
+  idpedido?: number | null;
+  idlote_talla?: number | null;
+  cantidad?: number | null;
+  precio?: number | null;
+  subtotal?: number | null;
+
+  Pedido?: Pedido;        // relación con Pedido
+  LoteTalla?: LoteTalla;  // relación con LoteTalla
 }
