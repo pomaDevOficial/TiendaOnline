@@ -38,6 +38,9 @@ const comprobante_router_1 = __importDefault(require("./routes/comprobante.route
 const wsp_router_1 = __importDefault(require("./routes/wsp.router"));
 const sharp_1 = __importDefault(require("sharp"));
 const morgan_1 = __importDefault(require("morgan"));
+const tipo_comprobante_router_1 = __importDefault(require("./routes/tipo_comprobante.router"));
+const tiposerie_router_1 = __importDefault(require("./routes/tiposerie.router"));
+const metodo_pago_router_1 = __importDefault(require("./routes/metodo_pago.router"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -126,6 +129,9 @@ class Server {
         this.app.use('/api/v1/detalleventa', detalleventa_router_1.default);
         this.app.use('/api/v1/comprobantes', comprobante_router_1.default);
         this.app.use('/api/v1/wsp', wsp_router_1.default); //  Esto está bien
+        this.app.use('/api/v1/tipocomprobante', tipo_comprobante_router_1.default); //  Esto está bien
+        this.app.use('/api/v1/tiposerie', tiposerie_router_1.default); //  Esto está bien
+        this.app.use('/api/v1/metodopagos', metodo_pago_router_1.default); //  Esto está bien
     }
     dbConnect() {
         return __awaiter(this, void 0, void 0, function* () {
