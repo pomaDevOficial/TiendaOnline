@@ -61,7 +61,7 @@ export const createPedido = async (req: Request, res: Response): Promise<void> =
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono', 'direccion']
         },
         { 
           model: MetodoPago, 
@@ -145,7 +145,7 @@ export const updatePedido = async (req: Request, res: Response): Promise<void> =
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
         },
         { 
           model: MetodoPago, 
@@ -179,7 +179,7 @@ export const getPedidos = async (req: Request, res: Response): Promise<void> => 
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
         },
         { 
           model: MetodoPago, 
@@ -216,7 +216,7 @@ export const getPedidosByEstado = async (req: Request, res: Response): Promise<v
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
         },
         { 
           model: MetodoPago, 
@@ -252,7 +252,7 @@ export const getPedidoById = async (req: Request, res: Response): Promise<void> 
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
         },
         { 
           model: MetodoPago, 
@@ -293,7 +293,7 @@ export const getPedidosByPersona = async (req: Request, res: Response): Promise<
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
         },
         { 
           model: MetodoPago, 
@@ -386,7 +386,7 @@ export const getPedidosCancelados = async (req: Request, res: Response): Promise
         { 
           model: Persona, 
           as: 'Persona',
-          attributes: ['id', 'nombres', 'apellidos', 'dni', 'telefono', 'direccion']
+          attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono', 'direccion']
         },
         { 
           model: MetodoPago, 

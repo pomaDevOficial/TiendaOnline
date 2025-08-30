@@ -1,3 +1,297 @@
-<p>
-  pedido works!
-</p>
+<div class="mt-5 mb-2">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Gestión de Pedidos</h2>
+    <div class="d-flex gap-2">
+      <p-button 
+        (click)="abrirNuevoPedido()" 
+        label="Nuevo Pedido" 
+        icon="pi pi-plus" 
+        styleClass="p-button-success">
+      </p-button>
+      <p-button 
+        (click)="cargarPedidos()" 
+        label="Actualizar" 
+        icon="pi pi-refresh" 
+        styleClass="p-button-info">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Tabla Pedidos -->
+  <div class="card">
+    <p-table #dt1 [value]="pedidos" dataKey="id" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
+             [loading]="loading" [paginator]="true" 
+             [globalFilterFields]="['id', 'Persona.nombres', 'Persona.apellidos', 'totalimporte']">
+
+      <ng-template #caption>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted">Total de pedidos: {{pedidos?.length || 0}}</span>
+          <p-iconfield iconPosition="left">
+            <p-inputicon>
+              <i class="pi pi-search"></i>
+            </p-inputicon>
+            <input pInputText #globalFilterInput type="text" 
+                   (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
+                   placeholder="Buscar pedidos..." class="p-2" />
+          </p-iconfield>
+        </div>
+      </ng-template>
+
+      <ng-template #header>
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Método Pago</th>
+          <th>Fecha Operación</th>
+          <th>Total Importe</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-pedido>
+        <tr>
+          <td><strong>#{{ pedido?.id || 'N/A' }}</strong></td>
+          <td>
+            <div>
+              <div>{{ pedido?.Persona?.nombres || 'N/A' }} {{ pedido?.Persona?.apellidos || '' }}</div>
+              <small class="text-muted">{{ pedido?.Persona?.nroidentidad || 'N/A' }}</small>
+            </div>
+          </td>
+          <td>{{ getMetodoPagoTexto(pedido?.idmetodopago || 0) }}</td>
+          <td>{{ pedido?.fechaoperacion | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>
+            <span class="fw-bold text-success">S/ {{ pedido?.totalimporte | number:'1.2-2' }}</span>
+          </td>
+          <td>
+            <span class="badge {{ getEstadoBadgeClass(pedido?.idestado || 0) }}">
+              {{ getEstadoTexto(pedido?.idestado || 0) }}
+            </span>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <button pButton type="button" icon="pi pi-eye" 
+                      class="p-button-sm p-button-info" 
+                      (click)="verDetalle(pedido)"
+                      pTooltip="Ver Detalle" tooltipPosition="top">
+              </button>
+
+              <button pButton type="button" icon="pi pi-pencil" 
+                      class="p-button-sm p-button-warning" 
+                      (click)="editar(pedido)"
+                      pTooltip="Editar" tooltipPosition="top"
+                      [disabled]="pedido?.idestado === 7">
+              </button>
+
+              <button pButton type="button" icon="pi pi-check" 
+                      class="p-button-sm p-button-success" 
+                      (click)="aprobarPedido(pedido)"
+                      pTooltip="Aprobar" tooltipPosition="top"
+                      [disabled]="pedido?.idestado === 6 || pedido?.idestado === 7">
+              </button>
+
+              <button pButton type="button" icon="pi pi-times" 
+                      class="p-button-sm p-button-danger" 
+                      (click)="eliminar(pedido)"
+                      pTooltip="Cancelar" tooltipPosition="top"
+                      [disabled]="pedido?.idestado === 7">
+              </button>
+
+              <button pButton type="button" icon="pi pi-refresh" 
+                      class="p-button-sm p-button-secondary" 
+                      (click)="restaurarPedido(pedido)"
+                      pTooltip="Restaurar" tooltipPosition="top"
+                      [disabled]="pedido?.idestado !== 7">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <i class="pi pi-inbox" style="font-size: 2rem;"></i>
+            <p class="text-muted mt-2">No se encontraron pedidos</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Dialog para registrar/editar pedido -->
+<p-dialog 
+  [header]="editarPedido ? 'Editar Pedido' : 'Nuevo Pedido'"
+  [(visible)]="mostrarDialogoPedido" 
+  [modal]="true" 
+  [style]="{width: '500px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  <div class="p-fluid">
+    <form [formGroup]="pedidoForm">
+      
+      <div class="mb-3">
+        <label for="idpersona" class="form-label">Cliente *</label>
+        <p-select 
+          id="idpersona" 
+          formControlName="idpersona" 
+          [options]="clientes" 
+          optionLabel="nombresCompletos" 
+          optionValue="id"
+          placeholder="Seleccione un cliente"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="nombres,apellidos,nroidentidad"
+          class="w-100">
+        </p-select>
+        <small *ngIf="pedidoForm.get('idpersona')?.invalid && pedidoForm.get('idpersona')?.touched" 
+               class="text-danger">El cliente es requerido</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="idmetodopago" class="form-label">Método de Pago *</label>
+        <p-select 
+          id="idmetodopago" 
+          formControlName="idmetodopago"
+          [options]="metodoPagoOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione método de pago"
+          class="w-100">
+        </p-select>
+        <small *ngIf="pedidoForm.get('idmetodopago')?.invalid && pedidoForm.get('idmetodopago')?.touched" 
+               class="text-danger">El método de pago es requerido</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="fechaoperacion" class="form-label">Fecha Operación *</label>
+        <input type="datetime-local" id="fechaoperacion" class="form-control" formControlName="fechaoperacion">
+        <small *ngIf="pedidoForm.get('fechaoperacion')?.invalid && pedidoForm.get('fechaoperacion')?.touched" 
+               class="text-danger">La fecha es requerida</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="totalimporte" class="form-label">Total Importe *</label>
+        <input type="number" id="totalimporte" class="form-control" formControlName="totalimporte" 
+               step="0.01" min="0" placeholder="0.00">
+        <small *ngIf="pedidoForm.get('totalimporte')?.invalid && pedidoForm.get('totalimporte')?.touched" 
+               class="text-danger">El total es requerido</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="adjunto" class="form-label">Adjunto (Opcional)</label>
+        <input type="text" id="adjunto" class="form-control" formControlName="adjunto" 
+               placeholder="URL o referencia del adjunto">
+      </div>
+
+    </form>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        styleClass="p-button-text" 
+        (click)="mostrarDialogoPedido = false">
+      </p-button>
+
+      <p-button 
+        [label]="editarPedido ? 'Guardar Cambios' : 'Crear Pedido'" 
+        [icon]="editarPedido ? 'pi pi-save' : 'pi pi-check'" 
+        (click)="guardarPedido()"
+        [disabled]="pedidoForm.invalid">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Dialog para ver detalle del pedido -->
+<p-dialog 
+  [header]="'Detalle del Pedido #' + (pedidoSeleccionado?.id || '')"
+  [(visible)]="mostrarDialogoDetalle" 
+  [modal]="true" 
+  [style]="{width: '700px'}"
+  [draggable]="false"
+  [resizable]="false">
+  
+  <div *ngIf="pedidoSeleccionado" class="detalle-pedido">
+    <!-- Información principal -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="info-item">
+          <strong>Cliente:</strong> 
+          {{ pedidoSeleccionado?.Persona?.nombres || 'N/A' }} {{ pedidoSeleccionado?.Persona?.apellidos || '' }}
+        </div>
+        <div class="info-item">
+          <strong>DNI/RUC:</strong> {{ pedidoSeleccionado?.Persona?.nroidentidad || 'N/A' }}
+        </div>
+        <div class="info-item">
+          <strong>Teléfono:</strong> {{ pedidoSeleccionado?.Persona?.telefono || 'N/A' }}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="info-item">
+          <strong>Método Pago:</strong> {{ getMetodoPagoTexto(pedidoSeleccionado?.idmetodopago || 0) }}
+        </div>
+        <div class="info-item">
+          <strong>Fecha:</strong> {{ pedidoSeleccionado?.fechaoperacion | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+        <div class="info-item">
+          <strong>Estado:</strong> 
+          <span class="badge {{ getEstadoBadgeClass(pedidoSeleccionado?.idestado || 0) }}">
+            {{ getEstadoTexto(pedidoSeleccionado?.idestado || 0) }}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Total y adjunto -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="info-item">
+          <strong>Total:</strong> 
+          <span class="text-success fw-bold">S/ {{ pedidoSeleccionado?.totalimporte | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      <div class="col-md-6" *ngIf="pedidoSeleccionado?.adjunto">
+        <div class="info-item">
+          <strong>Adjunto:</strong> {{ pedidoSeleccionado.adjunto }}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Detalles del pedido -->
+    <h5 class="mb-3">Productos del Pedido</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Producto</th>
+            <th>Talla</th>
+            <th>Cantidad</th>
+            <th>Precio Unit.</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let detalle of pedidoSeleccionado?.Detalles || []">
+            <td>{{ detalle?.LoteTalla?.Lote?.Producto?.nombre || 'N/A' }}</td>
+            <td>{{ detalle?.LoteTalla?.Talla?.nombre || 'N/A' }}</td>
+            <td>{{ detalle?.cantidad || 0 }}</td>
+            <td>S/ {{ detalle?.precio | number:'1.2-2' }}</td>
+            <td>S/ {{ calcularSubtotal(detalle) | number:'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="!pedidoSeleccionado?.Detalles || pedidoSeleccionado?.Detalles?.length === 0">
+              <td colspan="5" class="text-center text-muted py-3">
+              No hay productos en este pedido
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
