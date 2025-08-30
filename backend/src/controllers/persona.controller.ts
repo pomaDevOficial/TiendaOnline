@@ -336,3 +336,31 @@ export const restaurarPersona = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ msg: 'Error al restaurar la persona' });
   }
 };
+
+// READ - Listar clientes (tipo persona = 1 y no eliminados)
+export const listarClientes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const clientes = await Persona.findAll({
+      where: { 
+        idtipopersona: 1, // Filtro por tipo de persona = 1 (clientes)
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO] 
+      },
+      include: [
+        { 
+          model: Estado, 
+          as: 'Estado',
+          attributes: ['id', 'nombre'] 
+        }
+      ],
+      order: [['apellidos', 'ASC'], ['nombres', 'ASC']]
+    });
+
+    res.json({
+      msg: 'Clientes obtenidos exitosamente',
+      data: clientes
+    });
+  } catch (error) {
+    console.error('Error en listarClientes:', error);
+    res.status(500).json({ msg: 'Error al obtener clientes' });
+  }
+};

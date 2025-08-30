@@ -8,7 +8,8 @@ import {
     getPersonasRegistradas,
     getPersonasEliminadas,
     restaurarPersona,
-    verificarDni
+    verificarDni,
+    listarClientes
 } from '../controllers/persona.controller';
 
 const PersonaRouter = Router();
@@ -22,5 +23,6 @@ PersonaRouter.get('/:id', getPersonaById); // Obtener una persona por ID
 PersonaRouter.put('/:id', updatePersona); // Actualizar una persona por ID
 PersonaRouter.patch('/:id/eliminar', deletePersona); // Eliminar lógicamente una persona (cambiar estado a eliminado)
 PersonaRouter.patch('/:id/restaurar', restaurarPersona); // Restaurar una persona eliminada
+PersonaRouter.get('/clientes', listarClientes); // Nueva ruta para listar clientes
 
 export default PersonaRouter;
