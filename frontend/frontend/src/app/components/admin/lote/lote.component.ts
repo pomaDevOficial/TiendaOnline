@@ -19,13 +19,14 @@ import { ProductoServicio } from '../../../services/producto.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { DatePickerModule } from 'primeng/datepicker';
+import { CalendarModule } from 'primeng/calendar';
 import { TallaServicio } from '../../../services/Talla.service';
 
 @Component({
   selector: 'app-lote',
   templateUrl: './lote.component.html',
   imports:[CommonModule , TableModule, ButtonModule,FormsModule, ReactiveFormsModule, FormsModule,ToastModule,ConfirmDialogModule,DialogModule, InputTextModule, TagModule,
-    SelectModule, MultiSelectModule, ButtonModule,DropdownModule,DatePickerModule,FloatLabelModule, IconFieldModule, InputIconModule],
+    SelectModule, MultiSelectModule,CalendarModule, ButtonModule,DropdownModule,DatePickerModule,FloatLabelModule, IconFieldModule, InputIconModule],
   providers: [ConfirmationService, MessageService],
   styleUrls: ['./lote.component.css']
 })
@@ -41,9 +42,9 @@ export class LoteComponent implements OnInit {
   editar: boolean = false;
   minDate: Date | undefined;
   listaGeneros = [
-  { label: 'Hombre', value: 'Hombre' },
-  { label: 'Mujer', value: 'Mujer' },
-  { label: 'Unisex', value: 'Unisex' }
+  { label: 'Hombre', value: 1 },
+  { label: 'Mujer', value: 2},
+  { label: 'Unisex', value: 3 }
 ];
 
   maxDate: Date | undefined;
@@ -75,7 +76,7 @@ export class LoteComponent implements OnInit {
         id: [null],
         idproducto: ['', Validators.required],
         proveedor: ['', Validators.required],
-        fechaingreso: ['', Validators.required],
+        fechaingreso: [null, Validators.required],
         idestado: [1, Validators.required], // Valor por defecto activo
         detalles: this.fb.array([]) 
     });
@@ -86,6 +87,7 @@ export class LoteComponent implements OnInit {
   agregarDetalle() {
     const detalle = this.fb.group({
       idtalla: ['', Validators.required],
+      idLote: ['0'],
       esGenero: ['', Validators.required],
       preciocosto: [null, Validators.required],
       stock: [null, Validators.required]
@@ -136,16 +138,49 @@ export class LoteComponent implements OnInit {
   }
   editarLote(lote: Lote) {
       this.editar = true;
-      this.mostrarDialogo = true;
-      this.loteForm.patchValue({
-        id: lote.id,
-        idproducto: lote.idproducto,
-        proveedor: lote.proveedor,
-        fechaingreso: lote.fechaingreso,
-        idestado: lote.idestado
+      this.lote.getinfoLotes(lote.id).subscribe({
+      next: (res:any) => {
+        var lote= res.data;
+        var detalle = res.detalles;
+        const fechaIngreso = lote.fechaingreso ? new Date(lote.fechaingreso) : null;
+        this.mostrarDialogo = true;
+        this.loteForm.patchValue({
+          id: lote.id,
+          idproducto: lote.idproducto,
+          proveedor: lote.proveedor,
+          fechaingreso: fechaIngreso,
+          idestado: lote.idestado
+        });
+        // Limpiar detalles previos
+      this.detalles.clear();
+
+      // Recorrer y añadir al FormArray
+      detalle.forEach((d: any) => {
+        this.detalles.push(this.fb.group({
+          id: [d.id],
+          idlote: [d.idlote],
+          idtalla: [d.idtalla],
+          esGenero: [d.esGenero],
+          stock: [d.stock],
+          preciocosto: [d.preciocosto]
+        }));
       });
+
+      },
+      error: (err) => {
+        console.error('Error al cargar lotes', err);
+      }
+    })
+      // this.mostrarDialogo = true;
+      // this.loteForm.patchValue({
+      //   id: lote.id,
+      //   idproducto: lote.idproducto,
+      //   proveedor: lote.proveedor,
+      //   fechaingreso: lote.fechaingreso,
+      //   idestado: lote.idestado
+      // });
       
-    }
+  }
   cerrarDialogo(){
       this.mostrarDialogo = false;
   }

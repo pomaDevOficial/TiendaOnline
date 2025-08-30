@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarPersona = exports.getPersonasEliminadas = exports.deletePersona = exports.updatePersona = exports.verificarDni = exports.getPersonaById = exports.getPersonasRegistradas = exports.getPersonas = exports.createPersona = void 0;
+exports.listarClientes = exports.restaurarPersona = exports.getPersonasEliminadas = exports.deletePersona = exports.updatePersona = exports.verificarDni = exports.getPersonaById = exports.getPersonasRegistradas = exports.getPersonas = exports.createPersona = void 0;
 const persona_model_1 = __importDefault(require("../models/persona.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
@@ -334,3 +334,31 @@ const restaurarPersona = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.restaurarPersona = restaurarPersona;
+// READ - Listar clientes (tipo persona = 1 y no eliminados)
+const listarClientes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const clientes = yield persona_model_1.default.findAll({
+            where: {
+                idtipopersona: 1, // Filtro por tipo de persona = 1 (clientes)
+                idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO]
+            },
+            include: [
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
+                    attributes: ['id', 'nombre']
+                }
+            ],
+            order: [['apellidos', 'ASC'], ['nombres', 'ASC']]
+        });
+        res.json({
+            msg: 'Clientes obtenidos exitosamente',
+            data: clientes
+        });
+    }
+    catch (error) {
+        console.error('Error en listarClientes:', error);
+        res.status(500).json({ msg: 'Error al obtener clientes' });
+    }
+});
+exports.listarClientes = listarClientes;

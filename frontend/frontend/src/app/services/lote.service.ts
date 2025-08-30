@@ -16,6 +16,9 @@ export class LoteServicio {
 
   getLotes(): Observable<Lote[]> {
     return this.http.get<Lote[]>(this.apiUrl+'/disponibles');
+  } 
+  getinfoLotes(id: number): Observable<Lote[]> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/info`);
   }
   
   createLote(producto: Lote): Observable<Lote> {

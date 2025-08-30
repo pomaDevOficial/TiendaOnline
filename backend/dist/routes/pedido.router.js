@@ -4,6 +4,7 @@ const express_1 = require("express");
 const pedido_controller_1 = require("../controllers/pedido.controller");
 const PedidoRouter = (0, express_1.Router)();
 PedidoRouter.post('/', pedido_controller_1.createPedido); // Crear un nuevo pedido
+PedidoRouter.post('/aprobar/:id', pedido_controller_1.aprobarPedido); // Aprobar un nuevo pedido
 PedidoRouter.get('/', pedido_controller_1.getPedidos); // Obtener todos los pedidos
 PedidoRouter.get('/cancelados', pedido_controller_1.getPedidosCancelados); // Obtener pedidos cancelados
 PedidoRouter.get('/estado/:estado', pedido_controller_1.getPedidosByEstado); // Obtener pedidos por estado

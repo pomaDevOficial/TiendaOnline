@@ -12,12 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarPedido = exports.getPedidosCancelados = exports.deletePedido = exports.cambiarEstadoPedido = exports.getPedidosByPersona = exports.getPedidoById = exports.getPedidosByEstado = exports.getPedidos = exports.updatePedido = exports.createPedido = void 0;
+exports.aprobarPedido = exports.restaurarPedido = exports.getPedidosCancelados = exports.deletePedido = exports.cambiarEstadoPedido = exports.getPedidosByPersona = exports.getPedidoById = exports.getPedidosByEstado = exports.getPedidos = exports.updatePedido = exports.createPedido = void 0;
 const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const persona_model_1 = __importDefault(require("../models/persona.model"));
 const metodo_pago_model_1 = __importDefault(require("../models/metodo_pago.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const comprobante_model_1 = __importDefault(require("../models/comprobante.model"));
+const tipo_comprobante_model_1 = __importDefault(require("../models/tipo_comprobante.model"));
+const venta_model_1 = __importDefault(require("../models/venta.model"));
+const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
+const pedido_detalle_model_1 = __importDefault(require("../models/pedido_detalle.model"));
+const detalle_venta_model_1 = __importDefault(require("../models/detalle_venta.model"));
+const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
+const connection_db_1 = __importDefault(require("../db/connection.db"));
 // CREATE - Insertar nuevo pedido
 const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idpersona, idmetodopago, fechaoperacion, totalimporte, adjunto } = req.body;
@@ -412,3 +420,211 @@ const restaurarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.restaurarPedido = restaurarPedido;
+const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { idPedido } = req.body;
+    try {
+        // Validaciones
+        if (!idPedido) {
+            res.status(400).json({ msg: 'El ID del pedido es obligatorio' });
+            return;
+        }
+        // Buscar el pedido por ID con la persona
+        const pedido = yield pedido_model_1.default.findByPk(idPedido, {
+            include: [
+                {
+                    model: persona_model_1.default,
+                    as: 'Persona'
+                }
+            ]
+        });
+        if (!pedido) {
+            res.status(400).json({ msg: 'El pedido no existe' });
+            return;
+        }
+        // Verificar que el pedido esté en estado EN_ESPERA
+        if (pedido.idestado !== estados_constans_1.PedidoEstado.EN_ESPERA) {
+            res.status(400).json({
+                msg: `El pedido no puede ser aprobado. Estado actual: ${pedido.idestado}`
+            });
+            return;
+        }
+        // Obtener los detalles del pedido
+        const detallesPedido = yield pedido_detalle_model_1.default.findAll({
+            where: { idpedido: idPedido },
+            include: [
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTalla'
+                }
+            ]
+        });
+        if (!detallesPedido || detallesPedido.length === 0) {
+            res.status(400).json({ msg: 'El pedido no tiene detalles' });
+            return;
+        }
+        // Iniciar transacción
+        const transaction = yield connection_db_1.default.transaction();
+        try {
+            // 1. Actualizar estado del pedido a PAGADO
+            yield pedido.update({
+                idestado: estados_constans_1.PedidoEstado.PAGADO
+            }, { transaction });
+            // 2. Crear la venta
+            const nuevaVenta = yield venta_model_1.default.create({
+                fechaventa: new Date(),
+                idusuario: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id,
+                idpedido: pedido.id,
+                idestado: estados_constans_1.VentaEstado.REGISTRADO
+            }, { transaction });
+            // 3. Crear detalles de venta y actualizar stock
+            for (const detallePedido of detallesPedido) {
+                // Crear detalle de venta
+                yield detalle_venta_model_1.default.create({
+                    idpedidodetalle: detallePedido.id,
+                    idventa: nuevaVenta.id,
+                    precio_venta_real: detallePedido.precio,
+                    subtotal_real: detallePedido.subtotal,
+                    idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                }, { transaction });
+                // Actualizar stock solo si tiene lote_talla válido
+                if (detallePedido.idlote_talla && detallePedido.cantidad) {
+                    const loteTalla = yield lote_talla_model_1.default.findByPk(detallePedido.idlote_talla, { transaction });
+                    if (loteTalla && loteTalla.stock !== null) {
+                        const nuevoStock = Number(loteTalla.stock) - Number(detallePedido.cantidad);
+                        yield loteTalla.update({
+                            stock: nuevoStock,
+                            idestado: nuevoStock > 0 ? estados_constans_1.LoteEstado.DISPONIBLE : estados_constans_1.LoteEstado.AGOTADO
+                        }, { transaction });
+                        // Registrar movimiento de lote
+                        yield movimiento_lote_model_1.default.create({
+                            idlote_talla: detallePedido.idlote_talla,
+                            tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
+                            cantidad: detallePedido.cantidad,
+                            fechamovimiento: new Date(),
+                            idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                        }, { transaction });
+                    }
+                }
+            }
+            // 4. Determinar el tipo de comprobante
+            let idTipoComprobante;
+            if (pedido.Persona && pedido.Persona.idtipopersona === 2) {
+                idTipoComprobante = 2; // FACTURA
+            }
+            else {
+                idTipoComprobante = 1; // BOLETA
+            }
+            // 5. Crear comprobante
+            const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+            if (!tipoComprobante) {
+                throw new Error('Tipo de comprobante no encontrado');
+            }
+            // Calcular IGV (18% del total)
+            const total = Number(pedido.totalimporte) || 0;
+            const igv = total * 0.18;
+            const nuevoComprobante = yield comprobante_model_1.default.create({
+                idventa: nuevaVenta.id,
+                igv: igv,
+                descuento: 0,
+                total: total,
+                idtipocomprobante: tipoComprobante.id,
+                numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+                idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
+            }, { transaction });
+            // Confirmar transacción
+            yield transaction.commit();
+            // Obtener datos completos para respuesta
+            const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+                include: [
+                    {
+                        model: pedido_model_1.default,
+                        as: 'Pedido',
+                        include: [
+                            {
+                                model: persona_model_1.default,
+                                as: 'Persona'
+                            }
+                        ]
+                    }
+                ]
+            });
+            const comprobanteCompleto = yield comprobante_model_1.default.findByPk(nuevoComprobante.id, {
+                include: [
+                    {
+                        model: tipo_comprobante_model_1.default,
+                        as: 'TipoComprobante'
+                    },
+                    {
+                        model: venta_model_1.default,
+                        as: 'Venta'
+                    }
+                ]
+            });
+            const detallesVenta = yield detalle_venta_model_1.default.findAll({
+                where: { idventa: nuevaVenta.id },
+                include: [
+                    {
+                        model: pedido_detalle_model_1.default,
+                        as: 'PedidoDetalle',
+                        include: [
+                            {
+                                model: lote_talla_model_1.default,
+                                as: 'LoteTalla'
+                            }
+                        ]
+                    }
+                ]
+            });
+            res.status(200).json({
+                msg: 'Pedido aprobado exitosamente',
+                data: {
+                    pedido: pedido,
+                    venta: ventaCompleta,
+                    comprobante: comprobanteCompleto,
+                    detallesVenta: detallesVenta
+                }
+            });
+        }
+        catch (error) {
+            // Revertir transacción en caso de error
+            yield transaction.rollback();
+            throw error;
+        }
+    }
+    catch (error) {
+        console.error('Error en aprobarPedido:', error);
+        res.status(500).json({
+            msg: 'Ocurrió un error al aprobar el pedido',
+            error: error.message
+        });
+    }
+});
+exports.aprobarPedido = aprobarPedido;
+// Función para generar número de serie único
+const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(void 0, void 0, void 0, function* () {
+    const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
+        include: [{ model: connection_db_1.default.models.TipoSerie, as: 'TipoSerie' }],
+        transaction
+    });
+    if (!tipoComprobante || !tipoComprobante.TipoSerie) {
+        throw new Error('Tipo de comprobante o serie no encontrado');
+    }
+    // Obtener el último comprobante de este tipo
+    const ultimoComprobante = yield comprobante_model_1.default.findOne({
+        where: { idtipocomprobante: idTipoComprobante },
+        order: [['id', 'DESC']],
+        transaction
+    });
+    let siguienteNumero = 1;
+    if (ultimoComprobante && ultimoComprobante.numserie) {
+        // Extraer el número del último comprobante e incrementarlo
+        const partes = ultimoComprobante.numserie.split('-');
+        if (partes.length > 1) {
+            const ultimoNumero = parseInt(partes[1]) || 0;
+            siguienteNumero = ultimoNumero + 1;
+        }
+    }
+    // Formato: [SERIE]-[NÚMERO]
+    return `${tipoComprobante.TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
+});

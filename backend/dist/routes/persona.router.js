@@ -12,4 +12,5 @@ PersonaRouter.get('/:id', persona_controller_1.getPersonaById); // Obtener una p
 PersonaRouter.put('/:id', persona_controller_1.updatePersona); // Actualizar una persona por ID
 PersonaRouter.patch('/:id/eliminar', persona_controller_1.deletePersona); // Eliminar lógicamente una persona (cambiar estado a eliminado)
 PersonaRouter.patch('/:id/restaurar', persona_controller_1.restaurarPersona); // Restaurar una persona eliminada
+PersonaRouter.get('/clientes', persona_controller_1.listarClientes); // Nueva ruta para listar clientes
 exports.default = PersonaRouter;
