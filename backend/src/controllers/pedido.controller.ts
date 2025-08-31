@@ -17,6 +17,7 @@ import PedidoDetalle from '../models/pedido_detalle.model';
 import DetalleVenta from '../models/detalle_venta.model';
 import MovimientoLote from '../models/movimiento_lote.model';
 import db from '../db/connection.db';
+import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
 
 // CREATE - Insertar nuevo pedido
 export const createPedido = async (req: Request, res: Response): Promise<void> => {
@@ -612,15 +613,46 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
         ]
       });
 
-      res.status(200).json({
-        msg: 'Pedido aprobado exitosamente',
-        data: {
-          pedido: pedido,
-          venta: ventaCompleta,
-          comprobante: comprobanteCompleto,
-          detallesVenta: detallesVenta
-        }
-      });
+    // Generar el PDF del comprobante SOLO si el teléfono es válido
+const telefono = pedido?.Persona?.telefono ?? '';
+const phoneRegex = /^\d{9,15}$/; // valida de 9 a 15 dígitos
+
+if (telefono && phoneRegex.test(telefono)) {
+  // Generar PDF
+  const nombreArchivo = await generarPDFComprobante(
+    comprobanteCompleto, 
+    ventaCompleta, 
+    pedido, 
+    detallesVenta
+  );
+
+  // Enviar por WhatsApp
+  await enviarArchivoWSP(
+    telefono, 
+    nombreArchivo,
+    `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+  );
+
+  res.status(200).json({
+    msg: 'Pedido aprobado exitosamente y comprobante enviado',
+    data: {
+      pedido,
+      venta: ventaCompleta,
+      comprobante: comprobanteCompleto,
+      detallesVenta
+    }
+  });
+} else {
+  res.status(200).json({
+    msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
+    data: {
+      pedido,
+      venta: ventaCompleta,
+      comprobante: comprobanteCompleto,
+      detallesVenta
+    }
+  });
+}
 
     } catch (error) {
       // Revertir transacción en caso de error

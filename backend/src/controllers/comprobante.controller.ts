@@ -3,8 +3,18 @@ import Comprobante from '../models/comprobante.model';
 import Venta from '../models/venta.model';
 import TipoComprobante from '../models/tipo_comprobante.model';
 import Estado from '../models/estado.model';
-import { ComprobanteEstado } from '../estadosTablas/estados.constans';
+import { ComprobanteEstado, EstadoGeneral, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
+import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
+import PedidoDetalle from '../models/pedido_detalle.model';
+import DetalleVenta from '../models/detalle_venta.model';
+import LoteTalla from '../models/lote_talla.model';
+import db from '../db/connection.db';
+import Producto from '../models/producto.model';
+import Lote from '../models/lote.model';
+import Persona from '../models/persona.model';
+import Usuario from '../models/usuario.model';
+import Pedido from '../models/pedido.model';
 
 // CREATE - Insertar nuevo comprobante
 export const createComprobante = async (req: Request, res: Response): Promise<void> => {
@@ -623,4 +633,254 @@ export const deleteComprobante = async (req: Request, res: Response): Promise<vo
     console.error('Error en deleteComprobante:', error);
     res.status(500).json({ msg: 'Error al eliminar el comprobante' });
   }
+};
+
+export const crearVentaCompletaConComprobante = async (req: Request, res: Response): Promise<void> => {
+  const { fechaventa, idusuario, idpedido, detallesVenta } = req.body;
+
+  try {
+    // Validaciones básicas
+    if (!idusuario || !idpedido || !detallesVenta || !Array.isArray(detallesVenta) || detallesVenta.length === 0) {
+      res.status(400).json({ 
+        msg: 'Los campos idusuario, idpedido y detallesVenta (array) son obligatorios' 
+      });
+      return;
+    }
+
+    // Verificar si existe el usuario
+    const usuario = await Usuario.findByPk(idusuario);
+    if (!usuario) {
+      res.status(400).json({ msg: 'El usuario no existe' });
+      return;
+    }
+
+    // Verificar si existe el pedido con la persona
+    const pedido = await Pedido.findByPk(idpedido, {
+      include: [
+        {
+          model: Persona,
+          as: 'Persona'
+        }
+      ]
+    });
+
+    if (!pedido) {
+      res.status(400).json({ msg: 'El pedido no existe' });
+      return;
+    }
+
+    // Verificar si el pedido ya tiene una venta asociada
+    const ventaExistente = await Venta.findOne({ where: { idpedido } });
+    if (ventaExistente) {
+      res.status(400).json({ msg: 'El pedido ya tiene una venta asociada' });
+      return;
+    }
+
+    // Iniciar transacción
+    const transaction = await db.transaction();
+
+    try {
+      // 1. CREAR LA VENTA
+      const nuevaVenta = await Venta.create({
+        fechaventa: fechaventa || new Date(),
+        idusuario,
+        idpedido,
+        idestado: VentaEstado.REGISTRADO
+      }, { transaction });
+
+      // 2. CREAR DETALLES DE VENTA
+      const detallesVentaCreados = [];
+      for (const detalle of detallesVenta) {
+        // Validar detalle de pedido
+        const pedidoDetalle = await PedidoDetalle.findByPk(detalle.idpedidodetalle, { transaction });
+        if (!pedidoDetalle) {
+          throw new Error(`Detalle de pedido con ID ${detalle.idpedidodetalle} no existe`);
+        }
+
+        // Calcular subtotal si no se proporciona
+        const subtotal = detalle.subtotal_real !== undefined 
+          ? detalle.subtotal_real 
+          : Number(pedidoDetalle.cantidad) * Number(detalle.precio_venta_real);
+
+        // Crear detalle de venta
+        const nuevoDetalleVenta = await DetalleVenta.create({
+          idpedidodetalle: detalle.idpedidodetalle,
+          idventa: nuevaVenta.id,
+          precio_venta_real: detalle.precio_venta_real,
+          subtotal_real: subtotal,
+          idestado: EstadoGeneral.REGISTRADO
+        }, { transaction });
+
+        detallesVentaCreados.push(nuevoDetalleVenta);
+
+        // Actualizar stock si corresponde
+        if (pedidoDetalle.idlote_talla && pedidoDetalle.cantidad) {
+          const loteTalla = await LoteTalla.findByPk(pedidoDetalle.idlote_talla, { transaction });
+          if (loteTalla && loteTalla.stock !== null) {
+            const nuevoStock = Number(loteTalla.stock) - Number(pedidoDetalle.cantidad);
+            await loteTalla.update({ stock: nuevoStock }, { transaction });
+          }
+        }
+      }
+
+      // 3. DETERMINAR TIPO DE COMPROBANTE
+      let idTipoComprobante: number;
+      if (pedido.Persona && pedido.Persona.idtipopersona === 2) {
+        idTipoComprobante = 2; // FACTURA
+      } else {
+        idTipoComprobante = 1; // BOLETA
+      }
+
+      // 4. CREAR COMPROBANTE
+      const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, { transaction });
+      if (!tipoComprobante) {
+        throw new Error('Tipo de comprobante no encontrado');
+      }
+
+      const total = Number(pedido.totalimporte) || 0;
+      const igv = total * 0.18;
+
+      const nuevoComprobante = await Comprobante.create({
+        idventa: nuevaVenta.id,
+        igv: igv,
+        descuento: 0,
+        total: total,
+        idtipocomprobante: tipoComprobante.id,
+        numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
+        idestado: ComprobanteEstado.REGISTRADO
+      }, { transaction });
+
+      // CONFIRMAR TRANSACCIÓN
+      await transaction.commit();
+
+      // OBTENER DATOS COMPLETOS
+      const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
+        include: [
+          { model: Usuario, as: 'Usuario' },
+          { 
+            model: Pedido, 
+            as: 'Pedido',
+            include: [{ model: Persona, as: 'Persona' }]
+          }
+        ]
+      });
+
+      const comprobanteCompleto = await Comprobante.findByPk(nuevoComprobante.id, {
+        include: [
+          { model: TipoComprobante, as: 'TipoComprobante' },
+          { model: Venta, as: 'Venta' }
+        ]
+      });
+
+      const detallesVentaCompletos = await DetalleVenta.findAll({
+        where: { idventa: nuevaVenta.id },
+        include: [
+          {
+            model: PedidoDetalle,
+            as: 'PedidoDetalle',
+            include: [
+              {
+                model: LoteTalla,
+                as: 'LoteTalla',
+                include: [
+                  {
+                    model: Lote,
+                    as: 'Lote',
+                    include: [{ model: Producto, as: 'Producto' }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      });
+
+      // 5. GENERAR Y ENVIAR COMPROBANTE POR WHATSAPP
+      const telefono = pedido?.Persona?.telefono ?? '';
+      const phoneRegex = /^\d{9,15}$/;
+
+      if (telefono && phoneRegex.test(telefono)) {
+        try {
+          const nombreArchivo = await generarPDFComprobante(
+            comprobanteCompleto, 
+            ventaCompleta, 
+            pedido, 
+            detallesVentaCompletos
+          );
+
+          await enviarArchivoWSP(
+            telefono, 
+            nombreArchivo,
+            `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+          );
+
+          res.status(201).json({
+            msg: 'Venta, detalles, comprobante creados y enviados exitosamente',
+            data: {
+              venta: ventaCompleta,
+              comprobante: comprobanteCompleto,
+              detallesVenta: detallesVentaCompletos
+            }
+          });
+          return;
+
+        } catch (error) {
+          console.error('Error al enviar comprobante:', error);
+          // Continuar aunque falle el envío
+        }
+      }
+
+      res.status(201).json({
+        msg: 'Venta, detalles y comprobante creados exitosamente (sin envío por WhatsApp)',
+        data: {
+          venta: ventaCompleta,
+          comprobante: comprobanteCompleto,
+          detallesVenta: detallesVentaCompletos
+        }
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error en crearVentaCompletaConComprobante:', error);
+    res.status(500).json({ 
+      msg: 'Ocurrió un error al crear la venta completa', 
+      error: (error as Error).message 
+    });
+  }
+};
+
+// Función para generar número de serie único
+const generarNumeroSerieUnico = async (idTipoComprobante: number, transaction: any): Promise<string> => {
+  const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, {
+    include: [{ model: (db as any).models.TipoSerie, as: 'TipoSerie' }],
+    transaction
+  });
+
+  if (!tipoComprobante || !(tipoComprobante as any).TipoSerie) {
+    throw new Error('Tipo de comprobante o serie no encontrado');
+  }
+
+  // Obtener el último comprobante de este tipo
+  const ultimoComprobante = await Comprobante.findOne({
+    where: { idtipocomprobante: idTipoComprobante },
+    order: [['id', 'DESC']],
+    transaction
+  });
+
+  let siguienteNumero = 1;
+  if (ultimoComprobante && ultimoComprobante.numserie) {
+    // Extraer el número del último comprobante e incrementarlo
+    const partes = ultimoComprobante.numserie!.split('-');
+    if (partes.length > 1) {
+      const ultimoNumero = parseInt(partes[1]) || 0;
+      siguienteNumero = ultimoNumero + 1;
+    }
+  }
+
+  // Formato: [SERIE]-[NÚMERO]
+  return `${(tipoComprobante as any).TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
 };
