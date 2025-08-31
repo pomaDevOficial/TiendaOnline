@@ -133,7 +133,7 @@ export class LoteComponent implements OnInit {
   abrirRegistro() {
     this.editar = false;
     this.mostrarDialogo = true;
-    this.loteForm.reset({ idestado: 1 });
+    this.loteForm.reset({ idestado: 1 , fechaingreso: new Date().toISOString().slice(0, 16)});
      this.detalles.clear();
   }
   editarLote(lote: Lote) {
