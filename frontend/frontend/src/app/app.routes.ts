@@ -14,6 +14,7 @@ import { ProductoComponent } from './components/admin/producto/producto.componen
 import { MovimientoComponent } from './components/admin/movimiento/movimiento.component';
 import { LoteComponent } from './components/admin/lote/lote.component';
 import { PedidoComponent } from './components/admin/pedido/pedido.component';
+import { ComprobanteComponent } from './components/admin/comprobante/comprobante.component';
 
 export const routes: Routes = [
   // Login
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'persona', component: PersonaComponent },
       { path: 'usuario', component: UsuarioComponent },
       { path: 'pedido', component: PedidoComponent },
+      { path: 'comprobante', component: ComprobanteComponent },
 
       // Si la ruta hija no existe → redirigir a master de Admin
       { path: '**', redirectTo: '', pathMatch: 'full' }

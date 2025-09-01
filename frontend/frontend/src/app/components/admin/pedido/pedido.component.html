@@ -25,7 +25,7 @@
 
       <ng-template #caption>
         <div class="d-flex justify-content-between align-items-center">
-          <span class="text-muted">Total de pedidos: {{pedidos?.length || 0}}</span>
+          <span class="text-muted">Total de pedidos: {{pedidos.length || 0}}</span>
           <p-iconfield iconPosition="left">
             <p-inputicon>
               <i class="pi pi-search"></i>
@@ -221,26 +221,26 @@
       <div class="col-md-6">
         <div class="info-item">
           <strong>Cliente:</strong> 
-          {{ pedidoSeleccionado?.Persona?.nombres || 'N/A' }} {{ pedidoSeleccionado?.Persona?.apellidos || '' }}
+          {{ pedidoSeleccionado.Persona?.nombres || 'N/A' }} {{ pedidoSeleccionado.Persona?.apellidos || '' }}
         </div>
         <div class="info-item">
-          <strong>DNI/RUC:</strong> {{ pedidoSeleccionado?.Persona?.nroidentidad || 'N/A' }}
+          <strong>DNI/RUC:</strong> {{ pedidoSeleccionado.Persona?.nroidentidad || 'N/A' }}
         </div>
         <div class="info-item">
-          <strong>Teléfono:</strong> {{ pedidoSeleccionado?.Persona?.telefono || 'N/A' }}
+          <strong>Teléfono:</strong> {{ pedidoSeleccionado.Persona?.telefono || 'N/A' }}
         </div>
       </div>
       <div class="col-md-6">
         <div class="info-item">
-          <strong>Método Pago:</strong> {{ getMetodoPagoTexto(pedidoSeleccionado?.idmetodopago || 0) }}
+          <strong>Método Pago:</strong> {{ getMetodoPagoTexto(pedidoSeleccionado.idmetodopago || 0) }}
         </div>
         <div class="info-item">
-          <strong>Fecha:</strong> {{ pedidoSeleccionado?.fechaoperacion | date:'dd/MM/yyyy HH:mm' }}
+          <strong>Fecha:</strong> {{ pedidoSeleccionado.fechaoperacion | date:'dd/MM/yyyy HH:mm' }}
         </div>
         <div class="info-item">
           <strong>Estado:</strong> 
-          <span class="badge {{ getEstadoBadgeClass(pedidoSeleccionado?.idestado || 0) }}">
-            {{ getEstadoTexto(pedidoSeleccionado?.idestado || 0) }}
+          <span class="badge {{ getEstadoBadgeClass(pedidoSeleccionado.idestado || 0) }}">
+            {{ getEstadoTexto(pedidoSeleccionado.idestado || 0) }}
           </span>
         </div>
       </div>
@@ -251,7 +251,7 @@
       <div class="col-md-6">
         <div class="info-item">
           <strong>Total:</strong> 
-          <span class="text-success fw-bold">S/ {{ pedidoSeleccionado?.totalimporte | number:'1.2-2' }}</span>
+          <span class="text-success fw-bold">S/ {{ pedidoSeleccionado.totalimporte | number:'1.2-2' }}</span>
         </div>
       </div>
       <div class="col-md-6" *ngIf="pedidoSeleccionado?.adjunto">

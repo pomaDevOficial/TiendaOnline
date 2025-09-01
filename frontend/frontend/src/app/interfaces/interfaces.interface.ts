@@ -123,3 +123,72 @@ export interface PedidoDetalle {
   Pedido?: Pedido;        // relación con Pedido
   LoteTalla?: LoteTalla;  // relación con LoteTalla
 }
+
+export interface Venta {
+  id: number;
+  fechaventa?: Date | null;
+  idusuario?: number | null;
+  idpedido?: number | null;
+  idestado?: number | null;
+
+  // Relaciones
+  Usuario?: Usuario;
+  Pedido?: Pedido;
+  Estado?: Estado;
+}
+export interface DetalleVenta {
+  id: number;
+  idpedidodetalle?: number | null;
+  idventa?: number | null;
+  precio_venta_real?: number | null;
+  subtotal_real?: number | null;
+  idestado?: number | null;
+
+  // Relaciones
+  PedidoDetalle?: PedidoDetalle;
+  Venta?: Venta;
+  Estado?: Estado;
+}
+export interface TipoSerie {
+  id: number;
+  nombre?: string | null;
+  idestado?: number | null;
+  Estado?: Estado;
+}
+
+export interface TipoComprobante {
+  id: number;
+  idtiposerie?: number | null;
+  nombre?: string | null;
+  idestado?: number | null;
+  // Relaciones
+  TipoSerie?: TipoSerie;
+  Estado?: Estado;
+}
+export interface Comprobante {
+  id: number;
+  idventa?: number | null;
+  igv?: number | null;
+  descuento?: number | null;
+  total?: number | null;
+  idtipocomprobante?: number | null;
+  numserie?: string | null;
+  idestado?: number | null;
+
+  // Relaciones opcionales
+  Venta?: Venta; // Si quieres lo definimos con su interfaz de Venta
+  TipoComprobante?: TipoComprobante; // Igual para TipoComprobante
+  Estado?: Estado; // Igual para Estado
+}
+export interface MovimientoLote {
+  id: number;
+  idlote_talla?: number | null;
+  tipomovimiento?: string | null;
+  cantidad?: number | null;
+  fechamovimiento?: Date | null;
+  idestado?: number | null;
+  // Relaciones
+  LoteTalla?: LoteTalla;
+  Estado?: Estado;
+}
+

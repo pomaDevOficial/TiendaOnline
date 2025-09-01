@@ -75,7 +75,7 @@ export const createComprobante = async (req: Request, res: Response): Promise<vo
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -85,7 +85,7 @@ export const createComprobante = async (req: Request, res: Response): Promise<vo
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -94,7 +94,7 @@ export const createComprobante = async (req: Request, res: Response): Promise<vo
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -180,7 +180,7 @@ export const updateComprobante = async (req: Request, res: Response): Promise<vo
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -190,7 +190,7 @@ export const updateComprobante = async (req: Request, res: Response): Promise<vo
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -199,7 +199,7 @@ export const updateComprobante = async (req: Request, res: Response): Promise<vo
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -233,7 +233,7 @@ export const getComprobantes = async (req: Request, res: Response): Promise<void
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -243,7 +243,7 @@ export const getComprobantes = async (req: Request, res: Response): Promise<void
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -252,7 +252,7 @@ export const getComprobantes = async (req: Request, res: Response): Promise<void
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -300,7 +300,7 @@ export const getComprobantesByFecha = async (req: Request, res: Response): Promi
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -310,7 +310,7 @@ export const getComprobantesByFecha = async (req: Request, res: Response): Promi
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -319,7 +319,7 @@ export const getComprobantesByFecha = async (req: Request, res: Response): Promi
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -356,7 +356,7 @@ export const getComprobantesRegistrados = async (req: Request, res: Response): P
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -366,7 +366,7 @@ export const getComprobantesRegistrados = async (req: Request, res: Response): P
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -375,7 +375,7 @@ export const getComprobantesRegistrados = async (req: Request, res: Response): P
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -411,7 +411,7 @@ export const getComprobanteById = async (req: Request, res: Response): Promise<v
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -421,7 +421,7 @@ export const getComprobanteById = async (req: Request, res: Response): Promise<v
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -430,7 +430,7 @@ export const getComprobanteById = async (req: Request, res: Response): Promise<v
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -471,7 +471,7 @@ export const getComprobantesByVenta = async (req: Request, res: Response): Promi
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -481,7 +481,7 @@ export const getComprobantesByVenta = async (req: Request, res: Response): Promi
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -490,7 +490,7 @@ export const getComprobantesByVenta = async (req: Request, res: Response): Promi
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         },
         { 
           model: Estado, 
@@ -525,7 +525,7 @@ export const getComprobantesAnulados = async (req: Request, res: Response): Prom
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -535,7 +535,7 @@ export const getComprobantesAnulados = async (req: Request, res: Response): Prom
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'dni']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                 }
               ]
             }
@@ -544,7 +544,7 @@ export const getComprobantesAnulados = async (req: Request, res: Response): Prom
         { 
           model: TipoComprobante, 
           as: 'TipoComprobante',
-          attributes: ['id', 'nombre', 'codigo']
+          attributes: ['id', 'nombre']
         }
       ],
       order: [['id', 'DESC']]
