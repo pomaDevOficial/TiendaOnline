@@ -10,14 +10,15 @@ import {
     getComprobantesAnulados,
     getComprobantesByVenta,
     getComprobantesByFecha,
-    deleteComprobante
+    deleteComprobante,
+    crearVentaCompletaConComprobante
 } from '../controllers/comprobante.controller';
 
 const ComprobanteRouter = Router();
 
 // CREATE
 ComprobanteRouter.post('/', createComprobante); // Crear un nuevo comprobante
-
+ComprobanteRouter.post('/venta-completa', crearVentaCompletaConComprobante); // Nueva ruta
 // READ
 ComprobanteRouter.get('/', getComprobantes); // Obtener todos los comprobantes
 ComprobanteRouter.get('/registrados', getComprobantesRegistrados); // Obtener comprobantes registrados

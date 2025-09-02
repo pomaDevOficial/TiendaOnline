@@ -67,7 +67,7 @@ export const createVenta = async (req: Request, res: Response): Promise<void> =>
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -152,7 +152,7 @@ export const updateVenta = async (req: Request, res: Response): Promise<void> =>
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -162,7 +162,7 @@ export const updateVenta = async (req: Request, res: Response): Promise<void> =>
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -198,7 +198,7 @@ export const getVentas = async (req: Request, res: Response): Promise<void> => {
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -208,7 +208,7 @@ export const getVentas = async (req: Request, res: Response): Promise<void> => {
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -247,7 +247,7 @@ export const getVentasRegistradas = async (req: Request, res: Response): Promise
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -257,7 +257,7 @@ export const getVentasRegistradas = async (req: Request, res: Response): Promise
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -295,7 +295,7 @@ export const getVentaById = async (req: Request, res: Response): Promise<void> =
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -305,7 +305,7 @@ export const getVentaById = async (req: Request, res: Response): Promise<void> =
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -348,7 +348,7 @@ export const getVentasByUsuario = async (req: Request, res: Response): Promise<v
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -358,7 +358,7 @@ export const getVentasByUsuario = async (req: Request, res: Response): Promise<v
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -397,7 +397,7 @@ export const getVentasByPedido = async (req: Request, res: Response): Promise<vo
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -407,7 +407,7 @@ export const getVentasByPedido = async (req: Request, res: Response): Promise<vo
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,
@@ -444,7 +444,7 @@ export const getVentasAnuladas = async (req: Request, res: Response): Promise<vo
         { 
           model: Usuario, 
           as: 'Usuario',
-          attributes: ['id', 'nombre', 'email']
+          attributes: ['id', 'usuario']
         },
         { 
           model: Pedido, 
@@ -454,7 +454,7 @@ export const getVentasAnuladas = async (req: Request, res: Response): Promise<vo
             {
               model: Pedido.associations.Persona.target,
               as: 'Persona',
-              attributes: ['id', 'nombres', 'apellidos', 'dni']
+              attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
             },
             {
               model: Pedido.associations.MetodoPago.target,

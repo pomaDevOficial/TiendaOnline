@@ -15,8 +15,7 @@ import MarcaRouter from './routes/marca.router';
 import TallaRouter from './routes/talla.router';
 import RolesRouter from './routes/rol.router';
 import PersonaRouter from './routes/persona.router';
-import RouterDni from './routes/apidni.router';
-import routerRUC from './routes/apiruc.router';
+import RouterSunat from './routes/apiSunat.router';
 import LoteRouter from './routes/lote.router';
 import LoteTallaRouter from './routes/lote_talla.router';
 import PedidoRouter from './routes/pedido.router';
@@ -33,6 +32,8 @@ import TipoComprobanteRouter from './routes/tipo_comprobante.router';
 import TipoSerieRouter from './routes/tiposerie.router';
 import MetodoPago from './models/metodo_pago.model';
 import MetodoPagoRouter from './routes/metodo_pago.router';
+import MovimientoLote from './models/movimiento_lote.model';
+import MovimientoLoteRouter from './routes/movimiento_lote.router';
 
 class Server {
     private app: Application;
@@ -125,8 +126,7 @@ class Server {
        this.app.use('/api/v1/tallas', TallaRouter);
        this.app.use('/api/v1/roles', RolesRouter);
        this.app.use('/api/v1/personas', PersonaRouter);
-       this.app.use('/api/v1/dni', RouterDni);
-       this.app.use('/api/v1/ruc', routerRUC);
+       this.app.use('/api/v1/sunat', RouterSunat);
        this.app.use('/api/v1/lotes', LoteRouter);
        this.app.use('/api/v1/lotetallas', LoteTallaRouter);
        this.app.use('/api/v1/pedidos', PedidoRouter);
@@ -138,7 +138,7 @@ class Server {
        this.app.use('/api/v1/tipocomprobante', TipoComprobanteRouter); //  Esto está bien
        this.app.use('/api/v1/tiposerie', TipoSerieRouter); //  Esto está bien
        this.app.use('/api/v1/metodopagos', MetodoPagoRouter); //  Esto está bien
-
+       this.app.use('/api/v1/movimientoslote', MovimientoLoteRouter); //  Esto está bien
     }
   
     private async dbConnect() {
