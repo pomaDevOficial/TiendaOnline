@@ -58,4 +58,9 @@ export class PersonaServicio {
   restaurarPersona(id: number): Observable<Persona> {
     return this.http.patch<Persona>(`${this.apiUrl}/${id}/restaurar`, {});
   }
+
+  // Obtener lista de clientes
+  getClientes(): Observable<Persona[]> {
+    return this.http.get<Persona[]>(`${this.apiUrl}/clientes`);
+  }
 }

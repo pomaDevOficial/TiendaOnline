@@ -437,3 +437,59 @@ export const restaurarMovimientoLote = async (req: Request, res: Response): Prom
     res.status(500).json({ msg: 'Error al restaurar el movimiento' });
   }
 };
+
+// READ - Listar movimientos por rango de fechas
+export const getMovimientosByFecha = async (req: Request, res: Response): Promise<void> => {
+  const { fechaInicio, fechaFin } = req.query;
+
+  try {
+    if (!fechaInicio || !fechaFin) {
+      res.status(400).json({ 
+        msg: 'Los parámetros fechaInicio y fechaFin son obligatorios' 
+      });
+      return;
+    }
+
+    const movimientos = await MovimientoLote.findAll({
+      where: {
+        fechamovimiento: {
+          [Op.between]: [new Date(fechaInicio as string), new Date(fechaFin as string)]
+        },
+        idestado: { [Op.ne]: EstadoGeneral.ELIMINADO }
+      },
+      include: [
+        { 
+          model: LoteTalla, 
+          as: 'LoteTalla',
+          attributes: ['id', 'stock', 'esGenero', 'preciocosto', 'precioventa'],
+          include: [
+            {
+              model: LoteTalla.associations.Lote.target,
+              as: 'Lote',
+              attributes: ['id', 'proveedor', 'fechaingreso']
+            },
+            {
+              model: LoteTalla.associations.Talla.target,
+              as: 'Talla',
+              attributes: ['id', 'nombre']
+            }
+          ]
+        },
+        { 
+          model: Estado, 
+          as: 'Estado',
+          attributes: ['id', 'nombre'] 
+        }
+      ],
+      order: [['fechamovimiento', 'DESC']]
+    });
+
+    res.json({
+      msg: 'Movimientos por fecha obtenidos exitosamente',
+      data: movimientos
+    });
+  } catch (error) {
+    console.error('Error en getMovimientosByFecha:', error);
+    res.status(500).json({ msg: 'Error al obtener movimientos por fecha' });
+  }
+};

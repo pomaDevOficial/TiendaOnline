@@ -24,18 +24,17 @@
              [globalFilterFields]="['id', 'Persona.nombres', 'Persona.apellidos', 'totalimporte']">
 
       <ng-template #caption>
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="text-muted">Total de pedidos: {{pedidos.length || 0}}</span>
-          <p-iconfield iconPosition="left">
-            <p-inputicon>
-              <i class="pi pi-search"></i>
-            </p-inputicon>
-            <input pInputText #globalFilterInput type="text" 
-                   (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
-                   placeholder="Buscar pedidos..." class="p-2" />
-          </p-iconfield>
-        </div>
-      </ng-template>
+  <div class="d-flex justify-content-between align-items-center">
+    <span class="text-muted">Total de pedidos: {{pedidos.length || 0}}</span>
+    <div class="position-relative">
+      <i class="pi pi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+      <input pInputText #globalFilterInput type="text" 
+             (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
+             placeholder="Buscar pedidos..." 
+             class="p-2 ps-4 form-control" />
+    </div>
+  </div>
+</ng-template>
 
       <ng-template #header>
         <tr>
