@@ -34,6 +34,15 @@ export class VentaServicio {
     return this.http.get<Venta[]>(`${this.apiUrl}/anuladas`);
   }
 
+  // DASHBOARD - Obtener ventas por mes para gráfica
+  getVentasPorMes(año?: number, mes?: number): Observable<any[]> {
+    let params: any = {};
+    if (año) params.año = año.toString();
+    if (mes) params.mes = mes.toString();
+    
+    return this.http.get<any[]>(`${this.apiUrl}/dashboard/por-mes`, { params });
+  }
+
   // Obtener ventas por usuario
   getVentasByUsuario(idUsuario: number): Observable<Venta[]> {
     return this.http.get<Venta[]>(`${this.apiUrl}/usuario/${idUsuario}`);

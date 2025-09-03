@@ -1,3 +1,248 @@
-<p>
-  dashboard works!
-</p>
+<div class="container-fluid mt-4">
+  <!-- Header y Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+          <i class="pi pi-chart-line me-2"></i>Dashboard de Ventas
+        </h2>
+        <p-button 
+          icon="pi pi-refresh" 
+          label="Actualizar" 
+          (click)="cargarDashboard()"
+          styleClass="p-button-outlined">
+        </p-button>
+      </div>
+
+      <div class="row g-3 align-items-end">
+        <!-- Filtro Año -->
+        <div class="col-md-3">
+          <label class="form-label">Año</label>
+          <p-dropdown 
+            [options]="anios" 
+            [(ngModel)]="anioSeleccionado"
+            placeholder="Seleccionar año"
+            class="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Filtro Mes -->
+        <div class="col-md-3">
+          <label class="form-label">Mes</label>
+          <p-dropdown 
+            [options]="meses" 
+            [(ngModel)]="mesSeleccionado"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar mes"
+            class="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Filtro Límite Productos -->
+        <div class="col-md-3">
+          <label class="form-label">Top Productos</label>
+          <p-dropdown 
+            [options]="limites" 
+            [(ngModel)]="limiteProductos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Cantidad a mostrar"
+            class="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Botones -->
+        <div class="col-md-3">
+          <p-button 
+            icon="pi pi-filter" 
+            label="Aplicar Filtros" 
+            (click)="aplicarFiltros()"
+            styleClass="p-button-primary me-2">
+          </p-button>
+          <p-button 
+            icon="pi pi-times" 
+            label="Limpiar" 
+            (click)="limpiarFiltros()"
+            styleClass="p-button-secondary">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas Rápidas -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h6 class="text-white-50 small">Total Ventas</h6>
+              <h3 class="mb-0">S/ {{totalVentas | number:'1.2-2'}}</h3>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="pi pi-shopping-cart fs-1 opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h6 class="text-white-50 small">Promedio Mensual</h6>
+              <h3 class="mb-0">S/ {{promedioMensual | number:'1.2-2'}}</h3>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="pi pi-chart-bar fs-1 opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 bg-warning text-dark">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h6 class="text-dark-50 small">Mejor Mes</h6>
+              <h3 class="mb-0">{{mesMejorVenta}}</h3>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="pi pi-star fs-1 opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h6 class="text-white-50 small">Producto Top</h6>
+              <h3 class="mb-0" style="font-size: 1rem;">{{productoMasVendido}}</h3>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="pi pi-tag fs-1 opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="row">
+    <!-- Gráfica de Ventas por Mes -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Ventas por Mes</h5>
+          <div style="height: 400px;">
+            @if (loadingVentas) {
+              <div class="d-flex flex-column gap-3">
+                <p-skeleton width="100%" height="30px"></p-skeleton>
+                <p-skeleton width="100%" height="300px"></p-skeleton>
+              </div>
+            } @else {
+              <p-chart type="line" [data]="ventasPorMesData" [options]="ventasPorMesOptions"></p-chart>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfica de Productos Más Vendidos -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Productos Más Vendidos</h5>
+          <div style="height: 400px;">
+            @if (loadingProductos) {
+              <div class="d-flex flex-column gap-3">
+                <p-skeleton width="100%" height="30px"></p-skeleton>
+                <p-skeleton width="100%" height="300px"></p-skeleton>
+              </div>
+            } @else {
+              <p-chart type="bar" [data]="productosMasVendidosData" [options]="productosMasVendidosOptions"></p-chart>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Productos Más Vendidos -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title d-flex justify-content-between align-items-center">
+            <span>Detalle de Productos Más Vendidos</span>
+            <span class="badge bg-primary">Top {{limiteProductos}}</span>
+          </h5>
+          
+          @if (loadingProductos) {
+            <div class="d-flex flex-column gap-2">
+              <p-skeleton width="100%" height="40px" *ngFor="let i of [1,2,3,4,5]"></p-skeleton>
+            </div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Posición</th>
+                    <th>Producto</th>
+                    <th>Unidades Vendidas</th>
+                    <th>Total Vendido (S/)</th>
+                    <th>Participación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let producto of productosMasVendidos; let i = index">
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'bg-primary': i === 0,
+                        'bg-success': i === 1,
+                        'bg-warning': i === 2,
+                        'bg-info': i > 2
+                      }">
+                        #{{i + 1}}
+                      </span>
+                    </td>
+                    <td>{{producto.producto || 'N/A'}}</td>
+                    <td>{{producto.cantidad_vendida | number}}</td>
+                    <td>S/ {{producto.total_vendido | number:'1.2-2'}}</td>
+                    <td>
+                      <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" 
+                             [ngClass]="{
+                               'bg-primary': i === 0,
+                               'bg-success': i === 1,
+                               'bg-warning': i === 2,
+                               'bg-info': i > 2
+                             }"
+                             [style.width]="getProgressWidth(producto)">
+                        </div>
+                      </div>
+                      <small class="text-muted">
+                        {{getProgressPercentage(producto) | number:'1.0-0'}}%
+                      </small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

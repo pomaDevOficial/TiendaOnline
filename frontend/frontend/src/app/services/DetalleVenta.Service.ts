@@ -11,7 +11,7 @@ export class DetalleVentaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/detalles-venta`;
+    this.apiUrl = `${environment.endpoint}api/v1/detallesventa`;
   }
 
   // Crear un nuevo detalle de venta
@@ -20,8 +20,18 @@ export class DetalleVentaServicio {
   }
 
   // Crear múltiples detalles de venta
-  createMultipleDetalleVenta(detalles: DetalleVenta[]): Observable<DetalleVenta[]> {
+  createMultipleDetalleVenta(detalles: { detalles: DetalleVenta[] }): Observable<DetalleVenta[]> {
     return this.http.post<DetalleVenta[]>(`${this.apiUrl}/multiple`, detalles);
+  }
+
+  // DASHBOARD - Obtener productos más vendidos
+  getProductosMasVendidos(año?: number, mes?: number, limite?: number): Observable<any[]> {
+    let params: any = {};
+    if (año) params.año = año.toString();
+    if (mes) params.mes = mes.toString();
+    if (limite) params.limite = limite.toString();
+    
+    return this.http.get<any[]>(`${this.apiUrl}/productos-mas-vendidos`, { params });
   }
 
   // Obtener todos los detalles de venta

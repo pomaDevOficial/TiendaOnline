@@ -10,7 +10,8 @@ import {
     getDetallesVentaRegistrados,
     getDetallesVentaAnulados,
     getDetallesVentaByVenta,
-    deleteDetalleVenta
+    deleteDetalleVenta,
+    getProductosMasVendidos
 } from '../controllers/detalle_venta.controller';
 
 const DetalleVentaRouter = Router();
@@ -18,7 +19,7 @@ const DetalleVentaRouter = Router();
 // CREATE
 DetalleVentaRouter.post('/', createDetalleVenta); // Crear un nuevo detalle de venta
 DetalleVentaRouter.post('/multiple', createMultipleDetalleVenta); // Crear múltiples detalles de venta
-
+DetalleVentaRouter.get('/productos-mas-vendidos', getProductosMasVendidos);
 // READ
 DetalleVentaRouter.get('/', getDetallesVenta); // Obtener todos los detalles de venta
 DetalleVentaRouter.get('/registrados', getDetallesVentaRegistrados); // Obtener detalles de venta registrados
