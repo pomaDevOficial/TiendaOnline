@@ -132,7 +132,7 @@ class Server {
        this.app.use('/api/v1/pedidos', PedidoRouter);
        this.app.use('/api/v1/pedidodetalle', PedidoDetalleRouter);
        this.app.use('/api/v1/ventas', VentaRouter);
-       this.app.use('/api/v1/detalleventa', DetalleVentaRouter);
+       this.app.use('/api/v1/detallesventa', DetalleVentaRouter);
        this.app.use('/api/v1/comprobantes', ComprobanteRouter);
        this.app.use('/api/v1/wsp', routerWsp); //  Esto está bien
        this.app.use('/api/v1/tipocomprobante', TipoComprobanteRouter); //  Esto está bien

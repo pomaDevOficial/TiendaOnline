@@ -802,3 +802,135 @@ export const deleteDetalleVenta = async (req: Request, res: Response): Promise<v
     res.status(500).json({ msg: 'Error al eliminar el detalle de venta' });
   }
 };
+
+// ========================================
+// MÉTODO PARA DETALLE VENTA CONTROLLER
+// ========================================
+
+// READ - Obtener productos más vendidos con filtro por mes
+export const getProductosMasVendidos = async (req: Request, res: Response): Promise<void> => {
+  const { año, mes, limite } = req.query;
+
+  try {
+    let whereCondition: any = {
+      idestado: VentaEstado.REGISTRADO
+    };
+
+    // Construir condición de fecha para la venta
+    let ventaWhereCondition: any = {};
+    
+    if (año) {
+      const yearStart = new Date(`${año}-01-01`);
+      const yearEnd = new Date(`${año}-12-31 23:59:59`);
+      
+      ventaWhereCondition.fechaventa = {
+        [Op.between]: [yearStart, yearEnd]
+      };
+    }
+
+    if (mes && año) {
+      const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
+      const monthEnd = new Date(parseInt(año as string), parseInt(mes as string), 0, 23, 59, 59);
+      
+      ventaWhereCondition.fechaventa = {
+        [Op.between]: [monthStart, monthEnd]
+      };
+    }
+
+    const detallesVenta = await DetalleVenta.findAll({
+      where: whereCondition,
+      include: [
+        { 
+          model: PedidoDetalle, 
+          as: 'PedidoDetalle',
+          attributes: ['id', 'cantidad'],
+          include: [
+            {
+              model: PedidoDetalle.associations.LoteTalla.target,
+              as: 'LoteTalla',
+              attributes: ['id'],
+              include: [
+                {
+                  model: PedidoDetalle.associations.LoteTalla.target.associations.Lote.target,
+                  as: 'Lote',
+                  attributes: ['id'],
+                  include: [
+                    {
+                      model: PedidoDetalle.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
+                      as: 'Producto',
+                      attributes: ['id', 'nombre', 'imagen']
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        { 
+          model: Venta, 
+          as: 'Venta',
+          attributes: ['id', 'fechaventa'],
+          where: ventaWhereCondition
+        }
+      ],
+      attributes: ['id', 'subtotal_real']
+    });
+
+    // Agrupar productos y calcular totales
+    const productosVendidos: { 
+      [key: string]: { 
+        producto: any, 
+        cantidadVendida: number, 
+        totalVentas: number,
+        totalIngresos: number 
+      } 
+    } = {};
+
+    detallesVenta.forEach((detalle: any) => {
+      const producto = detalle.PedidoDetalle?.LoteTalla?.Lote?.Producto;
+      const cantidad = parseInt(detalle.PedidoDetalle?.cantidad || '0');
+      const subtotal = parseFloat(detalle.subtotal_real || '0');
+
+      if (producto) {
+        const productoId = producto.id.toString();
+        
+        if (!productosVendidos[productoId]) {
+          productosVendidos[productoId] = {
+            producto: {
+              id: producto.id,
+              nombre: producto.nombre,
+              imagen: producto.imagen
+            },
+            cantidadVendida: 0,
+            totalVentas: 0,
+            totalIngresos: 0
+          };
+        }
+
+        productosVendidos[productoId].cantidadVendida += cantidad;
+        productosVendidos[productoId].totalVentas += 1;
+        productosVendidos[productoId].totalIngresos += subtotal;
+      }
+    });
+
+    // Convertir a array y ordenar por cantidad vendida
+    let ranking = Object.values(productosVendidos)
+      .sort((a, b) => b.cantidadVendida - a.cantidadVendida);
+
+    // Aplicar límite si se proporciona
+    if (limite) {
+      const limiteNumero = parseInt(limite as string);
+      ranking = ranking.slice(0, limiteNumero);
+    }
+
+    res.json({
+      msg: 'Productos más vendidos obtenidos exitosamente',
+      data: ranking,
+      filtros: { año, mes, limite },
+      total: ranking.length
+    });
+  } catch (error) {
+    console.error('Error en getProductosMasVendidos:', error);
+    res.status(500).json({ msg: 'Error al obtener productos más vendidos' });
+  }
+};

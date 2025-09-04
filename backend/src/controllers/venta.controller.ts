@@ -526,3 +526,82 @@ export const restaurarVenta = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ msg: 'Error al restaurar la venta' });
   }
 };
+
+// ========================================
+// MÉTODO PARA VENTAS CONTROLLER
+// ========================================
+
+// READ - Obtener datos de ventas por mes para gráfica de barras
+export const getVentasPorMes = async (req: Request, res: Response): Promise<void> => {
+  const { año, mes } = req.query;
+
+  try {
+    let whereCondition: any = {
+      idestado: VentaEstado.REGISTRADO
+    };
+
+    // Si se proporciona año, filtrar por año
+    if (año) {
+      const yearStart = new Date(`${año}-01-01`);
+      const yearEnd = new Date(`${año}-12-31 23:59:59`);
+      
+      whereCondition.fechaventa = {
+        [Op.between]: [yearStart, yearEnd]
+      };
+    }
+
+    // Si se proporciona mes específico (requiere año)
+    if (mes && año) {
+      const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
+      const monthEnd = new Date(parseInt(año as string), parseInt(mes as string), 0, 23, 59, 59); // Último día del mes
+      
+      whereCondition.fechaventa = {
+        [Op.between]: [monthStart, monthEnd]
+      };
+    }
+
+    const ventas = await Venta.findAll({
+      where: whereCondition,
+      include: [
+        { 
+          model: Pedido, 
+          as: 'Pedido',
+          attributes: ['id', 'totalimporte']
+        }
+      ],
+      attributes: ['id', 'fechaventa'],
+      order: [['fechaventa', 'ASC']]
+    });
+
+    // Agrupar por mes
+    const ventasPorMes: { [key: string]: { cantidad: number, total: number } } = {};
+    
+    ventas.forEach((venta: any) => {
+      const fecha = new Date(venta.fechaventa);
+      const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+      
+      if (!ventasPorMes[mesAno]) {
+        ventasPorMes[mesAno] = { cantidad: 0, total: 0 };
+      }
+      
+      ventasPorMes[mesAno].cantidad += 1;
+      ventasPorMes[mesAno].total += parseFloat(venta.Pedido?.totalimporte || '0');
+    });
+
+    // Convertir a array para la gráfica
+    const datosGrafica = Object.entries(ventasPorMes).map(([mes, datos]) => ({
+      mes,
+      cantidad: datos.cantidad,
+      total: datos.total
+    }));
+
+    res.json({
+      msg: 'Datos de ventas por mes obtenidos exitosamente',
+      data: datosGrafica,
+      filtros: { año, mes }
+    });
+  } catch (error) {
+    console.error('Error en getVentasPorMes:', error);
+    res.status(500).json({ msg: 'Error al obtener datos de ventas por mes' });
+  }
+};

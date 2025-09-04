@@ -24,6 +24,12 @@ export class MovimientoLoteService {
     return this.http.get<MovimientoLote[]>(this.apiUrl);
   }
 
+  // Obtener movimientos por rango de fechas
+  getMovimientosByFecha(fechaInicio: string, fechaFin: string): Observable<MovimientoLote[]> {
+    const params = { fechaInicio, fechaFin };
+    return this.http.get<MovimientoLote[]>(`${this.apiUrl}/fecha`, { params });
+  }
+
   // Obtener movimientos registrados
   getMovimientosRegistrados(): Observable<MovimientoLote[]> {
     return this.http.get<MovimientoLote[]>(`${this.apiUrl}/registrados`);

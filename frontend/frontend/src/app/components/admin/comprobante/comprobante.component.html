@@ -18,49 +18,60 @@
   </div>
 
   <!-- Filtros por fecha -->
-  <div class="card mb-3">
-    <div class="card-body">
-      <h5 class="card-title">Filtrar por Fecha</h5>
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label for="fechaInicio" class="form-label">Fecha Inicio</label>
-          <p-calendar 
-            id="fechaInicio" 
-            [(ngModel)]="fechaInicio" 
-            dateFormat="dd/mm/yy" 
-            [showIcon]="true"
-            placeholder="Seleccione fecha inicio"
-            class="w-100">
-          </p-calendar>
-        </div>
-        <div class="col-md-4">
-          <label for="fechaFin" class="form-label">Fecha Fin</label>
-          <p-calendar 
-            id="fechaFin" 
-            [(ngModel)]="fechaFin" 
-            dateFormat="dd/mm/yy" 
-            [showIcon]="true"
-            placeholder="Seleccione fecha fin"
-            class="w-100">
-          </p-calendar>
-        </div>
-        <div class="col-md-4">
-          <p-button 
-            label="Filtrar" 
-            icon="pi pi-filter" 
-            (click)="cargarComprobantesPorFecha()"
-            styleClass="p-button-primary me-2">
-          </p-button>
-          <p-button 
-            label="Limpiar" 
-            icon="pi pi-times" 
-            (click)="limpiarFiltros()"
-            styleClass="p-button-secondary">
-          </p-button>
-        </div>
+<div class="card mb-3">
+  <div class="card-body p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="card-title mb-0">
+        <i class="pi pi-calendar me-2"></i>Filtrar por Fecha
+      </h6>
+    </div>
+    
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-4 col-md-5">
+        <label for="fechaInicio" class="form-label small mb-2">Fecha Inicio</label>
+        <p-calendar 
+          id="fechaInicio" 
+          [(ngModel)]="fechaInicio" 
+          dateFormat="dd/mm/yy" 
+          [showIcon]="true"
+          placeholder="dd/mm/aaaa"
+          size="small"
+          class="w-100">
+        </p-calendar>
+      </div>
+      
+      <div class="col-lg-4 col-md-5">
+        <label for="fechaFin" class="form-label small mb-2">Fecha Fin</label>
+        <p-calendar 
+          id="fechaFin" 
+          [(ngModel)]="fechaFin" 
+          dateFormat="dd/mm/yy" 
+          [showIcon]="true"
+          placeholder="dd/mm/aaaa"
+          size="small"
+          class="w-100">
+        </p-calendar>
+      </div>
+      
+      <div class="col-lg-4 col-md-2 d-flex gap-2 justify-content-lg-start justify-content-md-end">
+        <p-button 
+          label="Filtrar" 
+          icon="pi pi-filter" 
+          (click)="cargarComprobantesPorFecha()"
+          size="small"
+          styleClass="p-button-primary">
+        </p-button>
+        <p-button 
+          label="Limpiar" 
+          icon="pi pi-times" 
+          (click)="limpiarFiltros()"
+          size="small"
+          styleClass="p-button-secondary">
+        </p-button>
       </div>
     </div>
   </div>
+</div>
 
   <!-- Tabla Comprobantes -->
   <div class="card">
@@ -68,19 +79,18 @@
              [loading]="loading" [paginator]="true" 
              [globalFilterFields]="['numserie', 'Venta.Pedido.Persona.nombres', 'Venta.Pedido.Persona.apellidos', 'total']">
 
-      <ng-template #caption>
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="text-muted">Total de comprobantes: {{comprobantes.length || 0}}</span>
-          <p-iconfield iconPosition="left">
-            <p-inputicon>
-              <i class="pi pi-search"></i>
-            </p-inputicon>
-            <input pInputText #globalFilterInput type="text" 
-                   (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
-                   placeholder="Buscar comprobantes..." class="p-2" />
-          </p-iconfield>
-        </div>
-      </ng-template>
+     <ng-template #caption>
+  <div class="d-flex justify-content-between align-items-center">
+    <span class="text-muted">Total de comprobantes: {{comprobantes.length || 0}}</span>
+    <div class="position-relative">
+      <i class="pi pi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+      <input pInputText #globalFilterInput type="text" 
+             (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
+             placeholder="Buscar comprobantes..." 
+             class="p-2 ps-4 form-control" />
+    </div>
+  </div>
+</ng-template>
 
       <ng-template #header>
         <tr>
