@@ -12,13 +12,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteComprobante = exports.restaurarComprobante = exports.anularComprobante = exports.getComprobantesAnulados = exports.getComprobantesByVenta = exports.getComprobanteById = exports.getComprobantesRegistrados = exports.getComprobantesByFecha = exports.getComprobantes = exports.updateComprobante = exports.createComprobante = void 0;
+exports.crearVentaCompletaConComprobante = exports.crearVentaCompletaConComprobanteAdministracion = exports.deleteComprobante = exports.restaurarComprobante = exports.anularComprobante = exports.getComprobantesAnulados = exports.getComprobantesByVenta = exports.getComprobanteById = exports.getComprobantesRegistrados = exports.getComprobantesByFecha = exports.getComprobantes = exports.updateComprobante = exports.createComprobante = void 0;
 const comprobante_model_1 = __importDefault(require("../models/comprobante.model"));
 const venta_model_1 = __importDefault(require("../models/venta.model"));
 const tipo_comprobante_model_1 = __importDefault(require("../models/tipo_comprobante.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
+const wsp_controller_1 = require("./wsp.controller");
+const pedido_detalle_model_1 = __importDefault(require("../models/pedido_detalle.model"));
+const detalle_venta_model_1 = __importDefault(require("../models/detalle_venta.model"));
+const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
+const connection_db_1 = __importDefault(require("../db/connection.db"));
+const producto_model_1 = __importDefault(require("../models/producto.model"));
+const lote_model_1 = __importDefault(require("../models/lote.model"));
+const persona_model_1 = __importDefault(require("../models/persona.model"));
+const usuario_model_1 = __importDefault(require("../models/usuario.model"));
+const pedido_model_1 = __importDefault(require("../models/pedido.model"));
+const metodo_pago_model_1 = __importDefault(require("../models/metodo_pago.model"));
+const talla_model_1 = __importDefault(require("../models/talla.model"));
 // CREATE - Insertar nuevo comprobante
 const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idventa, igv, descuento, total, idtipocomprobante, numserie } = req.body;
@@ -71,7 +83,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -81,7 +93,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -90,7 +102,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -173,7 +185,7 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -183,7 +195,7 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -192,7 +204,7 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -225,7 +237,7 @@ const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -235,7 +247,7 @@ const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -244,7 +256,7 @@ const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -290,7 +302,7 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -300,7 +312,7 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -309,7 +321,7 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -346,7 +358,7 @@ const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -356,7 +368,7 @@ const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -365,7 +377,7 @@ const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -400,7 +412,7 @@ const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -410,7 +422,7 @@ const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, funct
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -419,7 +431,7 @@ const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -458,7 +470,7 @@ const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, f
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -468,7 +480,7 @@ const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, f
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -477,7 +489,7 @@ const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, f
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 },
                 {
                     model: estado_model_1.default,
@@ -512,7 +524,7 @@ const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, 
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -522,7 +534,7 @@ const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, 
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'dni']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
                                 }
                             ]
                         }
@@ -531,7 +543,7 @@ const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, 
                 {
                     model: tipo_comprobante_model_1.default,
                     as: 'TipoComprobante',
-                    attributes: ['id', 'nombre', 'codigo']
+                    attributes: ['id', 'nombre']
                 }
             ],
             order: [['id', 'DESC']]
@@ -614,3 +626,387 @@ const deleteComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.deleteComprobante = deleteComprobante;
+/// METOD COMPLETO DE LA VENTA POR LA ADMINISTRACION
+const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g;
+    const { cliente, metodoPago, productos, total, idusuario, fechaventa } = req.body;
+    // Validaciones básicas de entrada
+    if (!(cliente === null || cliente === void 0 ? void 0 : cliente.id) || !(metodoPago === null || metodoPago === void 0 ? void 0 : metodoPago.id) || !Array.isArray(productos) || productos.length === 0) {
+        res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
+        return;
+    }
+    if (!idusuario && !((_a = req.user) === null || _a === void 0 ? void 0 : _a.id)) {
+        res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
+        return;
+    }
+    const transaction = yield connection_db_1.default.transaction();
+    try {
+        // 1) CREAR PEDIDO (cabecera)
+        const pedido = yield pedido_model_1.default.create({
+            idpersona: cliente.id,
+            idmetodopago: metodoPago.id,
+            fechaoperacion: new Date(),
+            totalimporte: Number(total) || 0,
+            idestado: estados_constans_1.PedidoEstado.EN_ESPERA
+        }, { transaction });
+        // 2) CREAR DETALLES DE PEDIDO + DESCONTAR STOCK
+        const pedidoDetalles = [];
+        for (const p of productos) {
+            const { loteTalla, cantidad, precio, subtotal } = p;
+            // Validaciones mínimas por ítem
+            if (!(loteTalla === null || loteTalla === void 0 ? void 0 : loteTalla.id) || cantidad == null || precio == null) {
+                throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
+            }
+            // Verificar stock
+            const lt = yield lote_talla_model_1.default.findByPk(loteTalla.id, { transaction });
+            if (!lt)
+                throw new Error(`LoteTalla ${loteTalla.id} no existe`);
+            if (Number(lt.stock) < Number(cantidad)) {
+                throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+            }
+            // Crear detalle de pedido
+            const det = yield pedido_detalle_model_1.default.create({
+                idpedido: pedido.id,
+                idlote_talla: loteTalla.id,
+                cantidad: Number(cantidad),
+                precio: Number(precio),
+                subtotal: subtotal != null ? Number(subtotal) : Number(cantidad) * Number(precio)
+            }, { transaction });
+            pedidoDetalles.push(det);
+            // Descontar stock
+            yield lt.update({ stock: Number(lt.stock) - Number(cantidad) }, { transaction });
+        }
+        // 3) CREAR VENTA
+        const nuevaVenta = yield venta_model_1.default.create({
+            fechaventa: fechaventa || new Date(),
+            idusuario: idusuario || ((_b = req.user) === null || _b === void 0 ? void 0 : _b.id),
+            idpedido: pedido.id,
+            idestado: estados_constans_1.VentaEstado.REGISTRADO
+        }, { transaction });
+        // 4) CREAR DETALLES DE VENTA (a partir de PedidoDetalle)
+        const detallesVentaCreados = [];
+        for (const det of pedidoDetalles) {
+            const dv = yield detalle_venta_model_1.default.create({
+                idpedidodetalle: det.id,
+                idventa: nuevaVenta.id,
+                precio_venta_real: Number(det.precio),
+                subtotal_real: Number(det.subtotal),
+                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+            }, { transaction });
+            detallesVentaCreados.push(dv);
+        }
+        // 5) DETERMINAR COMPROBANTE (Boleta/Factura) según Persona
+        const persona = yield persona_model_1.default.findByPk(cliente.id, { transaction });
+        const idTipoComprobante = ((persona === null || persona === void 0 ? void 0 : persona.idtipopersona) === 2) ? 2 : 1; // 2: FACTURA, 1: BOLETA
+        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+        if (!tipoComprobante)
+            throw new Error('Tipo de comprobante no encontrado');
+        const totalNum = Number(total) || 0;
+        const igv = Number((totalNum * 0.18).toFixed(2));
+        const comprobante = yield comprobante_model_1.default.create({
+            idventa: nuevaVenta.id,
+            igv,
+            descuento: 0,
+            total: totalNum,
+            idtipocomprobante: tipoComprobante.id,
+            numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+            idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
+        }, { transaction });
+        // 6) ACTUALIZAR ESTADOS Y CONFIRMAR TRANSACCIÓN
+        yield pedido.update({ idestado: estados_constans_1.PedidoEstado.PAGADO }, { transaction });
+        yield transaction.commit();
+        // 7) RECUPERAR DATOS ENRIQUECIDOS PARA PDF/WS (fuera de la tx)
+        const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+            include: [
+                { model: usuario_model_1.default, as: 'Usuario' },
+                { model: pedido_model_1.default, as: 'Pedido', include: [{ model: persona_model_1.default, as: 'Persona' }, { model: metodo_pago_model_1.default, as: 'MetodoPago' }] }
+            ]
+        });
+        const comprobanteCompleto = yield comprobante_model_1.default.findByPk(comprobante.id, {
+            include: [
+                { model: tipo_comprobante_model_1.default, as: 'TipoComprobante' },
+                { model: venta_model_1.default, as: 'Venta' }
+            ]
+        });
+        const detallesVentaCompletos = yield detalle_venta_model_1.default.findAll({
+            where: { idventa: nuevaVenta.id },
+            include: [
+                {
+                    model: pedido_detalle_model_1.default,
+                    as: 'PedidoDetalle',
+                    include: [
+                        {
+                            model: lote_talla_model_1.default,
+                            as: 'LoteTalla',
+                            include: [
+                                {
+                                    model: lote_model_1.default,
+                                    as: 'Lote',
+                                    include: [{ model: producto_model_1.default, as: 'Producto' }]
+                                },
+                                { model: talla_model_1.default, as: 'Talla' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        });
+        // 8) GENERAR PDF Y ENVIAR POR WHATSAPP (si hay teléfono válido)
+        const telefonoRaw = (_f = (_c = cliente === null || cliente === void 0 ? void 0 : cliente.telefono) !== null && _c !== void 0 ? _c : (_e = (_d = ventaCompleta === null || ventaCompleta === void 0 ? void 0 : ventaCompleta.Pedido) === null || _d === void 0 ? void 0 : _d.Persona) === null || _e === void 0 ? void 0 : _e.telefono) !== null && _f !== void 0 ? _f : '';
+        const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
+        const phoneRegex = /^\d{9,15}$/;
+        if (telefono && phoneRegex.test(telefono)) {
+            try {
+                const nombreArchivo = yield (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, ventaCompleta === null || ventaCompleta === void 0 ? void 0 : ventaCompleta.Pedido, // incluye Persona y MetodoPago
+                detallesVentaCompletos);
+                yield (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_g = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _g === void 0 ? void 0 : _g.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
+                res.status(201).json({
+                    msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+                    data: {
+                        pedido,
+                        venta: ventaCompleta,
+                        comprobante: comprobanteCompleto,
+                        detallesVenta: detallesVentaCompletos
+                    }
+                });
+                return;
+            }
+            catch (err) {
+                console.error('Error al generar/enviar comprobante por WhatsApp:', err);
+                // sigue sin cortar la respuesta exitosa
+            }
+        }
+        // Si no hay teléfono válido o falló el envío:
+        res.status(201).json({
+            msg: 'Venta, detalles y comprobante creados exitosamente (sin envío por WhatsApp)',
+            data: {
+                pedido,
+                venta: ventaCompleta,
+                comprobante: comprobanteCompleto,
+                detallesVenta: detallesVentaCompletos
+            }
+        });
+    }
+    catch (error) {
+        yield transaction.rollback();
+        console.error('Error en crearVentaCompletaConComprobante:', error);
+        res.status(500).json({
+            msg: 'Ocurrió un error al crear la venta completa',
+            error: error.message
+        });
+    }
+});
+exports.crearVentaCompletaConComprobanteAdministracion = crearVentaCompletaConComprobanteAdministracion;
+const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    const { fechaventa, idusuario, idpedido, detallesVenta } = req.body;
+    try {
+        // Validaciones básicas
+        if (!idusuario || !idpedido || !detallesVenta || !Array.isArray(detallesVenta) || detallesVenta.length === 0) {
+            res.status(400).json({
+                msg: 'Los campos idusuario, idpedido y detallesVenta (array) son obligatorios'
+            });
+            return;
+        }
+        // Verificar si existe el usuario
+        const usuario = yield usuario_model_1.default.findByPk(idusuario);
+        if (!usuario) {
+            res.status(400).json({ msg: 'El usuario no existe' });
+            return;
+        }
+        // Verificar si existe el pedido con la persona
+        const pedido = yield pedido_model_1.default.findByPk(idpedido, {
+            include: [
+                {
+                    model: persona_model_1.default,
+                    as: 'Persona'
+                }
+            ]
+        });
+        if (!pedido) {
+            res.status(400).json({ msg: 'El pedido no existe' });
+            return;
+        }
+        // Verificar si el pedido ya tiene una venta asociada
+        const ventaExistente = yield venta_model_1.default.findOne({ where: { idpedido } });
+        if (ventaExistente) {
+            res.status(400).json({ msg: 'El pedido ya tiene una venta asociada' });
+            return;
+        }
+        // Iniciar transacción
+        const transaction = yield connection_db_1.default.transaction();
+        try {
+            // 1. CREAR LA VENTA
+            const nuevaVenta = yield venta_model_1.default.create({
+                fechaventa: fechaventa || new Date(),
+                idusuario,
+                idpedido,
+                idestado: estados_constans_1.VentaEstado.REGISTRADO
+            }, { transaction });
+            // 2. CREAR DETALLES DE VENTA
+            const detallesVentaCreados = [];
+            for (const detalle of detallesVenta) {
+                // Validar detalle de pedido
+                const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(detalle.idpedidodetalle, { transaction });
+                if (!pedidoDetalle) {
+                    throw new Error(`Detalle de pedido con ID ${detalle.idpedidodetalle} no existe`);
+                }
+                // Calcular subtotal si no se proporciona
+                const subtotal = detalle.subtotal_real !== undefined
+                    ? detalle.subtotal_real
+                    : Number(pedidoDetalle.cantidad) * Number(detalle.precio_venta_real);
+                // Crear detalle de venta
+                const nuevoDetalleVenta = yield detalle_venta_model_1.default.create({
+                    idpedidodetalle: detalle.idpedidodetalle,
+                    idventa: nuevaVenta.id,
+                    precio_venta_real: detalle.precio_venta_real,
+                    subtotal_real: subtotal,
+                    idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                }, { transaction });
+                detallesVentaCreados.push(nuevoDetalleVenta);
+                // Actualizar stock si corresponde
+                if (pedidoDetalle.idlote_talla && pedidoDetalle.cantidad) {
+                    const loteTalla = yield lote_talla_model_1.default.findByPk(pedidoDetalle.idlote_talla, { transaction });
+                    if (loteTalla && loteTalla.stock !== null) {
+                        const nuevoStock = Number(loteTalla.stock) - Number(pedidoDetalle.cantidad);
+                        yield loteTalla.update({ stock: nuevoStock }, { transaction });
+                    }
+                }
+            }
+            // 3. DETERMINAR TIPO DE COMPROBANTE
+            let idTipoComprobante;
+            if (pedido.Persona && pedido.Persona.idtipopersona === 2) {
+                idTipoComprobante = 2; // FACTURA
+            }
+            else {
+                idTipoComprobante = 1; // BOLETA
+            }
+            // 4. CREAR COMPROBANTE
+            const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+            if (!tipoComprobante) {
+                throw new Error('Tipo de comprobante no encontrado');
+            }
+            const total = Number(pedido.totalimporte) || 0;
+            const igv = total * 0.18;
+            const nuevoComprobante = yield comprobante_model_1.default.create({
+                idventa: nuevaVenta.id,
+                igv: igv,
+                descuento: 0,
+                total: total,
+                idtipocomprobante: tipoComprobante.id,
+                numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+                idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
+            }, { transaction });
+            // CONFIRMAR TRANSACCIÓN
+            yield transaction.commit();
+            // OBTENER DATOS COMPLETOS
+            const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+                include: [
+                    { model: usuario_model_1.default, as: 'Usuario' },
+                    {
+                        model: pedido_model_1.default,
+                        as: 'Pedido',
+                        include: [{ model: persona_model_1.default, as: 'Persona' }]
+                    }
+                ]
+            });
+            const comprobanteCompleto = yield comprobante_model_1.default.findByPk(nuevoComprobante.id, {
+                include: [
+                    { model: tipo_comprobante_model_1.default, as: 'TipoComprobante' },
+                    { model: venta_model_1.default, as: 'Venta' }
+                ]
+            });
+            const detallesVentaCompletos = yield detalle_venta_model_1.default.findAll({
+                where: { idventa: nuevaVenta.id },
+                include: [
+                    {
+                        model: pedido_detalle_model_1.default,
+                        as: 'PedidoDetalle',
+                        include: [
+                            {
+                                model: lote_talla_model_1.default,
+                                as: 'LoteTalla',
+                                include: [
+                                    {
+                                        model: lote_model_1.default,
+                                        as: 'Lote',
+                                        include: [{ model: producto_model_1.default, as: 'Producto' }]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            });
+            // 5. GENERAR Y ENVIAR COMPROBANTE POR WHATSAPP
+            const telefono = (_b = (_a = pedido === null || pedido === void 0 ? void 0 : pedido.Persona) === null || _a === void 0 ? void 0 : _a.telefono) !== null && _b !== void 0 ? _b : '';
+            const phoneRegex = /^\d{9,15}$/;
+            if (telefono && phoneRegex.test(telefono)) {
+                try {
+                    const nombreArchivo = yield (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, pedido, detallesVentaCompletos);
+                    yield (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_c = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _c === void 0 ? void 0 : _c.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
+                    res.status(201).json({
+                        msg: 'Venta, detalles, comprobante creados y enviados exitosamente',
+                        data: {
+                            venta: ventaCompleta,
+                            comprobante: comprobanteCompleto,
+                            detallesVenta: detallesVentaCompletos
+                        }
+                    });
+                    return;
+                }
+                catch (error) {
+                    console.error('Error al enviar comprobante:', error);
+                    // Continuar aunque falle el envío
+                }
+            }
+            res.status(201).json({
+                msg: 'Venta, detalles y comprobante creados exitosamente (sin envío por WhatsApp)',
+                data: {
+                    venta: ventaCompleta,
+                    comprobante: comprobanteCompleto,
+                    detallesVenta: detallesVentaCompletos
+                }
+            });
+        }
+        catch (error) {
+            yield transaction.rollback();
+            throw error;
+        }
+    }
+    catch (error) {
+        console.error('Error en crearVentaCompletaConComprobante:', error);
+        res.status(500).json({
+            msg: 'Ocurrió un error al crear la venta completa',
+            error: error.message
+        });
+    }
+});
+exports.crearVentaCompletaConComprobante = crearVentaCompletaConComprobante;
+// Función para generar número de serie único
+const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(void 0, void 0, void 0, function* () {
+    const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
+        include: [{ model: connection_db_1.default.models.TipoSerie, as: 'TipoSerie' }],
+        transaction
+    });
+    if (!tipoComprobante || !tipoComprobante.TipoSerie) {
+        throw new Error('Tipo de comprobante o serie no encontrado');
+    }
+    // Obtener el último comprobante de este tipo
+    const ultimoComprobante = yield comprobante_model_1.default.findOne({
+        where: { idtipocomprobante: idTipoComprobante },
+        order: [['id', 'DESC']],
+        transaction
+    });
+    let siguienteNumero = 1;
+    if (ultimoComprobante && ultimoComprobante.numserie) {
+        // Extraer el número del último comprobante e incrementarlo
+        const partes = ultimoComprobante.numserie.split('-');
+        if (partes.length > 1) {
+            const ultimoNumero = parseInt(partes[1]) || 0;
+            siguienteNumero = ultimoNumero + 1;
+        }
+    }
+    // Formato: [SERIE]-[NÚMERO]
+    return `${tipoComprobante.TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
+});

@@ -6,6 +6,7 @@ const DetalleVentaRouter = (0, express_1.Router)();
 // CREATE
 DetalleVentaRouter.post('/', detalle_venta_controller_1.createDetalleVenta); // Crear un nuevo detalle de venta
 DetalleVentaRouter.post('/multiple', detalle_venta_controller_1.createMultipleDetalleVenta); // Crear múltiples detalles de venta
+DetalleVentaRouter.get('/productos-mas-vendidos', detalle_venta_controller_1.getProductosMasVendidos);
 // READ
 DetalleVentaRouter.get('/', detalle_venta_controller_1.getDetallesVenta); // Obtener todos los detalles de venta
 DetalleVentaRouter.get('/registrados', detalle_venta_controller_1.getDetallesVentaRegistrados); // Obtener detalles de venta registrados

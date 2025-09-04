@@ -22,7 +22,7 @@ import { ProductoServicio } from '../../../services/producto.service';
 import { VentaServicio } from '../../../services/Venta.service';
 import { DetalleVentaServicio } from '../../../services/DetalleVenta.Service';
 import { MetodoPagoServicio } from '../../../services/MetodoPago.service';
-import { PersonaServicio } from '../../../services/Persona.service';
+import { PersonaServicio } from '../../../services/persona.service';
 import { LoteTallaServicio } from '../../../services/LoteTalla.service';
 import { ComprobanteServicio } from '../../../services/Comprobante.service';
 import { Producto, Persona, MetodoPago, Venta, DetalleVenta, LoteTalla } from '../../../interfaces/interfaces.interface';
@@ -205,12 +205,18 @@ export class VentaComponent implements OnInit {
   // Usa la ruta GET /api/v1/lotetallas/tallas con parámetros: idproducto, estado, stock
   cargarTallasDisponibles(productoId: number) {
     this.loteTallaService.getTallasDisponibles({
-      idproducto: productoId,
+      productoId: productoId,
       estado: 'disponible',
       stock: 'con_stock'
     }).subscribe({
       next: (response: any) => {
-        this.tallasDisponibles = Array.isArray(response) ? response : response?.data || [];
+        //this.tallasDisponibles = Array.isArray(response) ? response : response?.data || [];
+        this.tallasDisponibles = (Array.isArray(response) ? response : response?.data || [])
+        .map((item: any) => ({
+          ...item,
+          talla: item.Talla?.nombre // 🔹 agregamos un alias "talla"
+        }));
+
         // Ordenar tallas por precio ascendente
         this.tallasDisponibles.sort((a, b) => a.precioventa - b.precioventa);
       },
@@ -229,9 +235,9 @@ export class VentaComponent implements OnInit {
   // Método para verificar stock antes de agregar al carrito
   // Usa la ruta GET /api/v1/lotetallas/stock con parámetros: id, cantidad
   verificarStockDisponible(loteTallaId: number, cantidad: number): Observable<boolean> {
-    return this.loteTallaService.verificarStock({ id: loteTallaId, cantidad: cantidad }).pipe(
+    return this.loteTallaService.verificarStock({ loteTallaId: loteTallaId, cantidad: cantidad }).pipe(
       map((response: any) => {
-        return response?.disponible || false;
+        return response?.data.disponible || false;
       }),
       catchError(() => {
         return of(false);
@@ -257,8 +263,8 @@ export class VentaComponent implements OnInit {
     const query = event.query.toLowerCase();
     this.catalogoFiltrado = this.catalogoProductos.filter((item: any) =>
       item.nombre?.toLowerCase().includes(query) ||
-      item.marca?.toLowerCase().includes(query) ||
-      item.categoria?.toLowerCase().includes(query)
+      item.marca?.nombre?.toLowerCase().includes(query) ||
+      item.categoria?.nombre?.toLowerCase().includes(query)
     );
   }
 
@@ -283,8 +289,9 @@ export class VentaComponent implements OnInit {
   // Método para manejar cuando se selecciona un producto
   onProductoSeleccionado(event: any) {
     if (event) {
-      this.productoSeleccionado = event;
-      this.cargarTallasDisponibles(event.id);
+      this.productoSeleccionado = event.value;
+      console.log(event)
+      this.cargarTallasDisponibles(event.value.producto_id);
     } else {
       this.productoSeleccionado = null;
       this.tallasDisponibles = [];
@@ -305,6 +312,7 @@ export class VentaComponent implements OnInit {
     // Verificar stock usando el servicio del backend
     this.verificarStockDisponible(this.tallaSeleccionada.id, this.cantidadProducto).subscribe({
       next: (stockDisponible) => {
+        console.log(stockDisponible)
         if (!stockDisponible) {
           this.messageService.add({
             severity: 'error',
@@ -324,12 +332,12 @@ export class VentaComponent implements OnInit {
           return;
         }
 
-        const subtotal = this.cantidadProducto * this.tallaSeleccionada.precioventa;
+        const subtotal = this.cantidadProducto * this.tallaSeleccionada.preciocosto;
         const cartItem: CartItem = {
           id: Date.now(),
           loteTalla: this.tallaSeleccionada,
           cantidad: this.cantidadProducto,
-          precio: this.tallaSeleccionada.precioventa,
+          precio: this.tallaSeleccionada.preciocosto,
           subtotal: subtotal
         };
 
@@ -447,11 +455,12 @@ export class VentaComponent implements OnInit {
 
   procesarVenta() {
     this.guardandoVenta = true;
-
+    const idusuario = localStorage.getItem("idusuario");
     // Preparar datos para la venta completa usando POST /api/v1/comprobantes/venta-completa
     const ventaData = {
       cliente: this.clienteSeleccionado,
       metodoPago: this.metodoPagoSeleccionado,
+      idusuario : idusuario,
       productos: this.cartItems.map(item => ({
         loteTalla: item.loteTalla,
         cantidad: item.cantidad,

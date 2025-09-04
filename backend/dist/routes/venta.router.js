@@ -7,6 +7,7 @@ VentaRouter.post('/', venta_controller_1.createVenta); // Crear una nueva venta
 VentaRouter.get('/', venta_controller_1.getVentas); // Obtener todas las ventas
 VentaRouter.get('/registradas', venta_controller_1.getVentasRegistradas); // Obtener ventas registradas
 VentaRouter.get('/anuladas', venta_controller_1.getVentasAnuladas); // Obtener ventas anuladas
+VentaRouter.get('/dashboard/por-mes', venta_controller_1.getVentasPorMes);
 VentaRouter.get('/usuario/:idusuario', venta_controller_1.getVentasByUsuario); // Obtener ventas por usuario
 VentaRouter.get('/pedido/:idpedido', venta_controller_1.getVentasByPedido); // Obtener ventas por pedido
 VentaRouter.get('/:id', venta_controller_1.getVentaById); // Obtener una venta por ID

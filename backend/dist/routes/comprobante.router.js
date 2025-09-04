@@ -5,6 +5,8 @@ const comprobante_controller_1 = require("../controllers/comprobante.controller"
 const ComprobanteRouter = (0, express_1.Router)();
 // CREATE
 ComprobanteRouter.post('/', comprobante_controller_1.createComprobante); // Crear un nuevo comprobante
+ComprobanteRouter.post('/venta-completa', comprobante_controller_1.crearVentaCompletaConComprobante); // Nueva ruta
+ComprobanteRouter.post('/venta-completa/admin', comprobante_controller_1.crearVentaCompletaConComprobanteAdministracion); // Nueva ruta
 // READ
 ComprobanteRouter.get('/', comprobante_controller_1.getComprobantes); // Obtener todos los comprobantes
 ComprobanteRouter.get('/registrados', comprobante_controller_1.getComprobantesRegistrados); // Obtener comprobantes registrados

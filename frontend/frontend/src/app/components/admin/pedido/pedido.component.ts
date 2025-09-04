@@ -12,7 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Pedido, Persona, MetodoPago } from '../../../interfaces/interfaces.interface';
-import { PersonaServicio } from '../../../services/Persona.service';
+import { PersonaServicio } from '../../../services/persona.service';
 import { MetodoPagoServicio } from '../../../services/MetodoPago.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { PedidoServicio } from '../../../services/Pedido.service';

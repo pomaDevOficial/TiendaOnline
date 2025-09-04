@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarMovimientoLote = exports.deleteMovimientoLote = exports.getMovimientosEliminados = exports.getMovimientosByLoteTalla = exports.getMovimientoLoteById = exports.getMovimientosRegistrados = exports.getMovimientosLote = exports.updateMovimientoLote = exports.createMovimientoLote = void 0;
+exports.getMovimientosByFecha = exports.restaurarMovimientoLote = exports.deleteMovimientoLote = exports.getMovimientosEliminados = exports.getMovimientosByLoteTalla = exports.getMovimientoLoteById = exports.getMovimientosRegistrados = exports.getMovimientosLote = exports.updateMovimientoLote = exports.createMovimientoLote = void 0;
 const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
 const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
@@ -432,3 +432,57 @@ const restaurarMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.restaurarMovimientoLote = restaurarMovimientoLote;
+// READ - Listar movimientos por rango de fechas
+const getMovimientosByFecha = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { fechaInicio, fechaFin } = req.query;
+    try {
+        if (!fechaInicio || !fechaFin) {
+            res.status(400).json({
+                msg: 'Los parámetros fechaInicio y fechaFin son obligatorios'
+            });
+            return;
+        }
+        const movimientos = yield movimiento_lote_model_1.default.findAll({
+            where: {
+                fechamovimiento: {
+                    [sequelize_1.Op.between]: [new Date(fechaInicio), new Date(fechaFin)]
+                },
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
+            },
+            include: [
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTalla',
+                    attributes: ['id', 'stock', 'esGenero', 'preciocosto', 'precioventa'],
+                    include: [
+                        {
+                            model: lote_talla_model_1.default.associations.Lote.target,
+                            as: 'Lote',
+                            attributes: ['id', 'proveedor', 'fechaingreso']
+                        },
+                        {
+                            model: lote_talla_model_1.default.associations.Talla.target,
+                            as: 'Talla',
+                            attributes: ['id', 'nombre']
+                        }
+                    ]
+                },
+                {
+                    model: estado_model_1.default,
+                    as: 'Estado',
+                    attributes: ['id', 'nombre']
+                }
+            ],
+            order: [['fechamovimiento', 'DESC']]
+        });
+        res.json({
+            msg: 'Movimientos por fecha obtenidos exitosamente',
+            data: movimientos
+        });
+    }
+    catch (error) {
+        console.error('Error en getMovimientosByFecha:', error);
+        res.status(500).json({ msg: 'Error al obtener movimientos por fecha' });
+    }
+});
+exports.getMovimientosByFecha = getMovimientosByFecha;

@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarVenta = exports.anularVenta = exports.getVentasAnuladas = exports.getVentasByPedido = exports.getVentasByUsuario = exports.getVentaById = exports.getVentasRegistradas = exports.getVentas = exports.updateVenta = exports.createVenta = void 0;
+exports.getVentasPorMes = exports.restaurarVenta = exports.anularVenta = exports.getVentasAnuladas = exports.getVentasByPedido = exports.getVentasByUsuario = exports.getVentaById = exports.getVentasRegistradas = exports.getVentas = exports.updateVenta = exports.createVenta = void 0;
 const venta_model_1 = __importDefault(require("../models/venta.model"));
 const usuario_model_1 = __importDefault(require("../models/usuario.model"));
 const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const sequelize_1 = require("sequelize");
 // CREATE - Insertar nueva venta
 const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fechaventa, idusuario, idpedido } = req.body;
@@ -72,7 +73,7 @@ const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -151,7 +152,7 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -161,7 +162,7 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -196,7 +197,7 @@ const getVentas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -206,7 +207,7 @@ const getVentas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -245,7 +246,7 @@ const getVentasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0, fun
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -255,7 +256,7 @@ const getVentasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0, fun
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -292,7 +293,7 @@ const getVentaById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -302,7 +303,7 @@ const getVentaById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -343,7 +344,7 @@ const getVentasByUsuario = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -353,7 +354,7 @@ const getVentasByUsuario = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -391,7 +392,7 @@ const getVentasByPedido = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -401,7 +402,7 @@ const getVentasByPedido = (req, res) => __awaiter(void 0, void 0, void 0, functi
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -438,7 +439,7 @@ const getVentasAnuladas = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 {
                     model: usuario_model_1.default,
                     as: 'Usuario',
-                    attributes: ['id', 'nombre', 'email']
+                    attributes: ['id', 'usuario']
                 },
                 {
                     model: pedido_model_1.default,
@@ -448,7 +449,7 @@ const getVentasAnuladas = (req, res) => __awaiter(void 0, void 0, void 0, functi
                         {
                             model: pedido_model_1.default.associations.Persona.target,
                             as: 'Persona',
-                            attributes: ['id', 'nombres', 'apellidos', 'dni']
+                            attributes: ['id', 'nombres', 'apellidos', 'nroidentidad']
                         },
                         {
                             model: pedido_model_1.default.associations.MetodoPago.target,
@@ -516,3 +517,71 @@ const restaurarVenta = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.restaurarVenta = restaurarVenta;
+// ========================================
+// MÉTODO PARA VENTAS CONTROLLER
+// ========================================
+// READ - Obtener datos de ventas por mes para gráfica de barras
+const getVentasPorMes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { año, mes } = req.query;
+    try {
+        let whereCondition = {
+            idestado: estados_constans_1.VentaEstado.REGISTRADO
+        };
+        // Si se proporciona año, filtrar por año
+        if (año) {
+            const yearStart = new Date(`${año}-01-01`);
+            const yearEnd = new Date(`${año}-12-31 23:59:59`);
+            whereCondition.fechaventa = {
+                [sequelize_1.Op.between]: [yearStart, yearEnd]
+            };
+        }
+        // Si se proporciona mes específico (requiere año)
+        if (mes && año) {
+            const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
+            const monthEnd = new Date(parseInt(año), parseInt(mes), 0, 23, 59, 59); // Último día del mes
+            whereCondition.fechaventa = {
+                [sequelize_1.Op.between]: [monthStart, monthEnd]
+            };
+        }
+        const ventas = yield venta_model_1.default.findAll({
+            where: whereCondition,
+            include: [
+                {
+                    model: pedido_model_1.default,
+                    as: 'Pedido',
+                    attributes: ['id', 'totalimporte']
+                }
+            ],
+            attributes: ['id', 'fechaventa'],
+            order: [['fechaventa', 'ASC']]
+        });
+        // Agrupar por mes
+        const ventasPorMes = {};
+        ventas.forEach((venta) => {
+            var _a;
+            const fecha = new Date(venta.fechaventa);
+            const mesAno = `${fecha.getFullYear()}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}`;
+            if (!ventasPorMes[mesAno]) {
+                ventasPorMes[mesAno] = { cantidad: 0, total: 0 };
+            }
+            ventasPorMes[mesAno].cantidad += 1;
+            ventasPorMes[mesAno].total += parseFloat(((_a = venta.Pedido) === null || _a === void 0 ? void 0 : _a.totalimporte) || '0');
+        });
+        // Convertir a array para la gráfica
+        const datosGrafica = Object.entries(ventasPorMes).map(([mes, datos]) => ({
+            mes,
+            cantidad: datos.cantidad,
+            total: datos.total
+        }));
+        res.json({
+            msg: 'Datos de ventas por mes obtenidos exitosamente',
+            data: datosGrafica,
+            filtros: { año, mes }
+        });
+    }
+    catch (error) {
+        console.error('Error en getVentasPorMes:', error);
+        res.status(500).json({ msg: 'Error al obtener datos de ventas por mes' });
+    }
+});
+exports.getVentasPorMes = getVentasPorMes;

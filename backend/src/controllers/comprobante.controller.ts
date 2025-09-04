@@ -3,7 +3,7 @@ import Comprobante from '../models/comprobante.model';
 import Venta from '../models/venta.model';
 import TipoComprobante from '../models/tipo_comprobante.model';
 import Estado from '../models/estado.model';
-import { ComprobanteEstado, EstadoGeneral, VentaEstado } from '../estadosTablas/estados.constans';
+import { ComprobanteEstado, EstadoGeneral, PedidoEstado, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
 import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
 import PedidoDetalle from '../models/pedido_detalle.model';
@@ -15,6 +15,8 @@ import Lote from '../models/lote.model';
 import Persona from '../models/persona.model';
 import Usuario from '../models/usuario.model';
 import Pedido from '../models/pedido.model';
+import MetodoPago from '../models/metodo_pago.model';
+import Talla from '../models/talla.model';
 
 // CREATE - Insertar nuevo comprobante
 export const createComprobante = async (req: Request, res: Response): Promise<void> => {
@@ -632,6 +634,204 @@ export const deleteComprobante = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error('Error en deleteComprobante:', error);
     res.status(500).json({ msg: 'Error al eliminar el comprobante' });
+  }
+};
+/// METOD COMPLETO DE LA VENTA POR LA ADMINISTRACION
+export const crearVentaCompletaConComprobanteAdministracion = async (req: Request, res: Response): Promise<void> => {
+  const { cliente, metodoPago, productos, total, idusuario, fechaventa } = req.body;
+
+  // Validaciones básicas de entrada
+  if (!cliente?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
+    res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
+    return;
+  }
+  if (!idusuario && !((req as any).user?.id)) {
+    res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
+    return;
+  }
+
+  const transaction = await db.transaction();
+
+  try {
+    // 1) CREAR PEDIDO (cabecera)
+    const pedido = await Pedido.create({
+      idpersona: cliente.id,
+      idmetodopago: metodoPago.id,
+      fechaoperacion: new Date(),
+      totalimporte: Number(total) || 0,
+      idestado: PedidoEstado.EN_ESPERA
+    }, { transaction });
+
+    // 2) CREAR DETALLES DE PEDIDO + DESCONTAR STOCK
+    const pedidoDetalles: PedidoDetalle[] = [];
+    for (const p of productos) {
+      const { loteTalla, cantidad, precio, subtotal } = p;
+
+      // Validaciones mínimas por ítem
+      if (!loteTalla?.id || cantidad == null || precio == null) {
+        throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
+      }
+
+      // Verificar stock
+      const lt = await LoteTalla.findByPk(loteTalla.id, { transaction });
+      if (!lt) throw new Error(`LoteTalla ${loteTalla.id} no existe`);
+      if (Number(lt.stock) < Number(cantidad)) {
+        throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+      }
+
+      // Crear detalle de pedido
+      const det = await PedidoDetalle.create({
+        idpedido: pedido.id,
+        idlote_talla: loteTalla.id,
+        cantidad: Number(cantidad),
+        precio: Number(precio),
+        subtotal: subtotal != null ? Number(subtotal) : Number(cantidad) * Number(precio)
+      }, { transaction });
+
+      pedidoDetalles.push(det);
+
+      // Descontar stock
+      await lt.update({ stock: Number(lt.stock) - Number(cantidad) }, { transaction });
+    }
+
+    // 3) CREAR VENTA
+    const nuevaVenta = await Venta.create({
+      fechaventa: fechaventa || new Date(),
+      idusuario: idusuario || (req as any).user?.id,
+      idpedido: pedido.id,
+      idestado: VentaEstado.REGISTRADO
+    }, { transaction });
+
+    // 4) CREAR DETALLES DE VENTA (a partir de PedidoDetalle)
+    const detallesVentaCreados: DetalleVenta[] = [];
+    for (const det of pedidoDetalles) {
+      const dv = await DetalleVenta.create({
+        idpedidodetalle: det.id,
+        idventa: nuevaVenta.id,
+        precio_venta_real: Number(det.precio),
+        subtotal_real: Number(det.subtotal),
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
+      detallesVentaCreados.push(dv);
+    }
+
+    // 5) DETERMINAR COMPROBANTE (Boleta/Factura) según Persona
+    const persona = await Persona.findByPk(cliente.id, { transaction });
+    const idTipoComprobante = (persona?.idtipopersona === 2) ? 2 : 1; // 2: FACTURA, 1: BOLETA
+
+    const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, { transaction });
+    if (!tipoComprobante) throw new Error('Tipo de comprobante no encontrado');
+
+    const totalNum = Number(total) || 0;
+    const igv = Number((totalNum * 0.18).toFixed(2));
+
+    const comprobante = await Comprobante.create({
+      idventa: nuevaVenta.id,
+      igv,
+      descuento: 0,
+      total: totalNum,
+      idtipocomprobante: tipoComprobante.id,
+      numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
+      idestado: ComprobanteEstado.REGISTRADO
+    }, { transaction });
+
+    // 6) ACTUALIZAR ESTADOS Y CONFIRMAR TRANSACCIÓN
+    await pedido.update({ idestado: PedidoEstado.PAGADO }, { transaction });
+
+    await transaction.commit();
+
+    // 7) RECUPERAR DATOS ENRIQUECIDOS PARA PDF/WS (fuera de la tx)
+    const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
+      include: [
+        { model: Usuario, as: 'Usuario' },
+        { model: Pedido, as: 'Pedido', include: [{ model: Persona, as: 'Persona' }, { model: MetodoPago, as: 'MetodoPago' }] }
+      ]
+    });
+
+    const comprobanteCompleto = await Comprobante.findByPk(comprobante.id, {
+      include: [
+        { model: TipoComprobante, as: 'TipoComprobante' },
+        { model: Venta, as: 'Venta' }
+      ]
+    });
+
+    const detallesVentaCompletos = await DetalleVenta.findAll({
+      where: { idventa: nuevaVenta.id },
+      include: [
+        {
+          model: PedidoDetalle,
+          as: 'PedidoDetalle',
+          include: [
+            {
+              model: LoteTalla,
+              as: 'LoteTalla',
+              include: [
+                {
+                  model: Lote,
+                  as: 'Lote',
+                  include: [{ model: Producto, as: 'Producto' }]
+                },
+                { model: Talla, as: 'Talla' }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    // 8) GENERAR PDF Y ENVIAR POR WHATSAPP (si hay teléfono válido)
+    const telefonoRaw = cliente?.telefono ?? ventaCompleta?.Pedido?.Persona?.telefono ?? '';
+    const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
+    const phoneRegex = /^\d{9,15}$/;
+
+    if (telefono && phoneRegex.test(telefono)) {
+      try {
+        const nombreArchivo = await generarPDFComprobante(
+          comprobanteCompleto,
+          ventaCompleta,
+          ventaCompleta?.Pedido,           // incluye Persona y MetodoPago
+          detallesVentaCompletos
+        );
+
+        await enviarArchivoWSP(
+          telefono,
+          nombreArchivo,
+          `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+        );
+
+        res.status(201).json({
+          msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+          data: {
+            pedido,
+            venta: ventaCompleta,
+            comprobante: comprobanteCompleto,
+            detallesVenta: detallesVentaCompletos
+          }
+        });
+        return;
+      } catch (err) {
+        console.error('Error al generar/enviar comprobante por WhatsApp:', err);
+        // sigue sin cortar la respuesta exitosa
+      }
+    }
+
+    // Si no hay teléfono válido o falló el envío:
+    res.status(201).json({
+      msg: 'Venta, detalles y comprobante creados exitosamente (sin envío por WhatsApp)',
+      data: {
+        pedido,
+        venta: ventaCompleta,
+        comprobante: comprobanteCompleto,
+        detallesVenta: detallesVentaCompletos
+      }
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error en crearVentaCompletaConComprobante:', error);
+    res.status(500).json({
+      msg: 'Ocurrió un error al crear la venta completa',
+      error: (error as Error).message
+    });
   }
 };
 

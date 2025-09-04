@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDetalleVenta = exports.restaurarDetalleVenta = exports.anularDetalleVenta = exports.getDetallesVentaAnulados = exports.getDetallesVentaByVenta = exports.getDetalleVentaById = exports.getDetallesVentaRegistrados = exports.getDetallesVenta = exports.updateDetalleVenta = exports.createMultipleDetalleVenta = exports.createDetalleVenta = void 0;
+exports.getProductosMasVendidos = exports.deleteDetalleVenta = exports.restaurarDetalleVenta = exports.anularDetalleVenta = exports.getDetallesVentaAnulados = exports.getDetallesVentaByVenta = exports.getDetalleVentaById = exports.getDetallesVentaRegistrados = exports.getDetallesVenta = exports.updateDetalleVenta = exports.createMultipleDetalleVenta = exports.createDetalleVenta = void 0;
 const detalle_venta_model_1 = __importDefault(require("../models/detalle_venta.model"));
 const pedido_detalle_model_1 = __importDefault(require("../models/pedido_detalle.model"));
 const venta_model_1 = __importDefault(require("../models/venta.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const sequelize_1 = require("sequelize");
 // CREATE - Insertar nuevo detalle de venta
 const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idpedidodetalle, idventa, precio_venta_real, subtotal_real } = req.body;
@@ -786,3 +787,114 @@ const deleteDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.deleteDetalleVenta = deleteDetalleVenta;
+// ========================================
+// MÉTODO PARA DETALLE VENTA CONTROLLER
+// ========================================
+// READ - Obtener productos más vendidos con filtro por mes
+const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { año, mes, limite } = req.query;
+    try {
+        let whereCondition = {
+            idestado: estados_constans_1.VentaEstado.REGISTRADO
+        };
+        // Construir condición de fecha para la venta
+        let ventaWhereCondition = {};
+        if (año) {
+            const yearStart = new Date(`${año}-01-01`);
+            const yearEnd = new Date(`${año}-12-31 23:59:59`);
+            ventaWhereCondition.fechaventa = {
+                [sequelize_1.Op.between]: [yearStart, yearEnd]
+            };
+        }
+        if (mes && año) {
+            const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
+            const monthEnd = new Date(parseInt(año), parseInt(mes), 0, 23, 59, 59);
+            ventaWhereCondition.fechaventa = {
+                [sequelize_1.Op.between]: [monthStart, monthEnd]
+            };
+        }
+        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+            where: whereCondition,
+            include: [
+                {
+                    model: pedido_detalle_model_1.default,
+                    as: 'PedidoDetalle',
+                    attributes: ['id', 'cantidad'],
+                    include: [
+                        {
+                            model: pedido_detalle_model_1.default.associations.LoteTalla.target,
+                            as: 'LoteTalla',
+                            attributes: ['id'],
+                            include: [
+                                {
+                                    model: pedido_detalle_model_1.default.associations.LoteTalla.target.associations.Lote.target,
+                                    as: 'Lote',
+                                    attributes: ['id'],
+                                    include: [
+                                        {
+                                            model: pedido_detalle_model_1.default.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
+                                            as: 'Producto',
+                                            attributes: ['id', 'nombre', 'imagen']
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: venta_model_1.default,
+                    as: 'Venta',
+                    attributes: ['id', 'fechaventa'],
+                    where: ventaWhereCondition
+                }
+            ],
+            attributes: ['id', 'subtotal_real']
+        });
+        // Agrupar productos y calcular totales
+        const productosVendidos = {};
+        detallesVenta.forEach((detalle) => {
+            var _a, _b, _c, _d;
+            const producto = (_c = (_b = (_a = detalle.PedidoDetalle) === null || _a === void 0 ? void 0 : _a.LoteTalla) === null || _b === void 0 ? void 0 : _b.Lote) === null || _c === void 0 ? void 0 : _c.Producto;
+            const cantidad = parseInt(((_d = detalle.PedidoDetalle) === null || _d === void 0 ? void 0 : _d.cantidad) || '0');
+            const subtotal = parseFloat(detalle.subtotal_real || '0');
+            if (producto) {
+                const productoId = producto.id.toString();
+                if (!productosVendidos[productoId]) {
+                    productosVendidos[productoId] = {
+                        producto: {
+                            id: producto.id,
+                            nombre: producto.nombre,
+                            imagen: producto.imagen
+                        },
+                        cantidadVendida: 0,
+                        totalVentas: 0,
+                        totalIngresos: 0
+                    };
+                }
+                productosVendidos[productoId].cantidadVendida += cantidad;
+                productosVendidos[productoId].totalVentas += 1;
+                productosVendidos[productoId].totalIngresos += subtotal;
+            }
+        });
+        // Convertir a array y ordenar por cantidad vendida
+        let ranking = Object.values(productosVendidos)
+            .sort((a, b) => b.cantidadVendida - a.cantidadVendida);
+        // Aplicar límite si se proporciona
+        if (limite) {
+            const limiteNumero = parseInt(limite);
+            ranking = ranking.slice(0, limiteNumero);
+        }
+        res.json({
+            msg: 'Productos más vendidos obtenidos exitosamente',
+            data: ranking,
+            filtros: { año, mes, limite },
+            total: ranking.length
+        });
+    }
+    catch (error) {
+        console.error('Error en getProductosMasVendidos:', error);
+        res.status(500).json({ msg: 'Error al obtener productos más vendidos' });
+    }
+});
+exports.getProductosMasVendidos = getProductosMasVendidos;
