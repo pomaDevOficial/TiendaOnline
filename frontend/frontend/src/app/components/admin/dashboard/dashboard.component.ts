@@ -167,12 +167,23 @@ export class DashboardComponent implements OnInit {
     };
 
     this.ventasPorMesOptions = {
+      responsive: true,
       maintainAspectRatio: false,
-      aspectRatio: 0.6,
+      layout: {
+        padding: {
+          left: 20,
+          right: 20,
+          top: 30,
+          bottom: 30
+        }
+      },
       plugins: {
         legend: {
           labels: {
-            color: textColor
+            color: textColor,
+            font: {
+              size: 12
+            }
           }
         },
         title: {
@@ -182,13 +193,23 @@ export class DashboardComponent implements OnInit {
           font: {
             size: 16,
             weight: 'bold'
+          },
+          padding: {
+            top: 10,
+            bottom: 20
           }
         }
       },
       scales: {
         x: {
           ticks: {
-            color: textColorSecondary
+            color: textColorSecondary,
+            font: {
+              size: 11
+            },
+            maxRotation: 0,
+            minRotation: 0,
+            padding: 5
           },
           grid: {
             color: surfaceBorder,
@@ -197,7 +218,11 @@ export class DashboardComponent implements OnInit {
         },
         y: {
           ticks: {
-            color: textColorSecondary
+            color: textColorSecondary,
+            font: {
+              size: 11
+            },
+            padding: 5
           },
           grid: {
             color: surfaceBorder,
@@ -246,13 +271,24 @@ export class DashboardComponent implements OnInit {
     };
 
     this.productosMasVendidosOptions = {
+      responsive: true,
       maintainAspectRatio: false,
-      aspectRatio: 0.8,
+      layout: {
+        padding: {
+          left: 20,
+          right: 20,
+          top: 30,
+          bottom: 40
+        }
+      },
       plugins: {
         legend: {
           position: 'top',
           labels: {
-            color: textColor
+            color: textColor,
+            font: {
+              size: 12
+            }
           }
         },
         title: {
@@ -262,13 +298,23 @@ export class DashboardComponent implements OnInit {
           font: {
             size: 16,
             weight: 'bold'
+          },
+          padding: {
+            top: 10,
+            bottom: 20
           }
         }
       },
       scales: {
         x: {
           ticks: {
-            color: textColorSecondary
+            color: textColorSecondary,
+            font: {
+              size: 10
+            },
+            maxRotation: 45,
+            minRotation: 45,
+            padding: 5
           },
           grid: {
             color: surfaceBorder,
@@ -277,7 +323,11 @@ export class DashboardComponent implements OnInit {
         },
         y: {
           ticks: {
-            color: textColorSecondary
+            color: textColorSecondary,
+            font: {
+              size: 11
+            },
+            padding: 5
           },
           grid: {
             color: surfaceBorder,
