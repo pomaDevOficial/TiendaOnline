@@ -141,43 +141,47 @@
   <!-- Gráficas -->
   <div class="row">
     <!-- Gráfica de Ventas por Mes -->
-    <div class="col-xl-8 col-lg-7 mb-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Ventas por Mes</h5>
-          <div style="height: 400px;">
-            @if (loadingVentas) {
-              <div class="d-flex flex-column gap-3">
-                <p-skeleton width="100%" height="30px"></p-skeleton>
-                <p-skeleton width="100%" height="300px"></p-skeleton>
-              </div>
-            } @else {
-              <p-chart type="line" [data]="ventasPorMesData" [options]="ventasPorMesOptions"></p-chart>
-            }
+   <!-- Gráfica de Ventas por Mes -->
+<div class="col-xl-8 col-lg-7 mb-4">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Ventas por Mes</h5>
+      @if (loadingVentas) {
+        <div class="d-flex flex-column gap-3">
+          <p-skeleton width="100%" height="30px"></p-skeleton>
+          <p-skeleton width="100%" height="300px"></p-skeleton>
+        </div>
+      } @else {
+        <div class="chart-container">
+          <div class="chart-wrapper">
+            <p-chart type="line" [data]="ventasPorMesData" [options]="ventasPorMesOptions"></p-chart>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Gráfica de Productos Más Vendidos -->
-    <div class="col-xl-4 col-lg-5 mb-4">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Productos Más Vendidos</h5>
-          <div style="height: 400px;">
-            @if (loadingProductos) {
-              <div class="d-flex flex-column gap-3">
-                <p-skeleton width="100%" height="30px"></p-skeleton>
-                <p-skeleton width="100%" height="300px"></p-skeleton>
-              </div>
-            } @else {
-              <p-chart type="bar" [data]="productosMasVendidosData" [options]="productosMasVendidosOptions"></p-chart>
-            }
-          </div>
-        </div>
-      </div>
+      }
     </div>
   </div>
+</div>
+
+    <!-- Gráfica de Productos Más Vendidos -->
+<div class="col-xl-4 col-lg-5 mb-4">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Productos Más Vendidos</h5>
+      @if (loadingProductos) {
+        <div class="d-flex flex-column gap-3">
+          <p-skeleton width="100%" height="30px"></p-skeleton>
+          <p-skeleton width="100%" height="300px"></p-skeleton>
+        </div>
+      } @else {
+        <div class="chart-container">
+          <div class="chart-wrapper">
+            <p-chart type="bar" [data]="productosMasVendidosData" [options]="productosMasVendidosOptions"></p-chart>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
 
   <!-- Tabla de Productos Más Vendidos -->
   <div class="row">
