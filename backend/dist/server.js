@@ -26,8 +26,7 @@ const marca_router_1 = __importDefault(require("./routes/marca.router"));
 const talla_router_1 = __importDefault(require("./routes/talla.router"));
 const rol_router_1 = __importDefault(require("./routes/rol.router"));
 const persona_router_1 = __importDefault(require("./routes/persona.router"));
-const apidni_router_1 = __importDefault(require("./routes/apidni.router"));
-const apiruc_router_1 = __importDefault(require("./routes/apiruc.router"));
+const apiSunat_router_1 = __importDefault(require("./routes/apiSunat.router"));
 const lote_router_1 = __importDefault(require("./routes/lote.router"));
 const lote_talla_router_1 = __importDefault(require("./routes/lote_talla.router"));
 const pedido_router_1 = __importDefault(require("./routes/pedido.router"));
@@ -41,6 +40,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const tipo_comprobante_router_1 = __importDefault(require("./routes/tipo_comprobante.router"));
 const tiposerie_router_1 = __importDefault(require("./routes/tiposerie.router"));
 const metodo_pago_router_1 = __importDefault(require("./routes/metodo_pago.router"));
+const movimiento_lote_router_1 = __importDefault(require("./routes/movimiento_lote.router"));
 class Server {
     constructor() {
         this.isRequesting = false;
@@ -119,19 +119,19 @@ class Server {
         this.app.use('/api/v1/tallas', talla_router_1.default);
         this.app.use('/api/v1/roles', rol_router_1.default);
         this.app.use('/api/v1/personas', persona_router_1.default);
-        this.app.use('/api/v1/dni', apidni_router_1.default);
-        this.app.use('/api/v1/ruc', apiruc_router_1.default);
+        this.app.use('/api/v1/sunat', apiSunat_router_1.default);
         this.app.use('/api/v1/lotes', lote_router_1.default);
         this.app.use('/api/v1/lotetallas', lote_talla_router_1.default);
         this.app.use('/api/v1/pedidos', pedido_router_1.default);
         this.app.use('/api/v1/pedidodetalle', pedido_detalle_router_1.default);
         this.app.use('/api/v1/ventas', venta_router_1.default);
-        this.app.use('/api/v1/detalleventa', detalleventa_router_1.default);
+        this.app.use('/api/v1/detallesventa', detalleventa_router_1.default);
         this.app.use('/api/v1/comprobantes', comprobante_router_1.default);
         this.app.use('/api/v1/wsp', wsp_router_1.default); //  Esto está bien
         this.app.use('/api/v1/tipocomprobante', tipo_comprobante_router_1.default); //  Esto está bien
         this.app.use('/api/v1/tiposerie', tiposerie_router_1.default); //  Esto está bien
         this.app.use('/api/v1/metodopagos', metodo_pago_router_1.default); //  Esto está bien
+        this.app.use('/api/v1/movimientoslote', movimiento_lote_router_1.default); //  Esto está bien
     }
     dbConnect() {
         return __awaiter(this, void 0, void 0, function* () {

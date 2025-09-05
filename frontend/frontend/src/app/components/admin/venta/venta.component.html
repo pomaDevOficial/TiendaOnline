@@ -175,7 +175,6 @@
               [(ngModel)]="metodoPagoSeleccionado"
               [options]="metodosPago"
               optionLabel="nombre"
-              optionValue="this"
               placeholder="Seleccionar método"
               class="w-100"
               [style]="{'width': '100%'}"
@@ -246,15 +245,20 @@
       field="nombre"
       placeholder="Buscar producto..."
       class="w-100"
+      appendTo="body"
       [style]="{'width': '100%'}">
       <ng-template let-producto pTemplate="item">
         <div class="d-flex align-items-center">
           <div class="ms-2">
             <div class="fw-bold">{{producto.nombre}}</div>
-            <small class="text-muted">{{producto.marca}} - {{producto.categoria}}</small>
+            <small class="text-muted">{{producto.marca.nombre}} - {{producto.categoria.nombre}}</small>
           </div>
         </div>
       </ng-template>
+        <!-- Lo que se muestra cuando está seleccionado -->
+    <ng-template let-producto pTemplate="selectedItem">
+      {{ producto.nombre }} ({{ producto.marca.nombre }})
+    </ng-template>
     </p-autoComplete>
   </div>
 
@@ -265,15 +269,14 @@
         [(ngModel)]="tallaSeleccionada"
         [options]="tallasDisponibles"
         optionLabel="talla"
-        optionValue="this"
         placeholder="Seleccionar talla"
         class="w-100"
         [style]="{'width': '100%'}">
         <ng-template let-talla pTemplate="item">
           <div class="d-flex justify-content-between align-items-center">
-            <span>{{talla.talla}}</span>
+            <span>{{talla.nombre}}</span>
             <div class="text-end">
-              <div class="fw-bold">S/ {{talla.precioventa | number:'1.2-2'}}</div>
+              <div class="fw-bold">S/ {{talla.preciocosto | number:'1.2-2'}}</div>
               <small class="text-muted">Stock: {{talla.stock}}</small>
             </div>
           </div>
@@ -295,7 +298,7 @@
     <div class="col-md-6 mb-3">
       <label class="form-label">Precio Unitario</label>
       <p-inputNumber
-        [ngModel]="tallaSeleccionada?.precioventa || 0"
+        [ngModel]="tallaSeleccionada?.preciocosto || 0"
         mode="currency"
         currency="PEN"
         locale="es-PE"
@@ -308,8 +311,8 @@
   @if (tallaSeleccionada && cantidadProducto > 0) {
     <div class="alert alert-info">
       <div class="d-flex justify-content-between">
-        <span><strong>Precio unitario:</strong> S/ {{tallaSeleccionada.precioventa | number:'1.2-2'}}</span>
-        <span><strong>Subtotal:</strong> S/ {{(cantidadProducto * tallaSeleccionada.precioventa) | number:'1.2-2'}}</span>
+        <span><strong>Precio unitario:</strong> S/ {{tallaSeleccionada.preciocosto | number:'1.2-2'}}</span>
+        <span><strong>Subtotal:</strong> S/ {{(cantidadProducto * tallaSeleccionada.preciocosto) | number:'1.2-2'}}</span>
       </div>
       <small class="text-muted">Stock disponible: {{tallaSeleccionada.stock}} unidades</small>
     </div>

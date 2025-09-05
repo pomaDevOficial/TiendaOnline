@@ -26,6 +26,7 @@ const pedido_detalle_model_1 = __importDefault(require("../models/pedido_detalle
 const detalle_venta_model_1 = __importDefault(require("../models/detalle_venta.model"));
 const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
 const connection_db_1 = __importDefault(require("../db/connection.db"));
+const wsp_controller_1 = require("./wsp.controller");
 // CREATE - Insertar nuevo pedido
 const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idpersona, idmetodopago, fechaoperacion, totalimporte, adjunto } = req.body;
@@ -421,7 +422,7 @@ const restaurarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.restaurarPedido = restaurarPedido;
 const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c, _d;
     const { idPedido } = req.body;
     try {
         // Validaciones
@@ -576,15 +577,35 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     }
                 ]
             });
-            res.status(200).json({
-                msg: 'Pedido aprobado exitosamente',
-                data: {
-                    pedido: pedido,
-                    venta: ventaCompleta,
-                    comprobante: comprobanteCompleto,
-                    detallesVenta: detallesVenta
-                }
-            });
+            // Generar el PDF del comprobante SOLO si el teléfono es válido
+            const telefono = (_c = (_b = pedido === null || pedido === void 0 ? void 0 : pedido.Persona) === null || _b === void 0 ? void 0 : _b.telefono) !== null && _c !== void 0 ? _c : '';
+            const phoneRegex = /^\d{9,15}$/; // valida de 9 a 15 dígitos
+            if (telefono && phoneRegex.test(telefono)) {
+                // Generar PDF
+                const nombreArchivo = yield (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, pedido, detallesVenta);
+                // Enviar por WhatsApp
+                yield (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_d = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _d === void 0 ? void 0 : _d.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
+                res.status(200).json({
+                    msg: 'Pedido aprobado exitosamente y comprobante enviado',
+                    data: {
+                        pedido,
+                        venta: ventaCompleta,
+                        comprobante: comprobanteCompleto,
+                        detallesVenta
+                    }
+                });
+            }
+            else {
+                res.status(200).json({
+                    msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
+                    data: {
+                        pedido,
+                        venta: ventaCompleta,
+                        comprobante: comprobanteCompleto,
+                        detallesVenta
+                    }
+                });
+            }
         }
         catch (error) {
             // Revertir transacción en caso de error

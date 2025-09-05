@@ -144,20 +144,21 @@
           [style]="{ width: '100%' }">
         </p-dropdown>
       </div>
-
-   <div class="mb-3">
-      <label for="fecha">Fecha:</label>
-      <p-calendar 
-        id="fecha"
-        formControlName="fechaingreso" 
-        dateFormat="dd/mm/yy"
-        showIcon="false"
-        placeholder="Seleccione una fecha">
-      </p-calendar>
-      <small *ngIf="loteForm.get('fechaingreso')?.invalid && loteForm.get('fechaingreso')?.touched" class="text-danger">
-        La fecha es requerida
-      </small>
-    </div>
+        
+      <div class="row">
+           <label for="fecha">Fecha:</label>
+           <p-calendar 
+             id="fecha"
+             formControlName="fechaingreso" 
+             dateFormat="dd/mm/yy"
+             appendTo="body" 
+             showIcon="false"
+             placeholder="Seleccione una fecha">
+           </p-calendar>
+           <small *ngIf="loteForm.get('fechaingreso')?.invalid && loteForm.get('fechaingreso')?.touched" class="text-danger">
+             La fecha es requerida
+           </small>
+      </div>
         <!-- <div class="mb-3 d-flex flex-column w-100">
           <label for="nombre" class="form-label">Fecha Ingreso</label>
             <p-datepicker [appendTo]="'body'" [inputStyle]="{ 'width': '100%' }"[(ngModel)]="fecha" [minDate]="minDate" formControlName="fechaingreso" [maxDate]="maxDate" [readonlyInput]="true" />

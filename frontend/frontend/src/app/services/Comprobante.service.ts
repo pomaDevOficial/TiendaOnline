@@ -21,7 +21,7 @@ export class ComprobanteServicio {
 
   // Crear venta completa con comprobante
   crearVentaCompletaConComprobante(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/venta-completa`, data);
+    return this.http.post<any>(`${this.apiUrl}/venta-completa/admin`, data);
   }
 
   // Obtener todos los comprobantes

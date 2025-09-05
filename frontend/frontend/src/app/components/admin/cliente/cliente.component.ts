@@ -13,7 +13,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { Persona } from '../../../interfaces/interfaces.interface';
-import { PersonaServicio } from '../../../services/Persona.service';
+import { PersonaServicio } from '../../../services/persona.service';
 
 @Component({
   selector: 'app-cliente',

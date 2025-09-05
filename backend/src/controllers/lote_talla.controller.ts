@@ -829,38 +829,39 @@ export const getProductosDisponibles = async (req: Request, res: Response): Prom
 
     // Obtener total para paginación
     const total = await LoteTalla.count({
-      where: whereConditions,
+  where: whereConditions,
+  include: [
+    {
+      model: Lote,
+      as: 'Lote',
+      where: { idestado: LoteEstado.DISPONIBLE },
       include: [
         {
-          model: Lote,
-          as: 'Lote',
-          where: { idestado: LoteEstado.DISPONIBLE },
+          model: Producto,
+          as: 'Producto',
+          where: nombre ? { nombre: { [Op.like]: `%${nombre}%` } } : undefined,
           include: [
             {
-              model: Producto,
-              as: 'Producto',
-              where: nombre ? { nombre: { [Op.like]: `%${nombre}%` } } : undefined,
-              include: [
-                {
-                  model: Categoria,
-                  as: 'Categoria',
-                  where: idcategoria ? { id: idcategoria } : undefined,
-                  required: !!idcategoria
-                },
-                {
-                  model: Marca,
-                  as: 'Marca',
-                  where: idmarca ? { id: idmarca } : undefined,
-                  required: !!idmarca
-                }
-              ]
+              model: Categoria,
+              as: 'Categoria',
+              where: idcategoria ? { id: idcategoria } : undefined,
+              required: !!idcategoria
+            },
+            {
+              model: Marca,
+              as: 'Marca',
+              where: idmarca ? { id: idmarca } : undefined,
+              required: !!idmarca
             }
           ]
         }
-      ],
-      distinct: true,
-      col: 'LoteTalla.id'
-    });
+      ]
+    }
+  ],
+  distinct: true,
+  col: 'id'   // ✅ Ajuste aquí
+});
+
 
     // Transformar datos
     const productosTransformados = lotesTalla.map(item => ({
@@ -945,7 +946,7 @@ export const getTallasDisponibles = async (req: Request, res: Response): Promise
           attributes: ['id', 'nombre'] // Solo los atributos necesarios
         }
       ],
-      attributes: ['id', 'stock', 'precioventa'],
+      attributes: ['id', 'stock', 'precioventa' ,'preciocosto'],
       order: [[{ model: Talla, as: 'Talla' }, 'nombre', 'ASC']]
     });
 

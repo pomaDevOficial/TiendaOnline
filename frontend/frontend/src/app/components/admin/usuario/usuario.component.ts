@@ -13,7 +13,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Persona, Rol, Usuario } from '../../../interfaces/interfaces.interface';
 import { UsuarioServicio } from '../../../services/Usuario.service';
-import { PersonaServicio } from '../../../services/Persona.service';
+import { PersonaServicio } from '../../../services/persona.service';
 import { RolServicio } from '../../../services/Rol.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
