@@ -88,7 +88,8 @@ class Server {
         // origin: 'http://161.132.49.58:5200',
         origin: [
     'http://localhost:4200',   // frontend cliente
-    'http://localhost:4300'    // frontend admin
+    'http://localhost:4300',    // frontend admin
+    'http://localhost:50913'    // frontend admin
       ],
         credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
       }));

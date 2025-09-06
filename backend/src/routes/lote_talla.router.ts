@@ -14,7 +14,8 @@ import {
     getProductosDisponibles,
     getTallasDisponibles,
     verificarStock,
-    agregarStockPorLoteTalla
+    agregarStockPorLoteTalla,
+    getProductosFormatoService
 } from '../controllers/lote_talla.controller';
 
 const LoteTallaRouter = Router();
@@ -22,6 +23,7 @@ const LoteTallaRouter = Router();
 LoteTallaRouter.post('/', createLoteTalla); // Crear un nuevo lote_talla
 LoteTallaRouter.get('/', getLotesTalla); // Obtener la lista de todos los lotes_talla
 LoteTallaRouter.get('/disponibles', getLotesTallaDisponibles); // Obtener solo lotes_talla disponibles
+LoteTallaRouter.get('/filtro-productos', getProductosFormatoService); // Obtener solo lotes_talla disponibles
 LoteTallaRouter.get('/eliminados', getLotesTallaEliminados); // Obtener solo lotes_talla eliminados
 LoteTallaRouter.get('/lote/:idlote', getLotesTallaByLote); // Obtener lotes_talla por lote
 LoteTallaRouter.get('/catalogo/talla', getProductosDisponiblesPorTalla); // Obtener productos disponibles por talla (para catálogo)
