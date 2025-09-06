@@ -25,8 +25,9 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
     try {
       // Crear nombre de archivo único
       const filename = `comprobante_${comprobante.numserie}.pdf`;
-      const filePath = path.join(__dirname, '../uploads', filename);
-      
+     /// path.join(__dirname, "../../dist/uploads");
+      const filePath = path.join(__dirname, "../../dist/uploads", filename);
+      console.log(filePath)
       // Crear directorio si no existe
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -112,7 +113,6 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
          .stroke();
       
       doc.moveDown(0.5);
-
       // Productos
       detallesVenta.forEach(detalle => {
         const producto = detalle.PedidoDetalle?.LoteTalla?.Lote?.Producto?.nombre || 'Producto';
@@ -138,12 +138,12 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
 
       // Totales
       doc.font('Helvetica-Bold')
-         .text(`SUBTOTAL: S/. ${(comprobante.total - comprobante.igv).toFixed(2)}`, { align: 'right' });
+         .text(`SUBTOTAL: S/. ${(comprobante.total - comprobante.igv)}`, { align: 'right' });
       
-      doc.text(`IGV (18%): S/. ${comprobante.igv.toFixed(2)}`, { align: 'right' });
+      doc.text(`IGV (18%): S/. ${comprobante.igv}`, { align: 'right' });
       
       doc.fontSize(fontSizeLarge)
-         .text(`TOTAL: S/. ${comprobante.total.toFixed(2)}`, { align: 'right' });
+         .text(`TOTAL: S/. ${comprobante.total}`, { align: 'right' });
       
       doc.moveDown();
 
@@ -171,11 +171,11 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
     }
   });
 };
-
 // Función para enviar archivo por WhatsApp
 export const enviarArchivoWSP = async (phone: string, filename: string, caption: string = "📄 Comprobante de Venta"): Promise<any> => {
-  const localPath = path.join(__dirname, "../uploads", filename);
-
+  const localPath = path.join(__dirname, "../../dist/uploads", filename);
+console.log(localPath)
+console.log(phone)
   if (!fs.existsSync(localPath)) {
     throw new Error("Archivo no encontrado en el servidor");
   }
@@ -192,7 +192,7 @@ export const enviarArchivoWSP = async (phone: string, filename: string, caption:
     const sendResponse = await axios.post(greenUrl, form, {
       headers: form.getHeaders(),
     });
-
+    console.log(sendResponse)
     // Eliminar el archivo después de enviarlo
     fs.unlinkSync(localPath);
 
