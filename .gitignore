@@ -10,3 +10,4 @@ dist/
 /frontend/.angular/cache/19.0.2/frontendv
 /frontend/.angular/cache/19.0.2/frontendv
 /frontend/.angular/cache
+/backend/node_modules
