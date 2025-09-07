@@ -65,7 +65,7 @@ const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono', 'direccion']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -147,7 +147,7 @@ const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -180,7 +180,7 @@ const getPedidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -216,7 +216,7 @@ const getPedidosByEstado = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -251,7 +251,7 @@ const getPedidoById = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -290,7 +290,7 @@ const getPedidosByPersona = (req, res) => __awaiter(void 0, void 0, void 0, func
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,
@@ -377,7 +377,7 @@ const getPedidosCancelados = (req, res) => __awaiter(void 0, void 0, void 0, fun
                 {
                     model: persona_model_1.default,
                     as: 'Persona',
-                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad', 'telefono', 'direccion']
+                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                 },
                 {
                     model: metodo_pago_model_1.default,

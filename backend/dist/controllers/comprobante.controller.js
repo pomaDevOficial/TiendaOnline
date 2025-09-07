@@ -31,6 +31,7 @@ const usuario_model_1 = __importDefault(require("../models/usuario.model"));
 const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const metodo_pago_model_1 = __importDefault(require("../models/metodo_pago.model"));
 const talla_model_1 = __importDefault(require("../models/talla.model"));
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 // CREATE - Insertar nuevo comprobante
 const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idventa, igv, descuento, total, idtipocomprobante, numserie } = req.body;
@@ -93,7 +94,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -195,7 +196,7 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -247,7 +248,7 @@ const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -283,62 +284,65 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
     try {
         if (!fechaInicio || !fechaFin) {
             res.status(400).json({
-                msg: 'Los parámetros fechaInicio y fechaFin son obligatorios'
+                msg: "Los parámetros fechaInicio y fechaFin son obligatorios",
             });
             return;
         }
+        // ✅ Convertir a rango de Lima
+        const inicio = moment_timezone_1.default.tz(fechaInicio, "America/Lima").startOf("day").toDate();
+        const fin = moment_timezone_1.default.tz(fechaFin, "America/Lima").endOf("day").toDate();
         const comprobantes = yield comprobante_model_1.default.findAll({
             include: [
                 {
                     model: venta_model_1.default,
-                    as: 'Venta',
-                    attributes: ['id', 'fechaventa'],
+                    as: "Venta",
+                    attributes: ["id", "fechaventa"],
                     where: {
                         fechaventa: {
-                            [sequelize_1.Op.between]: [new Date(fechaInicio), new Date(fechaFin)]
-                        }
+                            [sequelize_1.Op.between]: [inicio, fin],
+                        },
                     },
                     include: [
                         {
                             model: venta_model_1.default.associations.Usuario.target,
-                            as: 'Usuario',
-                            attributes: ['id', 'usuario']
+                            as: "Usuario",
+                            attributes: ["id", "usuario"],
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
-                            as: 'Pedido',
-                            attributes: ['id', 'fechaoperacion', 'totalimporte'],
+                            as: "Pedido",
+                            attributes: ["id", "fechaoperacion", "totalimporte"],
                             include: [
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
-                                    as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
-                                }
-                            ]
-                        }
-                    ]
+                                    as: "Persona",
+                                    attributes: ["id", "nombres", "apellidos", "nroidentidad", "telefono", "correo"],
+                                },
+                            ],
+                        },
+                    ],
                 },
                 {
                     model: tipo_comprobante_model_1.default,
-                    as: 'TipoComprobante',
-                    attributes: ['id', 'nombre']
+                    as: "TipoComprobante",
+                    attributes: ["id", "nombre"],
                 },
                 {
                     model: estado_model_1.default,
-                    as: 'Estado',
-                    attributes: ['id', 'nombre']
-                }
+                    as: "Estado",
+                    attributes: ["id", "nombre"],
+                },
             ],
-            order: [[{ model: venta_model_1.default, as: 'Venta' }, 'fechaventa', 'DESC']]
+            order: [[{ model: venta_model_1.default, as: "Venta" }, "fechaventa", "DESC"]],
         });
         res.json({
-            msg: 'Comprobantes por fecha obtenidos exitosamente',
-            data: comprobantes
+            msg: "Comprobantes por fecha obtenidos exitosamente",
+            data: comprobantes,
         });
     }
     catch (error) {
-        console.error('Error en getComprobantesByFecha:', error);
-        res.status(500).json({ msg: 'Error al obtener comprobantes por fecha' });
+        console.error("Error en getComprobantesByFecha:", error);
+        res.status(500).json({ msg: "Error al obtener comprobantes por fecha" });
     }
 });
 exports.getComprobantesByFecha = getComprobantesByFecha;
@@ -368,7 +372,7 @@ const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -422,7 +426,7 @@ const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, funct
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -480,7 +484,7 @@ const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, f
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -534,7 +538,7 @@ const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, 
                                 {
                                     model: venta_model_1.default.associations.Pedido.target.associations.Persona.target,
                                     as: 'Persona',
-                                    attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                                    attributes: ['id', 'nombres', 'apellidos', 'nroidentidad', 'telefono', 'correo']
                                 }
                             ]
                         }
@@ -678,7 +682,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
         }
         // 3) CREAR VENTA
         const nuevaVenta = yield venta_model_1.default.create({
-            fechaventa: fechaventa || new Date(),
+            fechaventa: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
             idusuario: idusuario || ((_b = req.user) === null || _b === void 0 ? void 0 : _b.id),
             idpedido: pedido.id,
             idestado: estados_constans_1.VentaEstado.REGISTRADO
@@ -838,7 +842,7 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
         try {
             // 1. CREAR LA VENTA
             const nuevaVenta = yield venta_model_1.default.create({
-                fechaventa: fechaventa || new Date(),
+                fechaventa: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
                 idusuario,
                 idpedido,
                 idestado: estados_constans_1.VentaEstado.REGISTRADO

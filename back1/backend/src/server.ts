@@ -46,8 +46,9 @@ class Server {
     private isUpdatingPrestamos: boolean = false;
     private client: Client;
     private qrCodeData: string | null = null;
-    private ADMIN_NUMBER = '51908610377';
-    private NOTIFICATION_NUMBER = '51999999999';
+    private isWhatsAppConnected: boolean = false;
+    private ADMIN_NUMBER = '51916901549';
+    private NOTIFICATION_NUMBER = null;
     private lastConnectionStatus = null;
     private autoResponses = {
         greetings: [
@@ -73,7 +74,7 @@ class Server {
 
     constructor() {
       this.app = express();
-      this.port = process.env.PORT || '3001';
+      this.port = process.env.PORT || '4000';
       this.httpServer = new http.Server(this.app);
       this.io = new SocketIOServer(this.httpServer);
       this.client = new Client({
@@ -85,14 +86,17 @@ class Server {
 
       this.listen();
       this.middlewares();
-      this.routes();
       this.dbConnect();
-      this.initializeWhatsApp();
+      this.routes();
+      // Inicializar WhatsApp después de un breve delay para no bloquear el servidor
+      setTimeout(() => this.initializeWhatsApp(), 2000);
     }
   
     private listen() {
       this.httpServer.listen(this.port, () => {
         console.log(`Aplicacion corriendo en el puerto ${this.port}`);
+      }).on('error', (err: any) => {
+        
       });
     }
   
@@ -183,6 +187,7 @@ class Server {
        this.app.get('/status', (req: Request, res: Response, next?: NextFunction) => this.getStatus(req, res, next));
        this.app.get('/bot-status', (req: Request, res: Response, next?: NextFunction) => this.getBotStatus(req, res, next));
        this.app.get('/qr', (req: Request, res: Response, next?: NextFunction) => this.getQR(req, res, next));
+       this.app.get('/whatsapp-frontend-status', (req: Request, res: Response, next?: NextFunction) => this.getWhatsAppFrontendStatus(req, res, next));
        this.app.post('/notify', (req: Request, res: Response, next?: NextFunction) => this.notify(req, res, next));
        this.app.get('/bot-config', (req: Request, res: Response, next?: NextFunction) => this.getBotConfig(req, res, next));
        this.app.post('/bot-config', (req: Request, res: Response, next?: NextFunction) => this.updateBotConfig(req, res, next));
@@ -191,31 +196,46 @@ class Server {
     private async dbConnect() {
       try {
           await db.authenticate();
-          console.log('Base de datos conectada')
+          console.log('Base de datos conectada');
+          console.log('Modelos sincronizados con la base de datos');
       } catch (error) {
         console.log('Error al conectarse a la base de datos:', error);
       }
     }
 
-    private initializeWhatsApp() {
-      this.setupWhatsAppEvents();
-      this.client.initialize();
+    private async initializeWhatsApp() {
+      try {
+        this.setupWhatsAppEvents();
+        // Inicializar WhatsApp de forma completamente asíncrona para no bloquear
+        setTimeout(async () => {
+          try {
+            console.log('Iniciando conexión a WhatsApp en segundo plano...');
+            await this.client.initialize();
+            console.log('WhatsApp inicializado exitosamente');
+          } catch (error) {
+            console.error('Error inicializando WhatsApp:', error);
+          }
+        }, 3000); // Delay mayor para asegurar que el servidor esté completamente listo
+      } catch (error) {
+        console.error('Error en setup de WhatsApp:', error);
+      }
     }
 
     private setupWhatsAppEvents() {
       this.client.on('qr', async (qr) => {
-        console.log('Escanea este código QR con tu aplicación de WhatsApp:');
-        // Use qrcode-terminal if installed, but for server, we can store qrCodeData
+        // Solo almacenar QR sin logs que interfieran con peticiones HTTP
         this.qrCodeData = qr;
       });
 
       this.client.on('ready', () => {
         console.log('Cliente de WhatsApp listo y conectado!');
+        this.isWhatsAppConnected = true;
         this.sendAdminNotification('✅ WhatsApp conectado exitosamente');
       });
 
       this.client.on('authenticated', () => {
         console.log('Autenticación exitosa! Sesión guardada.');
+        this.isWhatsAppConnected = true;
       });
 
       this.client.on('auth_failure', (msg) => {
@@ -225,6 +245,9 @@ class Server {
 
       this.client.on('disconnected', (reason) => {
         console.log('Cliente desconectado:', reason);
+        // Limpiar el estado del cliente inmediatamente
+        this.isWhatsAppConnected = false;
+        this.qrCodeData = null;
         this.sendAdminNotification('⚠️ WhatsApp desconectado: ' + reason);
         // Reiniciar automáticamente
         setTimeout(() => {
@@ -365,6 +388,7 @@ class Server {
     private async reinitializeClient() {
       try {
         console.log('Limpiando sesión anterior...');
+        this.isWhatsAppConnected = false;
         this.qrCodeData = null;
         const sessionPath = './whatsapp-session';
         if (fs.existsSync(sessionPath)) {
@@ -620,33 +644,79 @@ class Server {
     }
 
     public getStatus(req: Request, res: Response, next?: NextFunction) {
-      const state = this.client.info ? 'conectado' : 'desconectado';
+      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
+      const state = isConnected ? 'conectado' : 'desconectado';
+      const hasQR = this.qrCodeData !== null;
+
       res.json({
         status: state,
+        connected: isConnected,
         info: this.client.info || null,
-        qrAvailable: !this.client.info && this.qrCodeData !== null
+        qrAvailable: hasQR && !isConnected,
+        qrData: hasQR ? this.qrCodeData : null,
+        timestamp: new Date().toISOString(),
+        message: isConnected
+          ? 'WhatsApp está conectado y listo para usar'
+          : hasQR
+            ? 'QR disponible para escanear'
+            : 'Esperando inicialización de WhatsApp'
       });
     }
 
     public getBotStatus(req: Request, res: Response, next?: NextFunction) {
+      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
+      const hasQR = this.qrCodeData !== null;
+
       const status = {
-        connected: this.client.info ? true : false,
+        connected: isConnected,
+        authenticated: isConnected,
+        ready: isConnected,
         number: this.client.info?.wid?.user || null,
         uptime: process.uptime(),
-        ready: this.client.info ? true : false
+        qrAvailable: hasQR && !isConnected,
+        qrData: hasQR && !isConnected ? this.qrCodeData : null,
+        timestamp: new Date().toISOString(),
+        statusText: isConnected
+          ? 'Conectado y listo'
+          : hasQR
+            ? 'Esperando escaneo del QR'
+            : 'Inicializando WhatsApp'
       };
       res.json(status);
     }
 
     public async getQR(req: Request, res: Response, next?: NextFunction) {
+      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
+
+      if (isConnected) {
+        return res.status(200).json({
+          error: 'Ya conectado',
+          message: 'WhatsApp ya está conectado. No se necesita QR.',
+          status: 'connected',
+          connected: true
+        });
+      }
+
       if (!this.qrCodeData) {
-        return res.status(404).json({ error: 'QR no disponible' });
+        return res.status(404).json({
+          error: 'QR no disponible',
+          message: 'El QR aún no se ha generado. Espera a que WhatsApp se inicialice.',
+          status: 'waiting'
+        });
       }
       try {
         const qrImage = await QRCode.toDataURL(this.qrCodeData);
-        res.json({ qrImage });
+        res.json({
+          qrImage,
+          qrText: this.qrCodeData,
+          status: 'ready',
+          message: 'Escanea este código QR con WhatsApp Web'
+        });
       } catch (error) {
-        res.status(500).json({ error: 'Error generando QR' });
+        res.status(500).json({
+          error: 'Error generando QR',
+          details: (error as Error).message
+        });
       }
     }
 
@@ -695,8 +765,102 @@ class Server {
       res.json({ success: true, message: 'Configuración actualizada' });
     }
 
+    // Función para enviar comprobante por WhatsApp usando el cliente del servidor
+    public async sendComprobanteWhatsApp(
+      telefono: string,
+      comprobanteCompleto: any,
+      ventaCompleta: any,
+      pedido: any,
+      detallesVentaCompletos: any[]
+    ): Promise<{ success: boolean; error?: string }> {
+      try {
+        // Verificar que WhatsApp esté conectado
+        if (!this.isWhatsAppConnected || !this.client.info) {
+          throw new Error('WhatsApp no está conectado');
+        }
+
+        console.log(`📱 Enviando comprobante por WhatsApp al número: ${telefono}`);
+
+        // Crear PDF usando la función existente
+        const { generarPDFComprobante } = await import('./controllers/wsp.controller');
+        const nombreArchivo = await generarPDFComprobante(
+          comprobanteCompleto,
+          ventaCompleta,
+          pedido,
+          detallesVentaCompletos
+        );
+        console.log(nombreArchivo)
+        // Leer el archivo PDF
+        // const filePath = path.join(__dirname, '..', 'uploads', nombreArchivo);
+          const filePath = path.join(__dirname, "../../backend/dist/uploads", nombreArchivo);
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`Archivo PDF no encontrado: ${filePath}`);
+        }
+
+        // Crear media desde el archivo
+        const media = MessageMedia.fromFilePath(filePath);
+
+        // Preparar mensaje
+        const mensaje = `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}\n\n✅ Venta procesada exitosamente`;
+
+        // Enviar archivo por WhatsApp
+        await this.client.sendMessage(`51${telefono}@c.us`, media, { caption: mensaje });
+
+        console.log(`✅ Comprobante enviado exitosamente por WhatsApp al ${telefono}`);
+        return { success: true };
+
+      } catch (error) {
+        console.error('❌ Error enviando comprobante por WhatsApp:', error);
+        return {
+          success: false,
+          error: (error as Error).message
+        };
+      }
+    }
+
+    public getWhatsAppFrontendStatus(req: Request, res: Response, next?: NextFunction) {
+      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
+      const hasQR = this.qrCodeData !== null;
+
+      let status = 'disconnected';
+      let message = 'WhatsApp no está conectado';
+      let qrImage = null;
+
+      if (isConnected) {
+        status = 'connected';
+        message = 'WhatsApp está conectado y listo para usar';
+      } else if (hasQR) {
+        status = 'waiting_qr';
+        message = 'Escanea el código QR para conectar WhatsApp';
+        // Generar QR si está disponible
+        if (this.qrCodeData) {
+          try {
+            qrImage = QRCode.toDataURL(this.qrCodeData);
+          } catch (error) {
+            console.error('Error generando QR para frontend:', error);
+          }
+        }
+      } else {
+        status = 'initializing';
+        message = 'Inicializando WhatsApp...';
+      }
+
+      res.json({
+        status,
+        connected: isConnected,
+        message,
+        qrAvailable: hasQR && !isConnected,
+        qrImage: qrImage ? qrImage : null,
+        qrText: hasQR && !isConnected ? this.qrCodeData : null,
+        number: this.client.info?.wid?.user || null,
+        timestamp: new Date().toISOString(),
+        serverUptime: process.uptime()
+      });
+    }
+
 
     }
 
    const serverInstance = new Server();
    export default serverInstance;
+   export { serverInstance as server };

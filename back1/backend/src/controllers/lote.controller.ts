@@ -349,7 +349,57 @@ export const getLoteById = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ msg: 'Error al obtener el lote' });
   }
 };
+export const getLotesBuscar = async (req: Request, res: Response): Promise<void> => {
+  const qraw = req.query.q;
+  console.log(qraw)
+  const q = typeof qraw === 'string' ? qraw.trim() : '';
 
+  try {
+    if (!q) {
+      res.status(400).json({ msg: 'El parámetro q (búsqueda) es obligatorio' });
+      return;
+    }
+
+    const like = `%${q}%`;
+
+    const lotes = await Lote.findAll({
+    where: {
+      [Op.or]: [
+        { proveedor: { [Op.like]: like } },
+        { '$Producto.nombre$': { [Op.like]: like } },
+        { '$Producto.Categoria.nombre$': { [Op.like]: like } },
+        { '$Producto.Marca.nombre$': { [Op.like]: like } }
+      ]
+    },
+    include: [
+      {
+        model: Producto,
+        as: 'Producto',
+        attributes: ['id', 'nombre'],
+        required: false,
+        include: [
+          { model: Categoria, as: 'Categoria', attributes: ['id', 'nombre'], required: false },
+          { model: Marca, as: 'Marca', attributes: ['id', 'nombre'], required: false }
+        ]
+      },
+      { model: Estado, as: 'Estado', attributes: ['id', 'nombre'], required: false }
+    ],
+    order: [['fechaingreso', 'DESC']]
+    // distinct: true - Sequelize no soporta distinct en FindOptions
+    // Para evitar duplicados, usar group: ['Lote.id']
+  });
+
+
+    res.json({
+      msg: 'Resultados de búsqueda obtenidos exitosamente',
+      data: lotes
+    });
+
+  } catch (error) {
+    console.error('Error en getLotesBuscar:', error);
+    res.status(500).json({ msg: 'Error al buscar lotes' });
+  }
+};
 // READ - Obtener lotes por producto
 export const getLotesByProducto = async (req: Request, res: Response): Promise<void> => {
   const { idproducto } = req.params;

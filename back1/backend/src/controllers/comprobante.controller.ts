@@ -5,7 +5,8 @@ import TipoComprobante from '../models/tipo_comprobante.model';
 import Estado from '../models/estado.model';
 import { ComprobanteEstado, EstadoGeneral, PedidoEstado, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
-import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
+import { generarPDFComprobante } from './wsp.controller';
+import { server } from '../server';
 import PedidoDetalle from '../models/pedido_detalle.model';
 import DetalleVenta from '../models/detalle_venta.model';
 import LoteTalla from '../models/lote_talla.model';
@@ -754,7 +755,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
         { model: Venta, as: 'Venta' }
       ]
     });
-
+    console.log(ventaCompleta)
     const detallesVentaCompletos = await DetalleVenta.findAll({
       where: { idventa: nuevaVenta.id },
       include: [
@@ -786,18 +787,31 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
     if (telefono && phoneRegex.test(telefono)) {
       try {
-        const nombreArchivo = await generarPDFComprobante(
+        console.log("cliente")
+        console.log( cliente?.telefono )
+        console.log("venta")
+        console.log( ventaCompleta?.Pedido?.Persona?.telefono  )
+        console.log( ventaCompleta?.Pedido )
+        console.log( ventaCompleta?.Pedido?.Persona )
+        // const nombreArchivo = await generarPDFComprobante(
+        //   comprobanteCompleto,
+        //   ventaCompleta,
+        //   ventaCompleta?.Pedido,           // incluye Persona y MetodoPago
+        //   detallesVentaCompletos
+        // );
+
+       // Usar la función del servidor para enviar el comprobante
+        const resultadoEnvio = await server.sendComprobanteWhatsApp(
+          telefono,
           comprobanteCompleto,
           ventaCompleta,
-          ventaCompleta?.Pedido,           // incluye Persona y MetodoPago
+          ventaCompleta?.Pedido,
           detallesVentaCompletos
         );
 
-        await enviarArchivoWSP(
-          telefono,
-          nombreArchivo,
-          `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-        );
+        if (!resultadoEnvio.success) {
+          throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+        }
 
         res.status(201).json({
           msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
@@ -1008,11 +1022,18 @@ export const crearVentaCompletaConComprobante = async (req: Request, res: Respon
             detallesVentaCompletos
           );
 
-          await enviarArchivoWSP(
-            telefono, 
-            nombreArchivo,
-            `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+          // Usar la función del servidor para enviar el comprobante
+          const resultadoEnvio = await server.sendComprobanteWhatsApp(
+            telefono,
+            comprobanteCompleto,
+            ventaCompleta,
+            pedido,
+            detallesVentaCompletos
           );
+
+          if (!resultadoEnvio.success) {
+            throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+          }
 
           res.status(201).json({
             msg: 'Venta, detalles, comprobante creados y enviados exitosamente',
@@ -1049,6 +1070,233 @@ export const crearVentaCompletaConComprobante = async (req: Request, res: Respon
     res.status(500).json({ 
       msg: 'Ocurrió un error al crear la venta completa', 
       error: (error as Error).message 
+    });
+  }
+};
+
+/// NUEVA FUNCIÓN PARA VENTA COMPLETA CON ENVÍO DE MENSAJES GARANTIZADO
+export const crearVentaCompletaConComprobanteConMensajes = async (req: Request, res: Response): Promise<void> => {
+  const { cliente, metodoPago, productos, total, idusuario, fechaventa } = req.body;
+
+  // Validaciones básicas de entrada
+  if (!cliente?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
+    res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
+    return;
+  }
+  if (!idusuario && !((req as any).user?.id)) {
+    res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
+    return;
+  }
+
+  const transaction = await db.transaction();
+
+  try {
+    // 1) CREAR PEDIDO (cabecera)
+    const pedido = await Pedido.create({
+      idpersona: cliente.id,
+      idmetodopago: metodoPago.id,
+      fechaoperacion: new Date(),
+      totalimporte: Number(total) || 0,
+      idestado: PedidoEstado.EN_ESPERA
+    }, { transaction });
+
+    // 2) CREAR DETALLES DE PEDIDO + DESCONTAR STOCK
+    const pedidoDetalles: PedidoDetalle[] = [];
+    for (const p of productos) {
+      const { loteTalla, cantidad, precio, subtotal } = p;
+
+      // Validaciones mínimas por ítem
+      if (!loteTalla?.id || cantidad == null || precio == null) {
+        throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
+      }
+
+      // Verificar stock
+      const lt = await LoteTalla.findByPk(loteTalla.id, { transaction });
+      if (!lt) throw new Error(`LoteTalla ${loteTalla.id} no existe`);
+      if (Number(lt.stock) < Number(cantidad)) {
+        throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+      }
+
+      // Crear detalle de pedido
+      const det = await PedidoDetalle.create({
+        idpedido: pedido.id,
+        idlote_talla: loteTalla.id,
+        cantidad: Number(cantidad),
+        precio: Number(precio),
+        subtotal: subtotal != null ? Number(subtotal) : Number(cantidad) * Number(precio)
+      }, { transaction });
+
+      pedidoDetalles.push(det);
+
+      // Descontar stock
+      await lt.update({ stock: Number(lt.stock) - Number(cantidad) }, { transaction });
+    }
+
+    // 3) CREAR VENTA
+    const nuevaVenta = await Venta.create({
+      fechaventa: fechaventa || new Date(),
+      idusuario: idusuario || (req as any).user?.id,
+      idpedido: pedido.id,
+      idestado: VentaEstado.REGISTRADO
+    }, { transaction });
+
+    // 4) CREAR DETALLES DE VENTA (a partir de PedidoDetalle)
+    const detallesVentaCreados: DetalleVenta[] = [];
+    for (const det of pedidoDetalles) {
+      const dv = await DetalleVenta.create({
+        idpedidodetalle: det.id,
+        idventa: nuevaVenta.id,
+        precio_venta_real: Number(det.precio),
+        subtotal_real: Number(det.subtotal),
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
+      detallesVentaCreados.push(dv);
+    }
+
+    // 5) DETERMINAR COMPROBANTE (Boleta/Factura) según Persona
+    const persona = await Persona.findByPk(cliente.id, { transaction });
+    const idTipoComprobante = (persona?.idtipopersona === 2) ? 2 : 1; // 2: FACTURA, 1: BOLETA
+
+    const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, { transaction });
+    if (!tipoComprobante) throw new Error('Tipo de comprobante no encontrado');
+
+    const totalNum = Number(total) || 0;
+    const igv = Number((totalNum * 0.18).toFixed(2));
+
+    const comprobante = await Comprobante.create({
+      idventa: nuevaVenta.id,
+      igv,
+      descuento: 0,
+      total: totalNum,
+      idtipocomprobante: tipoComprobante.id,
+      numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
+      idestado: ComprobanteEstado.REGISTRADO
+    }, { transaction });
+
+    // 6) ACTUALIZAR ESTADOS Y CONFIRMAR TRANSACCIÓN
+    await pedido.update({ idestado: PedidoEstado.PAGADO }, { transaction });
+
+    await transaction.commit();
+
+    // 7) RECUPERAR DATOS ENRIQUECIDOS PARA PDF/WS (fuera de la tx)
+    const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
+      include: [
+        { model: Usuario, as: 'Usuario' },
+        { model: Pedido, as: 'Pedido', include: [{ model: Persona, as: 'Persona' }, { model: MetodoPago, as: 'MetodoPago' }] }
+      ]
+    });
+
+    const comprobanteCompleto = await Comprobante.findByPk(comprobante.id, {
+      include: [
+        { model: TipoComprobante, as: 'TipoComprobante' },
+        { model: Venta, as: 'Venta' }
+      ]
+    });
+
+    const detallesVentaCompletos = await DetalleVenta.findAll({
+      where: { idventa: nuevaVenta.id },
+      include: [
+        {
+          model: PedidoDetalle,
+          as: 'PedidoDetalle',
+          include: [
+            {
+              model: LoteTalla,
+              as: 'LoteTalla',
+              include: [
+                {
+                  model: Lote,
+                  as: 'Lote',
+                  include: [{ model: Producto, as: 'Producto' }]
+                },
+                { model: Talla, as: 'Talla' }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    // 8) GENERAR PDF Y ENVIAR POR WHATSAPP (GARANTIZADO)
+    const telefonoRaw = cliente?.telefono ?? ventaCompleta?.Pedido?.Persona?.telefono ?? '';
+    const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
+    const phoneRegex = /^\d{9,15}$/;
+
+    if (telefono && phoneRegex.test(telefono)) {
+      try {
+        console.log(`📱 Enviando comprobante por WhatsApp al número: ${telefono}`);
+
+        const nombreArchivo = await generarPDFComprobante(
+          comprobanteCompleto,
+          ventaCompleta,
+          ventaCompleta?.Pedido,
+          detallesVentaCompletos
+        );
+
+        // Usar la función del servidor para enviar el comprobante
+        const resultadoEnvio = await server.sendComprobanteWhatsApp(
+          telefono,
+          comprobanteCompleto,
+          ventaCompleta,
+          ventaCompleta?.Pedido,
+          detallesVentaCompletos
+        );
+
+        if (!resultadoEnvio.success) {
+          throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+        }
+
+        console.log(`✅ Comprobante enviado exitosamente por WhatsApp al ${telefono}`);
+
+        res.status(201).json({
+          msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+          data: {
+            pedido,
+            venta: ventaCompleta,
+            comprobante: comprobanteCompleto,
+            detallesVenta: detallesVentaCompletos,
+            whatsappEnviado: true,
+            telefonoDestino: telefono
+          }
+        });
+        return;
+      } catch (err) {
+        console.error('❌ Error al generar/enviar comprobante por WhatsApp:', err);
+        // Enviar respuesta indicando el error pero manteniendo la venta creada
+        res.status(201).json({
+          msg: 'Venta y comprobante creados exitosamente, pero falló el envío por WhatsApp',
+          data: {
+            pedido,
+            venta: ventaCompleta,
+            comprobante: comprobanteCompleto,
+            detallesVenta: detallesVentaCompletos,
+            whatsappEnviado: false,
+            whatsappError: (err as Error).message,
+            telefonoDestino: telefono
+          }
+        });
+        return;
+      }
+    } else {
+      console.log('⚠️ No se pudo enviar por WhatsApp: teléfono no válido o no proporcionado');
+      res.status(201).json({
+        msg: 'Venta y comprobante creados exitosamente (teléfono no válido para WhatsApp)',
+        data: {
+          pedido,
+          venta: ventaCompleta,
+          comprobante: comprobanteCompleto,
+          detallesVenta: detallesVentaCompletos,
+          whatsappEnviado: false,
+          whatsappError: 'Teléfono no válido o no proporcionado'
+        }
+      });
+    }
+  } catch (error) {
+    await transaction.rollback();
+    console.error('❌ Error en crearVentaCompletaConComprobanteConMensajes:', error);
+    res.status(500).json({
+      msg: 'Ocurrió un error al crear la venta completa',
+      error: (error as Error).message
     });
   }
 };

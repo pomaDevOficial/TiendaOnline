@@ -12,7 +12,8 @@ import {
     getComprobantesByFecha,
     deleteComprobante,
     crearVentaCompletaConComprobante,
-    crearVentaCompletaConComprobanteAdministracion
+    crearVentaCompletaConComprobanteAdministracion,
+    crearVentaCompletaConComprobanteConMensajes
 } from '../controllers/comprobante.controller';
 
 const ComprobanteRouter = Router();
@@ -21,6 +22,7 @@ const ComprobanteRouter = Router();
 ComprobanteRouter.post('/', createComprobante); // Crear un nuevo comprobante
 ComprobanteRouter.post('/venta-completa', crearVentaCompletaConComprobante); // Nueva ruta
 ComprobanteRouter.post('/venta-completa/admin', crearVentaCompletaConComprobanteAdministracion); // Nueva ruta
+ComprobanteRouter.post('/venta-completa/mensajes', crearVentaCompletaConComprobanteConMensajes); // Nueva ruta con envío garantizado de mensajes
 // READ
 ComprobanteRouter.get('/', getComprobantes); // Obtener todos los comprobantes
 ComprobanteRouter.get('/registrados', getComprobantesRegistrados); // Obtener comprobantes registrados
