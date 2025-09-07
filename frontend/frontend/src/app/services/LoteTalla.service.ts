@@ -69,7 +69,10 @@ export class LoteTallaServicio {
   updateLoteTalla(id: number, loteTalla: LoteTalla): Observable<LoteTalla> {
     return this.http.put<LoteTalla>(`${this.apiUrl}/${id}`, loteTalla);
   }
-
+  // En tu servicio de Angular
+  updateMultipleLoteTalla(lotesTalla: LoteTalla[]): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/multiple`, { lotesTalla });
+  }
   // Cambiar estado del lote_talla (disponible/agotado)
   cambiarEstadoLoteTalla(id: number, estado: any): Observable<LoteTalla> {
     return this.http.patch<LoteTalla>(`${this.apiUrl}/${id}/estado`, estado);

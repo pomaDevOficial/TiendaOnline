@@ -496,4 +496,21 @@ cargarComprobantesPorFecha() {
     this.fechaFin = null;
     this.cargarComprobantes();
   }
+
+  descargarComprobante(id: number) {
+  this.comprobanteService.descargarComprobante(id).subscribe({
+    next: (archivo: Blob) => {
+      const url = window.URL.createObjectURL(archivo);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comprobante-${id}.pdf`; // Nombre sugerido del archivo
+      a.click();
+      window.URL.revokeObjectURL(url);
+    },
+    error: (err) => {
+      console.error('Error al descargar comprobante:', err);
+    }
+  });
+}
+
 }

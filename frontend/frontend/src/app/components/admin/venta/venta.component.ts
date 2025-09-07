@@ -30,10 +30,14 @@ import { LoteServicio } from '../../../services/lote.service';
 
 interface CartItem {
   id: number;
-  loteTalla: any; // El lote_talla seleccionado con toda su información
+  loteTallaId: number; // Para búsquedas más rápidas
+  loteTalla: any;
   cantidad: number;
-  precio: number; // El precio ya viene del lote_talla
+  precio: number;
   subtotal: number;
+  producto: string;
+  marca: string;
+  talla: string;
 }
 
 @Component({
@@ -313,36 +317,64 @@ export class VentaComponent implements OnInit {
     });
   }
 
-  // Agregar loteTalla al carrito directamente
-  agregarLoteTallaAlCarrito(loteTalla: LoteTalla) {
-    if (!loteTalla || (loteTalla.stock ?? 0)  <= 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'No hay stock disponible para esta talla'
-      });
-      return;
-    }
 
-    // Verificar stock
-    this.verificarStockDisponible(loteTalla.id, 1).subscribe({
-      next: (stockDisponible) => {
-        if (!stockDisponible) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Stock insuficiente',
-            detail: 'No hay suficiente stock disponible'
-          });
-          return;
-        }
+// Método optimizado para agregar al carrito
+agregarLoteTallaAlCarrito(loteTalla: LoteTalla) {
+  if (!loteTalla || (loteTalla.stock ?? 0) <= 0) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Advertencia',
+      detail: 'No hay stock disponible para esta talla'
+    });
+    return;
+  }
 
-        const subtotal = 1 * (loteTalla.precioventa ?? 0) ;
+  // Buscar item existente (más eficiente con loteTallaId)
+  const itemExistente = this.cartItems.find(item => item.loteTallaId === loteTalla.id);
+  const cantidadDeseada = itemExistente ? itemExistente.cantidad + 1 : 1;
+
+  // Verificar stock disponible
+  this.verificarStockDisponible(loteTalla.id, cantidadDeseada).subscribe({
+    next: (stockDisponible) => {
+      if (!stockDisponible) {
+        const mensaje = itemExistente 
+          ? 'No hay suficiente stock para aumentar la cantidad' 
+          : 'No hay suficiente stock disponible';
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Stock insuficiente',
+          detail: mensaje
+        });
+        return;
+      }
+
+      if (itemExistente) {
+        // Aumentar cantidad existente
+        itemExistente.cantidad += 1;
+        itemExistente.subtotal = itemExistente.cantidad * itemExistente.precio;
+        this.calcularTotal();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Cantidad aumentada en el carrito'
+        });
+      } else {
+        // Agregar nuevo item
+        console.log("LoteTalla agregado:", loteTalla);
+        const subtotal = 1 * (loteTalla.precioventa ?? 0);
+        
         const cartItem: CartItem = {
           id: Date.now(),
+          loteTallaId: loteTalla.id,
           loteTalla: loteTalla,
           cantidad: 1,
           precio: (loteTalla.precioventa ?? 0),
-          subtotal: subtotal
+          subtotal: subtotal,
+          producto: loteTalla.Lote?.Producto?.nombre || "Producto sin nombre",
+          marca: loteTalla.Lote?.Producto?.Marca?.nombre || "",
+          talla: loteTalla.Talla?.nombre || "Sin talla"
         };
 
         this.cartItems.push(cartItem);
@@ -353,17 +385,18 @@ export class VentaComponent implements OnInit {
           summary: 'Éxito',
           detail: 'Producto agregado al carrito'
         });
-      },
-      error: (error) => {
-        console.error('Error al verificar stock:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo verificar el stock disponible'
-        });
       }
-    });
-  }
+    },
+    error: (error) => {
+      console.error('Error al verificar stock:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo verificar el stock disponible'
+      });
+    }
+  });
+}
   // Método alternativo para cargar catálogo usando la ruta /catalogo/talla
   cargarCatalogoAlternativo() {
     this.loteTallaService.getProductosDisponiblesPorTalla().subscribe({
@@ -418,86 +451,23 @@ export class VentaComponent implements OnInit {
     }
   }
 
-  agregarProductoAlCarrito() {
-    if (!this.productoSeleccionado || !this.tallaSeleccionada || this.cantidadProducto <= 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Seleccione producto, talla y cantidad'
-      });
-      return;
-    }
-
-    // Verificar stock usando el servicio del backend
-    this.verificarStockDisponible(this.tallaSeleccionada.id, this.cantidadProducto).subscribe({
-      next: (stockDisponible) => {
-        console.log(stockDisponible)
-        if (!stockDisponible) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Stock insuficiente',
-            detail: `No hay suficiente stock disponible para ${this.tallaSeleccionada.talla}`
-          });
-          return;
-        }
-
-        // Verificación adicional con el stock local
-        if (this.cantidadProducto > this.tallaSeleccionada.stock) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Stock insuficiente',
-            detail: `Solo hay ${this.tallaSeleccionada.stock} unidades disponibles`
-          });
-          return;
-        }
-
-        const subtotal = this.cantidadProducto * this.tallaSeleccionada.preciocosto;
-        const cartItem: CartItem = {
-          id: Date.now(),
-          loteTalla: this.tallaSeleccionada,
-          cantidad: this.cantidadProducto,
-          precio: this.tallaSeleccionada.preciocosto,
-          subtotal: subtotal
-        };
-
-        this.cartItems.push(cartItem);
-        this.calcularTotal();
-        this.mostrarDialogProducto = false;
-
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `${this.productoSeleccionado.nombre} - ${this.tallaSeleccionada.talla} agregado al carrito`
-        });
-      },
-      error: (error) => {
-        console.error('Error al verificar stock:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo verificar el stock disponible'
-        });
-      }
-    });
-  }
-
+  
   eliminarDelCarrito(item: CartItem) {
-    this.confirmationService.confirm({
-      message: `¿Está seguro de eliminar ${item.loteTalla.nombre} - ${item.loteTalla.talla} del carrito?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.cartItems = this.cartItems.filter(cartItem => cartItem.id !== item.id);
-        this.calcularTotal();
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Eliminado',
-          detail: `${item.loteTalla.nombre} - ${item.loteTalla.talla} eliminado del carrito`
-        });
-      }
-    });
-  }
-
+  this.confirmationService.confirm({
+    message: `¿Está seguro de eliminar ${item.producto} ${item.marca} - Talla: ${item.talla} del carrito?`,
+    header: 'Confirmar eliminación',
+    icon: 'pi pi-exclamation-triangle',
+    accept: () => {
+      this.cartItems = this.cartItems.filter(cartItem => cartItem.id !== item.id);
+      this.calcularTotal();
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Eliminado',
+        detail: `${item.producto} ${item.marca} - Talla: ${item.talla} eliminado del carrito`
+      });
+    }
+  });
+}
   calcularTotal() {
     this.cartTotal = this.cartItems.reduce((total, item) => total + item.subtotal, 0);
   }

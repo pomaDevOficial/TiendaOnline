@@ -1364,102 +1364,213 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
   }
 };
 
-// export const getProductosFormatoService = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     // Obtener productos disponibles siguiendo el patrón de consultas existentes
-//     const lotesTalla = await LoteTalla.findAll({
-//       where: {
-//         idestado: LoteEstado.DISPONIBLE,
-//         stock: { [Op.gt]: 0 }
-//       },
-//       include: [
-//         {
-//           model: Lote,
-//           as: 'Lote',
-//           where: { idestado: LoteEstado.DISPONIBLE },
-//           include: [
-//             {
-//               model: Producto,
-//               as: 'Producto',
-//               where: { idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO]  },
-//               include: [
-//                 {
-//                   model: Categoria,
-//                   as: 'Categoria',
-//                   attributes: ['id', 'nombre']
-//                 },
-//                 {
-//                   model: Marca,
-//                   as: 'Marca',
-//                   attributes: ['id', 'nombre']
-//                 }
-//               ]
-//             }
-//           ]
-//         },
-//         {
-//           model: Talla,
-//           as: 'Talla',
-//           attributes: ['id', 'nombre']
-//         }
-//       ],
-//       order: [
-//         [{ model: Lote, as: 'Lote' }, { model: Producto, as: 'Producto' }, 'nombre', 'ASC']
-//       ]
-//     });
 
-//     // Agrupar por producto para evitar duplicados
-//     const productosMap = new Map();
 
-//     lotesTalla.forEach((item: any) => {
-//       const producto = item.Lote?.Producto;
-//       if (!producto) return;
+// UPDATE OR CREATE MULTIPLE - Crear o actualizar múltiples lote_talla
+export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Response): Promise<void> => {
+  const { lotesTalla } = req.body; // Array de objetos lote_talla a procesar
 
-//       const productoId = producto.id;
+  try {
+    if (!lotesTalla || !Array.isArray(lotesTalla) || lotesTalla.length === 0) {
+      res.status(400).json({ msg: "El array de lotes_talla es obligatorio" });
+      return;
+    }
 
-//       if (!productosMap.has(productoId)) {
-      
+    const resultados = [];
+    const errores = [];
 
-//         // Generar imágenes placeholder
-//         const imagenes = [
-//           `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+1`,
-//           `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+2`,
-//           `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+3`
-//         ];
+    for (const item of lotesTalla) {
+      try {
+        const { id, idlote, idtalla, stock, esGenero, preciocosto, precioventa } = item;
 
-//         productosMap.set(productoId, {
-//           id: producto.id,
-//           nombre: producto.nombre || 'Producto sin nombre',
-//           marca: producto.Marca?.nombre || 'Sin marca',
-//           precio: item.precioventa || 0,
-//           descripcion: producto.descripcion || `Descripción del producto ${producto.nombre}`,
-//           imagenes: imagenes,
-//           categoria: producto.Categoria?.nombre || 'Sin categoría',
-//           genero: item.esGenero === 1 ? 'Hombre' : item.esGenero === 2 ? 'Mujer' : 'Unisex',
-//           tallas: [],
-//           stock: 0
-//         });
-//       }
+        // VALIDACIONES OBLIGATORIAS
+        if (!idlote) {
+          errores.push({ item, error: "El idlote es obligatorio" });
+          continue;
+        }
 
-//       // Agregar talla si no existe
-//       const productoData = productosMap.get(productoId);
-//       if (item.Talla?.nombre && !productoData.tallas.includes(item.Talla.nombre)) {
-//         productoData.tallas.push(item.Talla.nombre);
-//       }
+        if (!idtalla) {
+          errores.push({ item, error: "El idtalla es obligatorio" });
+          continue;
+        }
 
-//       // Sumar stock
-//       productoData.stock += item.stock || 0;
-//     });
+        if (esGenero === undefined) {
+          errores.push({ item, error: "El campo esGenero es obligatorio" });
+          continue;
+        }
 
-//     // Convertir el mapa a array
-//     const productosFormateados = Array.from(productosMap.values());
+        // Verificar si existe el lote
+        const lote = await Lote.findByPk(idlote);
+        if (!lote) {
+          errores.push({ item, error: 'El lote no existe' });
+          continue;
+        }
 
-//     res.json({
-//       msg: 'Productos obtenidos en formato servicio exitosamente',
-//       data: productosFormateados
-//     });
-//   } catch (error) {
-//     console.error('Error en getProductosFormatoService:', error);
-//     res.status(500).json({ msg: 'Error al obtener productos en formato servicio' });
-//   }
-// };
+        // Verificar si existe la talla
+        const talla = await Talla.findByPk(idtalla);
+        if (!talla) {
+          errores.push({ item, error: 'La talla no existe' });
+          continue;
+        }
+
+        let loteTalla: any;
+        let esNuevo = false;
+
+        if (id) {
+          // ========== ACTUALIZACIÓN ==========
+          // Buscar registro existente
+          loteTalla = await LoteTalla.findByPk(id);
+          if (!loteTalla) {
+            errores.push({ item, error: `No existe un lote_talla con el id ${id}` });
+            continue;
+          }
+
+          // Verificar duplicados SOLO para actualizaciones
+          const whereClause: any = {
+            id: { [Op.ne]: id }, // Excluir el registro actual
+            idlote,
+            idtalla,
+            esGenero,
+            idestado: { [Op.ne]: LoteEstado.ELIMINADO }
+          };
+
+          const loteTallaExistente = await LoteTalla.findOne({ where: whereClause });
+
+          if (loteTallaExistente) {
+            errores.push({ 
+              item, 
+              error: 'Ya existe otro registro con la misma talla y género para este lote' 
+            });
+            continue;
+          }
+
+          // Actualizar campos (EXCLUYENDO el stock para actualizaciones)
+          if (preciocosto !== undefined) loteTalla.preciocosto = preciocosto;
+          if (precioventa !== undefined) loteTalla.precioventa = precioventa;
+          
+          // Cambiar estado a DISPONIBLE si no está eliminado
+          if (loteTalla.idestado !== LoteEstado.ELIMINADO) {
+            loteTalla.idestado = LoteEstado.DISPONIBLE;
+          }
+
+        } else {
+          // ========== CREACIÓN ==========
+          esNuevo = true;
+          
+          // Validar que el stock esté presente para nuevos registros
+          if (stock === undefined || stock === null) {
+            errores.push({ item, error: "El stock es obligatorio para nuevos registros" });
+            continue;
+          }
+
+          // Verificar duplicados SOLO para creaciones (sin excluir ningún ID)
+          const whereClause: any = {
+            idlote,
+            idtalla,
+            esGenero,
+            idestado: { [Op.ne]: LoteEstado.ELIMINADO }
+          };
+
+          const loteTallaExistente = await LoteTalla.findOne({ where: whereClause });
+
+          if (loteTallaExistente) {
+            errores.push({ 
+              item, 
+              error: 'Ya existe un registro con la misma talla y género para este lote' 
+            });
+            continue;
+          }
+
+          // Crear nuevo registro
+          loteTalla = await LoteTalla.create({
+            idlote,
+            idtalla,
+            stock: stock || 0,
+            esGenero,
+            preciocosto: preciocosto || 0,
+            precioventa: precioventa || 0,
+            idestado: LoteEstado.DISPONIBLE
+          });
+        }
+
+        await loteTalla.save();
+
+        // Obtener el lote_talla actualizado/creado con relaciones
+        const loteTallaCompleto = await LoteTalla.findByPk(loteTalla.id, {
+          include: [
+            { 
+              model: Lote, 
+              as: 'Lote',
+              attributes: ['id', 'proveedor', 'fechaingreso'],
+              include: [
+                {
+                  model: Producto,
+                  as: 'Producto',
+                  attributes: ['id', 'nombre'],
+                  include: [
+                    {
+                      model: Categoria,
+                      as: 'Categoria',
+                      attributes: ['id', 'nombre']
+                    },
+                    {
+                      model: Marca,
+                      as: 'Marca',
+                      attributes: ['id', 'nombre']
+                    }
+                  ]
+                }
+              ]
+            },
+            { 
+              model: Talla, 
+              as: 'Talla',
+              attributes: ['id', 'nombre'] 
+            },
+            { 
+              model: Estado, 
+              as: 'Estado',
+              attributes: ['id', 'nombre'] 
+            }
+          ]
+        });
+
+        // Verificar que loteTallaCompleto no sea null antes de usarlo
+        if (!loteTallaCompleto) {
+          errores.push({ item, error: "Error al recuperar el registro después de guardar" });
+          continue;
+        }
+
+        resultados.push({
+          ...loteTallaCompleto.toJSON(),
+          accion: esNuevo ? 'creado' : 'actualizado'
+        });
+
+      } catch (error) {
+        console.error(`Error procesando lote_talla ${item.id || 'nuevo'}:`, error);
+        errores.push({ item, error: "Error interno al procesar el registro" });
+      }
+    }
+
+    if (errores.length > 0) {
+      res.status(207).json({ // 207 Multi-Status
+        msg: "Algunos registros no se pudieron procesar",
+        data: resultados,
+        errores: errores,
+        total: lotesTalla.length,
+        exitosos: resultados.length,
+        fallidos: errores.length
+      });
+    } else {
+      res.json({
+        msg: "Todos los lote_talla fueron procesados con éxito",
+        data: resultados,
+        total: resultados.length
+      });
+    }
+
+  } catch (error) {
+    console.error("Error en updateOrCreateMultipleLoteTalla:", error);
+    res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+  }
+};

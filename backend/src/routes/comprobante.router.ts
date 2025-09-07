@@ -12,7 +12,8 @@ import {
     getComprobantesByFecha,
     deleteComprobante,
     crearVentaCompletaConComprobante,
-    crearVentaCompletaConComprobanteAdministracion
+    crearVentaCompletaConComprobanteAdministracion,
+    descargarComprobante
 } from '../controllers/comprobante.controller';
 
 const ComprobanteRouter = Router();
@@ -26,6 +27,7 @@ ComprobanteRouter.get('/', getComprobantes); // Obtener todos los comprobantes
 ComprobanteRouter.get('/registrados', getComprobantesRegistrados); // Obtener comprobantes registrados
 ComprobanteRouter.get('/anulados', getComprobantesAnulados); // Obtener comprobantes anulados
 ComprobanteRouter.get('/fecha', getComprobantesByFecha); // Obtener comprobantes por rango de fechas
+ComprobanteRouter.get('/descargar/:id',descargarComprobante); // Obtener comprobantes por rango de fechas
 ComprobanteRouter.get('/venta/:idventa', getComprobantesByVenta); // Obtener comprobantes por venta
 ComprobanteRouter.get('/:id', getComprobanteById); // Obtener un comprobante por ID
 

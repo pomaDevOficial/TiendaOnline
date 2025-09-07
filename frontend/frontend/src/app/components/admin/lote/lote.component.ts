@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Lote, Producto, Talla } from '../../../interfaces/interfaces.interface';
+import { Lote, LoteTalla, Producto, Talla } from '../../../interfaces/interfaces.interface';
 import { LoteServicio } from '../../../services/lote.service';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -21,6 +21,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CalendarModule } from 'primeng/calendar';
 import { TallaServicio } from '../../../services/Talla.service';
+import { LoteTallaServicio } from '../../../services/LoteTalla.service';
 
 @Component({
   selector: 'app-lote',
@@ -48,7 +49,13 @@ export class LoteComponent implements OnInit {
 ];
 
   maxDate: Date | undefined;
-  constructor(private lote: LoteServicio,private talla: TallaServicio, private fb: FormBuilder, private producto: ProductoServicio, private messageService: MessageService,  private confirmationService: ConfirmationService) { }
+  constructor(private lote: LoteServicio,
+    private loteTallaServicio : LoteTallaServicio,
+    private talla: TallaServicio, 
+    private fb: FormBuilder, private producto: ProductoServicio,
+     private messageService: MessageService, 
+      private confirmationService: ConfirmationService
+    ) { }
 
 
   ngOnInit() {
@@ -85,11 +92,13 @@ export class LoteComponent implements OnInit {
     return this.loteForm.get('detalles') as FormArray;
   }
   agregarDetalle() {
+      const idLoteActual = this.loteForm.get('id')?.value;
+
     const detalle = this.fb.group({
       idtalla: ['', Validators.required],
-      idLote: ['0'],
+      idlote: [idLoteActual],
       esGenero: ['', Validators.required],
-      preciocosto: [null, Validators.required],
+      precioventa: [null, Validators.required],
       stock: [null, Validators.required]
     });
     this.detalles.push(detalle);
@@ -137,50 +146,48 @@ export class LoteComponent implements OnInit {
      this.detalles.clear();
   }
   editarLote(lote: Lote) {
-      this.editar = true;
-      this.lote.getinfoLotes(lote.id).subscribe({
-      next: (res:any) => {
-        var lote= res.data;
-        var detalle = res.detalles;
-        const fechaIngreso = lote.fechaingreso ? new Date(lote.fechaingreso) : null;
-        this.mostrarDialogo = true;
-        this.loteForm.patchValue({
-          id: lote.id,
-          idproducto: lote.idproducto,
-          proveedor: lote.proveedor,
-          fechaingreso: fechaIngreso,
-          idestado: lote.idestado
-        });
-        // Limpiar detalles previos
+  this.editar = true;
+  this.lote.getinfoLotes(lote.id).subscribe({
+    next: (res:any) => {
+      var lote= res.data;
+      var detalle = res.detalles;
+      const fechaIngreso = lote.fechaingreso ? new Date(lote.fechaingreso) : null;
+      this.mostrarDialogo = true;
+      this.loteForm.patchValue({
+        id: lote.id,
+        idproducto: lote.idproducto,
+        proveedor: lote.proveedor,
+        fechaingreso: fechaIngreso,
+        idestado: lote.idestado
+      });
+      
+      // Limpiar detalles previos
       this.detalles.clear();
 
       // Recorrer y añadir al FormArray
       detalle.forEach((d: any) => {
-        this.detalles.push(this.fb.group({
+        const detalleGroup = this.fb.group({
           id: [d.id],
           idlote: [d.idlote],
           idtalla: [d.idtalla],
           esGenero: [d.esGenero],
           stock: [d.stock],
-          preciocosto: [d.preciocosto]
-        }));
-      });
+          precioventa: [d.precioventa]
+        });
 
-      },
-      error: (err) => {
-        console.error('Error al cargar lotes', err);
-      }
-    })
-      // this.mostrarDialogo = true;
-      // this.loteForm.patchValue({
-      //   id: lote.id,
-      //   idproducto: lote.idproducto,
-      //   proveedor: lote.proveedor,
-      //   fechaingreso: lote.fechaingreso,
-      //   idestado: lote.idestado
-      // });
-      
-  }
+        // Deshabilitar precioventa si ya tiene ID (registro existente)
+        if (d.id) {
+          detalleGroup.get('stock')?.disable();
+        }
+
+        this.detalles.push(detalleGroup);
+      });
+    },
+    error: (err) => {
+      console.error('Error al cargar lotes', err);
+    }
+  });
+}
   cerrarDialogo(){
       this.mostrarDialogo = false;
   }
@@ -218,29 +225,55 @@ export class LoteComponent implements OnInit {
     });
   }
   
-  guardarEdicion() {
-    if (this.loteForm.invalid) return;
-
-    const marcaData: Lote = this.loteForm.value;
-    const formData = new FormData();
-    formData.append('id', this.loteForm.get('id')?.value);
-    formData.append('idproducto', this.loteForm.get('idproducto')?.value);
-    formData.append('proveedor', this.loteForm.get('proveedor')?.value);
-    formData.append('fechaingreso', this.loteForm.get('fechaingreso')?.value);
-    formData.append('idestado', this.loteForm.get('idestado')?.value);
-    this.lote.updateLote(marcaData.id!, formData)
-      .subscribe({
-        next: (res) => {
-            this.cargarLotes();
-          
-            this.cerrarDialogo();
-            this.editar = false; 
-        },
-        error: (err) => {
-          console.error("Error al actualizar la talla", err);
-        }
-      });
+// Método actualizado para guardarEdicion con mensajes
+async guardarEdicion() {
+  if (this.loteForm.invalid) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario incompleto',
+      detail: 'Por favor, complete todos los campos requeridos'
+    });
+    return;
   }
+
+  try {
+    const loteData: Lote = this.loteForm.value;
+    const detalles: LoteTalla[] = this.loteForm.get('detalles')?.value || [];
+
+    // Actualizar cabecera
+    const loteActualizado = await this.lote.updateLote(loteData.id!, loteData).toPromise();
+    
+    // Actualizar detalles (todos en una sola llamada)
+    console.log(detalles);
+    const resultadoDetalles = await this.loteTallaServicio.updateMultipleLoteTalla(detalles).toPromise();
+    
+    console.log('Actualización completada:', { 
+      lote: loteActualizado, 
+      detalles: resultadoDetalles 
+    });
+
+    // Mensaje de éxito
+    this.messageService.add({
+      severity: 'success',
+      summary: '¡Éxito!',
+      detail: 'Lote y detalles actualizados correctamente'
+    });
+    
+    this.cargarLotes();
+    this.cerrarDialogo();
+    this.editar = false;
+    
+  } catch (err) {
+    console.error("Error al actualizar el lote y detalles", err);
+    
+    // Mensaje de error
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudo actualizar el lote. Por favor, intente nuevamente'
+    });
+  }
+}
 
   eliminarLotes(categoria: Lote) {
       this.confirmationService.confirm({
@@ -265,8 +298,10 @@ export class LoteComponent implements OnInit {
     }
     getEstadoBadgeClass(idestado: number): string {
       switch (idestado) {
-        case 6: return 'bg-success';
-        case 7: return 'bg-secondary';
+        case 9: return 'bg-success';
+        case 10: return 'bg-warning';
+        case 11: return 'bg-danger';
+
         default: return 'bg-secondary';
       }
     }
