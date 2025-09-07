@@ -163,6 +163,15 @@
                         (click)="reenviarComprobante(comprobante)"
                         pTooltip="Reenviar por WhatsApp" tooltipPosition="top">
                 </button>
+               <button 
+                pButton 
+                type="button" 
+                icon="pi pi-download" 
+                class="p-button-sm p-button-info" 
+                (click)="descargarComprobante(comprobante.id)"
+                pTooltip="Descargar comprobante" 
+                tooltipPosition="top">
+              </button>
 
                 <!-- <button pButton type="button" icon="pi pi-trash" 
                         class="p-button-sm p-button-danger" 

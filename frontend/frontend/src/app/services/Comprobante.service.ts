@@ -75,4 +75,11 @@ export class ComprobanteServicio {
   deleteComprobante(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
+    // Descargar comprobante en PDF
+  descargarComprobante(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/descargar/${id}`, {
+      responseType: 'blob'
+    });
+  }
+
 }

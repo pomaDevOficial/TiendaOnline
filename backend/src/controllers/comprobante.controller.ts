@@ -18,6 +18,10 @@ import Pedido from '../models/pedido.model';
 import MetodoPago from '../models/metodo_pago.model';
 import Talla from '../models/talla.model';
 import moment from "moment-timezone";
+import { path } from 'pdfkit';
+import fs from "fs";
+import { generarPDFComprobanteModelo } from '../helper/generarPdf.helper';
+
 
 // CREATE - Insertar nuevo comprobante
 export const createComprobante = async (req: Request, res: Response): Promise<void> => {
@@ -1089,3 +1093,92 @@ const generarNumeroSerieUnico = async (idTipoComprobante: number, transaction: a
   // Formato: [SERIE]-[NÚMERO]
   return `${(tipoComprobante as any).TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
 };
+
+
+// DOWNLOAD - Descargar comprobante en PDF
+export const descargarComprobante = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    // Buscar comprobante con sus relaciones necesarias
+    const comprobante = await Comprobante.findByPk(id, {
+      include: [
+        { model: TipoComprobante, as: 'TipoComprobante' },
+        {
+          model: Venta,
+          as: 'Venta',
+          include: [
+            { model: Usuario, as: 'Usuario' },
+            {
+              model: Pedido,
+              as: 'Pedido',
+              include: [
+                { model: Persona, as: 'Persona' },
+                { model: MetodoPago, as: 'MetodoPago' }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!comprobante) {
+      res.status(404).json({ msg: 'Comprobante no encontrado' });
+      return;
+    }
+
+    // Detalles de venta para el comprobante
+    const detallesVenta = await DetalleVenta.findAll({
+      where: { idventa: comprobante.idventa },
+      include: [
+        {
+          model: PedidoDetalle,
+          as: 'PedidoDetalle',
+          include: [
+            {
+              model: LoteTalla,
+              as: 'LoteTalla',
+              include: [
+                {
+                  model: Lote,
+                  as: 'Lote',
+                  include: [{ model: Producto, as: 'Producto' }]
+                },
+                { model: Talla, as: 'Talla' }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    // Generar el PDF temporal
+    const nombreArchivo = await generarPDFComprobanteModelo(
+      comprobante,
+      comprobante.Venta,
+      comprobante.Venta?.Pedido,
+      detallesVenta
+    );
+
+    // Enviar PDF como descarga
+    res.download(nombreArchivo, `${comprobante.TipoComprobante?.nombre}-${comprobante.numserie}.pdf`, (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.status(500).json({ msg: 'Error al descargar el comprobante' });
+      }
+
+      // ✅ Eliminar archivo temporal después de enviarlo
+      fs.unlink(nombreArchivo, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('Error al eliminar archivo temporal:', unlinkErr);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error en descargarComprobante:', error);
+    res.status(500).json({ msg: 'Error al descargar el comprobante' });
+  }
+};
+
+
+
