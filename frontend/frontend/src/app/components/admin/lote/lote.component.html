@@ -76,7 +76,7 @@
                     {{ lote.proveedor}}
                 </td>
                 <td>
-                    <span class="badge bg-{{ lote.idestado === 1 ? 'success' : 'secondary' }}">
+                    <span class="badge {{ getEstadoBadgeClass(lote.idestado || 0) }}">
                       {{ lote.Estado?.nombre}}
                     </span>
                 </td>
@@ -87,7 +87,7 @@
                           class="p-button-sm p-button-warning p-mr-2" 
                           style="display: inline-flex; align-items: center;" 
                           (click)="editarLote(lote)">
-                    <span class="p-ml-1">Editar</span>
+                    <span class="p-ml-1"></span>
                   </button>
 
                   <!-- Botón Eliminar -->
@@ -97,7 +97,7 @@
                           class="p-button-sm p-button-danger" 
                           style="display: inline-flex; align-items: center;" 
                           (click)="eliminarLotes(lote)">
-                    <span class="p-ml-1">Eliminar</span>
+                    <span class="p-ml-1"></span>
                   </button>
                 </td>
             </tr>
@@ -206,7 +206,7 @@
               
             </div>
             <div class="col-3">
-              <input type="number" placeholder="Precio" pInputText formControlName="preciocosto" class="w-full"/>
+              <input type="number" placeholder="Precio" pInputText formControlName="precioventa" class="w-full"/>
             </div>
             <div class="col-2">
               <input type="number" placeholder="Stock" pInputText formControlName="stock" class="w-full"/>

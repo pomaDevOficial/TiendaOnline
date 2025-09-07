@@ -25,8 +25,8 @@ export class LoteServicio {
     return this.http.post<Lote>(`${this.apiUrl}/completo`, producto);
   }
 
-  updateLote(id: number, producto: FormData): Observable<Lote> {
-    return this.http.put<Lote>(`${this.apiUrl}/${id}`, producto);
+  updateLote(id: number, loteData: any): Observable<Lote> {
+    return this.http.put<Lote>(`${this.apiUrl}/${id}`, loteData);
   }
   eliminarLote(id: number, producto:any): Observable<Lote> {
     return this.http.patch<Lote>(`${this.apiUrl}/${id}/eliminar`, producto);

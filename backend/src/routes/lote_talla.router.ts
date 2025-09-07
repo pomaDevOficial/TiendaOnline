@@ -14,7 +14,9 @@ import {
     getProductosDisponibles,
     getTallasDisponibles,
     verificarStock,
-    agregarStockPorLoteTalla
+    agregarStockPorLoteTalla,
+    updateOrCreateMultipleLoteTalla,
+    
 } from '../controllers/lote_talla.controller';
 
 const LoteTallaRouter = Router();
@@ -29,12 +31,14 @@ LoteTallaRouter.get('/catalogo/talla', getProductosDisponiblesPorTalla); // Obte
 LoteTallaRouter.get('/catalogo', getProductosDisponibles); // Catálogo con filtros
 LoteTallaRouter.get('/tallas', getTallasDisponibles); // Tallas por producto
 LoteTallaRouter.get('/stock', verificarStock); // Verificación de stock
-
+LoteTallaRouter.put('/multiple', updateOrCreateMultipleLoteTalla);
 LoteTallaRouter.get('/:id', getLoteTallaById); // Obtener un lote_talla por ID
 LoteTallaRouter.put('/:id', updateLoteTalla); // Actualizar un lote_talla por ID
 LoteTallaRouter.patch('/:id/estado', cambiarEstadoLoteTalla); // Cambiar estado del lote_talla (disponible/agotado)
 LoteTallaRouter.patch('/:id/eliminar', deleteLoteTalla); // Eliminar lógicamente un lote_talla (cambiar estado a eliminado)
 LoteTallaRouter.patch('/:id/restaurar', restaurarLoteTalla); // Restaurar un lote_talla eliminado
+// En tu archivo de rutas
+
 // NUEVA RUTA PARA AGREGAR STOCK
 LoteTallaRouter.patch('/agregar-stock', agregarStockPorLoteTalla); // Agregar stock a un lote_talla específico
 
