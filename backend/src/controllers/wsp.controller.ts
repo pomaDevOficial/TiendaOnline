@@ -124,7 +124,7 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
            .fontSize(fontSizeSmall)
            .text(producto.substring(0, 20), 10, doc.y, { width: 120, align: 'left' })
            .text(cantidad.toString(), 130, doc.y, { width: 30, align: 'right' })
-           .text(`S/. ${total.toFixed(2)}`, 160, doc.y, { width: 50, align: 'right' });
+           .text(`S/. ${total}`, 160, doc.y, { width: 50, align: 'right' });
         
         doc.moveDown(0.5);
       });
@@ -138,12 +138,12 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
 
       // Totales
       doc.font('Helvetica-Bold')
-         .text(`SUBTOTAL: S/. ${(comprobante.total - comprobante.igv).toFixed(2)}`, { align: 'right' });
+         .text(`SUBTOTAL: S/. ${(comprobante.total - comprobante.igv)}`, { align: 'right' });
       
-      doc.text(`IGV (18%): S/. ${comprobante.igv.toFixed(2)}`, { align: 'right' });
+      doc.text(`IGV (18%): S/. ${comprobante.igv}`, { align: 'right' });
       
       doc.fontSize(fontSizeLarge)
-         .text(`TOTAL: S/. ${comprobante.total.toFixed(2)}`, { align: 'right' });
+         .text(`TOTAL: S/. ${comprobante.total}`, { align: 'right' });
       
       doc.moveDown();
 
@@ -206,18 +206,26 @@ export const enviarArchivoWSP = async (phone: string, filename: string, caption:
   }
 };
 
+// ============== CONTROLADORES ==============
+
 // Enviar mensaje simple
-export const sendWhatsAppMessage = async (req: Request, res: Response): Promise<void> => {
+export const enviarMensaje = async (req: Request, res: Response): Promise<void> => {
   const { phone, message } = req.body;
 
   if (!phone || !message) {
-    res.status(400).json({ error: 'Falta número o mensaje' });
+    res.status(400).json({ 
+      success: false,
+      error: 'El número de teléfono y el mensaje son obligatorios' 
+    });
     return;
   }
 
   const phoneRegex = /^\d{10,15}$/;
   if (!phoneRegex.test(phone)) {
-    res.status(400).json({ error: 'Formato de número inválido. Usa formato internacional sin "+" ni espacios.' });
+    res.status(400).json({ 
+      success: false,
+      error: 'Formato de número inválido. Usa formato internacional sin "+" ni espacios (ej: 51987654321)' 
+    });
     return;
   }
 
@@ -228,7 +236,7 @@ export const sendWhatsAppMessage = async (req: Request, res: Response): Promise<
     message,
     customPreview: {
       title: "Mensaje desde tu app",
-      description: "Comprobante de pago"
+      description: "Notificación automática"
     }
   };
 
@@ -237,22 +245,30 @@ export const sendWhatsAppMessage = async (req: Request, res: Response): Promise<
       headers: { 'Content-Type': 'application/json' }
     });
 
-    res.status(200).json({ success: true, data: response.data });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Mensaje enviado exitosamente',
+      data: response.data 
+    });
   } catch (error: any) {
+    console.error('Error al enviar mensaje:', error);
     res.status(500).json({
       success: false,
-      error: error.response?.data || error.message
+      error: error.response?.data || error.message || 'Error al enviar mensaje'
     });
   }
 };
 
 // Enviar comprobante por WhatsApp
-export const enviarComprobanteWSP = async (req: Request, res: Response): Promise<void> => {
+export const enviarComprobante = async (req: Request, res: Response): Promise<void> => {
   const { idComprobante } = req.body;
 
   try {
     if (!idComprobante) {
-      res.status(400).json({ error: 'El ID del comprobante es obligatorio' });
+      res.status(400).json({ 
+        success: false,
+        error: 'El ID del comprobante es obligatorio' 
+      });
       return;
     }
 
@@ -283,7 +299,10 @@ export const enviarComprobanteWSP = async (req: Request, res: Response): Promise
     });
 
     if (!comprobante) {
-      res.status(404).json({ error: 'Comprobante no encontrado' });
+      res.status(404).json({ 
+        success: false,
+        error: 'Comprobante no encontrado' 
+      });
       return;
     }
 
@@ -324,9 +343,10 @@ export const enviarComprobanteWSP = async (req: Request, res: Response): Promise
       detallesVenta
     );
     
-    const telefono = comprobante?.Venta?.Pedido?.Persona?.telefono;
-   let resultadoWSP = null;
-    if (telefono) {
+    const telefono = "51" + comprobante?.Venta?.Pedido?.Persona?.telefono;
+    let resultadoWSP = null;
+    
+    if (telefono && comprobante?.Venta?.Pedido?.Persona?.telefono) {
       resultadoWSP = await enviarArchivoWSP(
         telefono,
         nombreArchivo,
@@ -334,12 +354,16 @@ export const enviarComprobanteWSP = async (req: Request, res: Response): Promise
       );
     } else {
       console.warn("⚠️ El comprobante no tiene número de teléfono, no se envió por WhatsApp.");
+      res.status(400).json({
+        success: false,
+        error: 'El comprobante no tiene un número de teléfono válido asociado'
+      });
+      return;
     }
-
 
     res.status(200).json({
       success: true,
-      message: 'Comprobante enviado exitosamente',
+      message: 'Comprobante enviado exitosamente por WhatsApp',
       data: resultadoWSP
     });
 
@@ -347,18 +371,21 @@ export const enviarComprobanteWSP = async (req: Request, res: Response): Promise
     console.error('Error al enviar comprobante:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Error al enviar comprobante'
+      error: error.message || 'Error interno al enviar comprobante'
     });
   }
 };
 
 // Reenviar comprobante por WhatsApp
-export const reenviarComprobanteWSP = async (req: Request, res: Response): Promise<void> => {
+export const reenviarComprobante = async (req: Request, res: Response): Promise<void> => {
   const { idComprobante } = req.body;
 
   try {
     if (!idComprobante) {
-      res.status(400).json({ error: 'El ID del comprobante es obligatorio' });
+      res.status(400).json({ 
+        success: false,
+        error: 'El ID del comprobante es obligatorio' 
+      });
       return;
     }
 
@@ -389,7 +416,10 @@ export const reenviarComprobanteWSP = async (req: Request, res: Response): Promi
     });
 
     if (!comprobante) {
-      res.status(404).json({ error: 'Comprobante no encontrado' });
+      res.status(404).json({ 
+        success: false,
+        error: 'Comprobante no encontrado' 
+      });
       return;
     }
 
@@ -430,22 +460,27 @@ export const reenviarComprobanteWSP = async (req: Request, res: Response): Promi
       detallesVenta
     );
     
-    const telefono = comprobante?.Venta?.Pedido?.Persona?.telefono;
+    const telefono = "51" + comprobante?.Venta?.Pedido?.Persona?.telefono;
     let resultadoWSP = null;
-    if (telefono) {
-       resultadoWSP = await enviarArchivoWSP(
+    
+    if (telefono && comprobante?.Venta?.Pedido?.Persona?.telefono) {
+      resultadoWSP = await enviarArchivoWSP(
         telefono,
         nombreArchivo,
-        `📄 ${comprobante.TipoComprobante?.nombre || 'Comprobante'} ${comprobante.numserie}`
+        `🔄 REENVÍO - ${comprobante.TipoComprobante?.nombre || 'Comprobante'} ${comprobante.numserie}`
       );
     } else {
       console.warn("⚠️ El comprobante no tiene número de teléfono, no se envió por WhatsApp.");
+      res.status(400).json({
+        success: false,
+        error: 'El comprobante no tiene un número de teléfono válido asociado'
+      });
+      return;
     }
-
 
     res.status(200).json({
       success: true,
-      message: 'Comprobante reenviado exitosamente',
+      message: 'Comprobante reenviado exitosamente por WhatsApp',
       data: resultadoWSP
     });
 
@@ -453,38 +488,79 @@ export const reenviarComprobanteWSP = async (req: Request, res: Response): Promi
     console.error('Error al reenviar comprobante:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Error al reenviar comprobante'
+      error: error.message || 'Error interno al reenviar comprobante'
     });
   }
 };
 
 // Enviar archivo genérico por WhatsApp
-export const sendFileWhatsApp = async (req: Request, res: Response): Promise<void> => {
+export const enviarArchivo = async (req: Request, res: Response): Promise<void> => {
   const { phone, filename } = req.body;
 
   if (!phone || !filename) {
-    res.status(400).json({ error: "Falta número o nombre de archivo" });
+    res.status(400).json({ 
+      success: false,
+      error: "El número de teléfono y nombre de archivo son obligatorios" 
+    });
     return;
   }
 
   const phoneRegex = /^\d{10,15}$/;
   if (!phoneRegex.test(phone)) {
-    res.status(400).json({ error: "Formato de número inválido" });
+    res.status(400).json({ 
+      success: false,
+      error: "Formato de número inválido. Usa formato internacional sin '+' ni espacios (ej: 51987654321)" 
+    });
     return;
   }
 
   try {
-    const resultado = await enviarArchivoWSP(phone, filename, "📎 Archivo enviado desde tu servidor");
+    const resultado = await enviarArchivoWSP(
+      phone, 
+      filename, 
+      "📎 Archivo enviado desde tu servidor"
+    );
     
     res.status(200).json({
       success: true,
-      whatsappResponse: resultado,
+      message: 'Archivo enviado exitosamente por WhatsApp',
+      data: resultado,
     });
 
   } catch (error: any) {
+    console.error('Error al enviar archivo:', error);
     res.status(500).json({
       success: false,
-      error: error.response?.data || error.message,
+      error: error.response?.data || error.message || 'Error al enviar archivo',
     });
   }
 };
+
+// Estado del servicio WhatsApp
+export const obtenerEstadoServicio = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const url = `https://7105.api.greenapi.com/waInstance${ID_INSTANCE}/getStateInstance/${API_TOKEN_INSTANCE}`;
+    
+    const response = await axios.get(url);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Estado del servicio WhatsApp obtenido',
+      data: response.data
+    });
+  } catch (error: any) {
+    console.error('Error al obtener estado del servicio:', error);
+    res.status(500).json({
+      success: false,
+      error: error.response?.data || error.message || 'Error al consultar estado del servicio'
+    });
+  }
+};
+
+// ============== FUNCIONES LEGACY (compatibilidad) ==============
+
+// Mantener compatibilidad con nombres anteriores
+export const sendWhatsAppMessage = enviarMensaje;
+export const enviarComprobanteWSP = enviarComprobante;
+export const reenviarComprobanteWSP = reenviarComprobante;
+export const sendFileWhatsApp = enviarArchivo;

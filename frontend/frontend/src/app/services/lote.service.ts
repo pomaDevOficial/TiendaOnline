@@ -11,7 +11,7 @@ export class LoteServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/lotes`;
+    this.apiUrl = `${environment.endpoint}/lotes`;
   }
 
   getLotes(): Observable<Lote[]> {
@@ -30,5 +30,9 @@ export class LoteServicio {
   }
   eliminarLote(id: number, producto:any): Observable<Lote> {
     return this.http.patch<Lote>(`${this.apiUrl}/${id}/eliminar`, producto);
+  }
+   // 👇 Nuevo método para la búsqueda
+  buscarLotes(q: string): Observable<Lote[]> {
+    return this.http.get<Lote[]>(`${this.apiUrl}/buscar?q=${encodeURIComponent(q)}`);
   }
 }

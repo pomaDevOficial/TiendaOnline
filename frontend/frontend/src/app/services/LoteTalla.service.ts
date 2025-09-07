@@ -11,7 +11,7 @@ export class LoteTallaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/lotetallas`;
+    this.apiUrl = `${environment.endpoint}/lotetallas`;
   }
 
   // Crear un nuevo lote_talla

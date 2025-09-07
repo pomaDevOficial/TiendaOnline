@@ -11,7 +11,7 @@ export class MovimientoLoteService {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/movimientoslote`;
+    this.apiUrl = `${environment.endpoint}/movimientoslote`;
   }
 
   // Crear un nuevo movimiento

@@ -11,7 +11,7 @@ export class TallaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/tallas`;
+    this.apiUrl = `${environment.endpoint}/tallas`;
   }
 
   getTallas(): Observable<Talla[]> {

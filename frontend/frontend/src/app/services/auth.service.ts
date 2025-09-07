@@ -19,7 +19,7 @@ export class AuthService {
     private notify: NotificationService,
     private globalService: GlobalService
   ) {
-    this.apiUrl = `${environment.endpoint}api/v1`;
+    this.apiUrl = `${environment.endpoint}`;
   }
 
   // Método para hacer login y guardar el token

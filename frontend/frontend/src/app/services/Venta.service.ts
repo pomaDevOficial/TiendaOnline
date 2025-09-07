@@ -11,7 +11,7 @@ export class VentaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/ventas`;
+    this.apiUrl = `${environment.endpoint}/ventas`;
   }
 
   // Crear una nueva venta

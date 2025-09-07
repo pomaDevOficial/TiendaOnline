@@ -17,6 +17,7 @@ import Usuario from '../models/usuario.model';
 import Pedido from '../models/pedido.model';
 import MetodoPago from '../models/metodo_pago.model';
 import Talla from '../models/talla.model';
+import moment from "moment-timezone";
 
 // CREATE - Insertar nuevo comprobante
 export const createComprobante = async (req: Request, res: Response): Promise<void> => {
@@ -87,7 +88,7 @@ export const createComprobante = async (req: Request, res: Response): Promise<vo
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -192,7 +193,7 @@ export const updateComprobante = async (req: Request, res: Response): Promise<vo
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -245,7 +246,7 @@ export const getComprobantes = async (req: Request, res: Response): Promise<void
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -281,64 +282,68 @@ export const getComprobantesByFecha = async (req: Request, res: Response): Promi
 
   try {
     if (!fechaInicio || !fechaFin) {
-      res.status(400).json({ 
-        msg: 'Los parámetros fechaInicio y fechaFin son obligatorios' 
+      res.status(400).json({
+        msg: "Los parámetros fechaInicio y fechaFin son obligatorios",
       });
       return;
     }
 
+    // ✅ Convertir a rango de Lima
+    const inicio = moment.tz(fechaInicio as string, "America/Lima").startOf("day").toDate();
+    const fin = moment.tz(fechaFin as string, "America/Lima").endOf("day").toDate();
+
     const comprobantes = await Comprobante.findAll({
       include: [
-        { 
-          model: Venta, 
-          as: 'Venta',
-          attributes: ['id', 'fechaventa'],
+        {
+          model: Venta,
+          as: "Venta",
+          attributes: ["id", "fechaventa"],
           where: {
             fechaventa: {
-              [Op.between]: [new Date(fechaInicio as string), new Date(fechaFin as string)]
-            }
+              [Op.between]: [inicio, fin],
+            },
           },
           include: [
             {
               model: Venta.associations.Usuario.target,
-              as: 'Usuario',
-              attributes: ['id', 'usuario']
+              as: "Usuario",
+              attributes: ["id", "usuario"],
             },
             {
               model: Venta.associations.Pedido.target,
-              as: 'Pedido',
-              attributes: ['id', 'fechaoperacion', 'totalimporte'],
+              as: "Pedido",
+              attributes: ["id", "fechaoperacion", "totalimporte"],
               include: [
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
-                  as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
-                }
-              ]
-            }
-          ]
+                  as: "Persona",
+                  attributes: ["id", "nombres", "apellidos", "nroidentidad", "telefono", "correo"],
+                },
+              ],
+            },
+          ],
         },
-        { 
-          model: TipoComprobante, 
-          as: 'TipoComprobante',
-          attributes: ['id', 'nombre']
+        {
+          model: TipoComprobante,
+          as: "TipoComprobante",
+          attributes: ["id", "nombre"],
         },
-        { 
-          model: Estado, 
-          as: 'Estado',
-          attributes: ['id', 'nombre'] 
-        }
+        {
+          model: Estado,
+          as: "Estado",
+          attributes: ["id", "nombre"],
+        },
       ],
-      order: [[{ model: Venta, as: 'Venta' }, 'fechaventa', 'DESC']]
+      order: [[{ model: Venta, as: "Venta" }, "fechaventa", "DESC"]],
     });
 
     res.json({
-      msg: 'Comprobantes por fecha obtenidos exitosamente',
-      data: comprobantes
+      msg: "Comprobantes por fecha obtenidos exitosamente",
+      data: comprobantes,
     });
   } catch (error) {
-    console.error('Error en getComprobantesByFecha:', error);
-    res.status(500).json({ msg: 'Error al obtener comprobantes por fecha' });
+    console.error("Error en getComprobantesByFecha:", error);
+    res.status(500).json({ msg: "Error al obtener comprobantes por fecha" });
   }
 };
 
@@ -368,7 +373,7 @@ export const getComprobantesRegistrados = async (req: Request, res: Response): P
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -423,7 +428,7 @@ export const getComprobanteById = async (req: Request, res: Response): Promise<v
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -483,7 +488,7 @@ export const getComprobantesByVenta = async (req: Request, res: Response): Promi
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -537,7 +542,7 @@ export const getComprobantesAnulados = async (req: Request, res: Response): Prom
                 {
                   model: Venta.associations.Pedido.target.associations.Persona.target,
                   as: 'Persona',
-                  attributes: ['id', 'nombres', 'apellidos', 'nroIdentidad']
+                  attributes: ['id', 'nombres', 'apellidos', 'nroidentidad','telefono','correo']
                 }
               ]
             }
@@ -696,7 +701,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
     // 3) CREAR VENTA
     const nuevaVenta = await Venta.create({
-      fechaventa: fechaventa || new Date(),
+      fechaventa: moment().tz("America/Lima").toDate(),
       idusuario: idusuario || (req as any).user?.id,
       idpedido: pedido.id,
       idestado: VentaEstado.REGISTRADO
@@ -882,7 +887,7 @@ export const crearVentaCompletaConComprobante = async (req: Request, res: Respon
     try {
       // 1. CREAR LA VENTA
       const nuevaVenta = await Venta.create({
-        fechaventa: fechaventa || new Date(),
+        fechaventa: moment().tz("America/Lima").toDate(),
         idusuario,
         idpedido,
         idestado: VentaEstado.REGISTRADO

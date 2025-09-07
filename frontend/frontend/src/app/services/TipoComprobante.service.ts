@@ -11,7 +11,7 @@ export class TipoComprobanteServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/tipocomprobante`;
+    this.apiUrl = `${environment.endpoint}/tipocomprobante`;
   }
 
   // Crear un nuevo tipo de comprobante

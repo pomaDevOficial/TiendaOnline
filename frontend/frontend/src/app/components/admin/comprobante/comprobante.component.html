@@ -1,190 +1,194 @@
 <div class="mt-5 mb-2">
   <div class="d-flex justify-content-between align-items-center mb-3">
+
+    
     <h2>Gestión de Comprobantes</h2>
     <div class="d-flex gap-2">
-      <p-button 
-        (click)="abrirNuevoComprobante()" 
-        label="Nuevo Comprobante" 
-        icon="pi pi-plus" 
-        styleClass="p-button-success">
-      </p-button>
-      <p-button 
-        (click)="cargarComprobantes()" 
-        label="Actualizar" 
-        icon="pi pi-refresh" 
-        styleClass="p-button-info">
-      </p-button>
+      <button pButton type="button" 
+              (click)="abrirNuevoComprobante()" 
+              label="Nuevo Comprobante" 
+              icon="pi pi-plus" 
+              class="p-button-success">
+      </button>
+      <button pButton type="button" 
+              (click)="cargarComprobantes()" 
+              label="Actualizar" 
+              icon="pi pi-refresh" 
+              class="p-button-info">
+      </button>
     </div>
   </div>
 
   <!-- Filtros por fecha -->
-<div class="card mb-3">
-  <div class="card-body p-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="card-title mb-0">
-        <i class="pi pi-calendar me-2"></i>Filtrar por Fecha
-      </h6>
+  <div class="card mb-3">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="card-title mb-0">
+          <i class="pi pi-calendar me-2"></i>Filtrar por Fecha
+        </h6>
+      </div>
+      
+      <div class="row g-3 align-items-end">
+        <div class="col-lg-4 col-md-5">
+          <label for="fechaInicio" class="form-label small mb-2">Fecha Inicio</label>
+          <p-calendar 
+            id="fechaInicio" 
+            [(ngModel)]="fechaInicio" 
+            dateFormat="dd/mm/yy" 
+            [showIcon]="true"
+            placeholder="dd/mm/aaaa"
+            [style]="{'width': '100%'}">
+          </p-calendar>
+        </div>
+        
+        <div class="col-lg-4 col-md-5">
+          <label for="fechaFin" class="form-label small mb-2">Fecha Fin</label>
+          <p-calendar 
+            id="fechaFin" 
+            [(ngModel)]="fechaFin" 
+            dateFormat="dd/mm/yy" 
+            [showIcon]="true"
+            placeholder="dd/mm/aaaa"
+            [style]="{'width': '100%'}">
+          </p-calendar>
+        </div>
+        
+        <div class="col-lg-4 col-md-2 d-flex gap-2 justify-content-lg-start justify-content-md-end">
+          <button pButton type="button" 
+                  label="Filtrar" 
+                  icon="pi pi-filter" 
+                  (click)="cargarComprobantesPorFecha()"
+                  class="p-button-primary">
+          </button>
+          <button pButton type="button" 
+                  label="Limpiar" 
+                  icon="pi pi-times" 
+                  (click)="limpiarFiltros()"
+                  class="p-button-secondary">
+          </button>
+        </div>
+      </div>
     </div>
-    
-    <div class="row g-3 align-items-end">
-      <div class="col-lg-4 col-md-5">
-        <label for="fechaInicio" class="form-label small mb-2">Fecha Inicio</label>
-        <p-calendar 
-          id="fechaInicio" 
-          [(ngModel)]="fechaInicio" 
-          dateFormat="dd/mm/yy" 
-          [showIcon]="true"
-          placeholder="dd/mm/aaaa"
-          size="small"
-          class="w-100">
-        </p-calendar>
-      </div>
-      
-      <div class="col-lg-4 col-md-5">
-        <label for="fechaFin" class="form-label small mb-2">Fecha Fin</label>
-        <p-calendar 
-          id="fechaFin" 
-          [(ngModel)]="fechaFin" 
-          dateFormat="dd/mm/yy" 
-          [showIcon]="true"
-          placeholder="dd/mm/aaaa"
-          size="small"
-          class="w-100">
-        </p-calendar>
-      </div>
-      
-      <div class="col-lg-4 col-md-2 d-flex gap-2 justify-content-lg-start justify-content-md-end">
-        <p-button 
-          label="Filtrar" 
-          icon="pi pi-filter" 
-          (click)="cargarComprobantesPorFecha()"
-          size="small"
-          styleClass="p-button-primary">
-        </p-button>
-        <p-button 
-          label="Limpiar" 
-          icon="pi pi-times" 
-          (click)="limpiarFiltros()"
-          size="small"
-          styleClass="p-button-secondary">
-        </p-button>
-      </div>
+  </div>
+
+  <!-- Tabla Comprobantes con scroll horizontal -->
+  <div class="card">
+    <div class="table-container">
+      <p-table #dt1 [value]="comprobantes" dataKey="id" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
+               [loading]="loading" [paginator]="true" 
+               [globalFilterFields]="['numserie', 'TipoComprobante.nombre', 'Venta.Pedido.Persona.nombres', 'Venta.Pedido.Persona.apellidos', 'total', 'igv', 'Estado.nombre']"
+               [scrollable]="true" scrollHeight="400px">
+
+        <ng-template #caption>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Total de comprobantes: {{comprobantes.length || 0}}</span>
+            <div class="p-input-icon-left w-25">
+              <i class="pi pi-search"></i>
+              <input type="text" pInputText 
+                    (input)="dt1.filterGlobal($any($event).target.value, 'contains')" 
+                    placeholder="Buscar comprobantes..." />
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #header>
+          <tr>
+            <th style="min-width: 120px">N° Serie</th>
+            <th style="min-width: 120px">Tipo</th>
+            <th style="min-width: 200px">Cliente</th>
+            <th style="min-width: 150px">Fecha Emisión</th>
+            <th style="min-width: 100px">IGV</th>
+            <th style="min-width: 120px">Total</th>
+            <th style="min-width: 120px">Estado</th>
+            <th style="min-width: 250px">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-comprobante>
+          <tr>
+            <td style="min-width: 120px"><strong>{{ comprobante?.numserie || 'N/A' }}</strong></td>
+            <td style="min-width: 120px">{{ comprobante?.TipoComprobante?.nombre || 'N/A' }}</td>
+            <td style="min-width: 200px">
+              <div *ngIf="comprobante?.Venta?.Pedido?.Persona; else noCliente">
+                {{ comprobante.Venta.Pedido.Persona.nombres || 'N/A' }} 
+                {{ comprobante.Venta.Pedido.Persona.apellidos || '' }}
+              </div>
+              <ng-template #noCliente>
+                <div>N/A</div>
+              </ng-template>
+            </td>
+            <td style="min-width: 150px">{{ comprobante?.Venta?.fechaventa | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td style="min-width: 100px">
+              <span class="text-info">S/ {{ comprobante?.igv | number:'1.2-2' }}</span>
+            </td>
+            <td style="min-width: 120px">
+              <span class="fw-bold text-success">S/ {{ comprobante?.total | number:'1.2-2' }}</span>
+            </td>
+            <td style="min-width: 120px">
+              <span class="badge {{ getEstadoBadgeClass(comprobante?.idestado || 0) }}">
+                {{ comprobante?.Estado?.nombre || 'N/A' }}
+              </span>
+            </td>
+            <td style="min-width: 250px">
+              <div class="d-flex gap-1 flex-wrap">
+                <button pButton type="button" icon="pi pi-eye" 
+                        class="p-button-sm p-button-info" 
+                        (click)="verDetalle(comprobante)"
+                        pTooltip="Ver Detalle" tooltipPosition="top">
+                </button>
+
+                <button pButton type="button" icon="pi pi-pencil" 
+                        class="p-button-sm p-button-warning" 
+                        (click)="editar(comprobante)"
+                        pTooltip="Editar" tooltipPosition="top"
+                        [disabled]="comprobante?.idestado === 2">
+                </button>
+
+                <button pButton type="button" icon="pi pi-times" 
+                        class="p-button-sm p-button-danger" 
+                        (click)="anularComprobante(comprobante)"
+                        pTooltip="Anular" tooltipPosition="top"
+                        [disabled]="comprobante?.idestado === 2">
+                </button>
+
+                <button pButton type="button" icon="pi pi-refresh" 
+                        class="p-button-sm p-button-secondary" 
+                        (click)="restaurarComprobante(comprobante)"
+                        pTooltip="Restaurar" tooltipPosition="top"
+                        [disabled]="comprobante?.idestado !== 2">
+                </button>
+
+                <button pButton type="button" icon="pi pi-whatsapp" 
+                        class="p-button-sm p-button-success" 
+                        (click)="reenviarComprobante(comprobante)"
+                        pTooltip="Reenviar por WhatsApp" tooltipPosition="top">
+                </button>
+
+                <!-- <button pButton type="button" icon="pi pi-trash" 
+                        class="p-button-sm p-button-danger" 
+                        (click)="eliminarComprobante(comprobante)"
+                        pTooltip="Eliminar Permanentemente" tooltipPosition="top">
+                </button> -->
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="8" class="text-center py-4">
+              <i class="pi pi-inbox" style="font-size: 2rem;"></i>
+              <p class="text-muted mt-2">No se encontraron comprobantes</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   </div>
 </div>
-
-  <!-- Tabla Comprobantes -->
-  <div class="card">
-    <p-table #dt1 [value]="comprobantes" dataKey="id" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
-             [loading]="loading" [paginator]="true" 
-             [globalFilterFields]="['numserie', 'Venta.Pedido.Persona.nombres', 'Venta.Pedido.Persona.apellidos', 'total']">
-
-     <ng-template #caption>
-  <div class="d-flex justify-content-between align-items-center">
-    <span class="text-muted">Total de comprobantes: {{comprobantes.length || 0}}</span>
-    <div class="position-relative">
-      <i class="pi pi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
-      <input pInputText #globalFilterInput type="text" 
-             (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
-             placeholder="Buscar comprobantes..." 
-             class="p-2 ps-4 form-control" />
-    </div>
-  </div>
-</ng-template>
-
-      <ng-template #header>
-        <tr>
-          <th>N° Serie</th>
-          <th>Tipo</th>
-          <th>Cliente</th>
-          <th>Fecha Emisión</th>
-          <th>IGV</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </ng-template>
-
-      <ng-template #body let-comprobante>
-        <tr>
-          <td><strong>{{ comprobante?.numserie || 'N/A' }}</strong></td>
-          <td>{{ comprobante?.TipoComprobante?.nombre || 'N/A' }}</td>
-          <td>
-            <div *ngIf="comprobante?.Venta?.Pedido?.Persona">
-              {{ comprobante.Venta.Pedido.Persona.nombres || 'N/A' }} 
-              {{ comprobante.Venta.Pedido.Persona.apellidos || '' }}
-            </div>
-            <div *ngIf="!comprobante?.Venta?.Pedido?.Persona">
-              N/A
-            </div>
-          </td>
-          <td>{{ comprobante?.Venta?.fechaventa | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>
-            <span class="text-info">S/ {{ comprobante?.igv | number:'1.2-2' }}</span>
-          </td>
-          <td>
-            <span class="fw-bold text-success">S/ {{ comprobante?.total | number:'1.2-2' }}</span>
-          </td>
-          <td>
-            <span class="badge {{ getEstadoBadgeClass(comprobante?.idestado || 0) }}">
-              {{ getEstadoTexto(comprobante?.idestado || 0) }}
-            </span>
-          </td>
-          <td>
-            <div class="d-flex gap-1">
-              <button pButton type="button" icon="pi pi-eye" 
-                      class="p-button-sm p-button-info" 
-                      (click)="verDetalle(comprobante)"
-                      pTooltip="Ver Detalle" tooltipPosition="top">
-              </button>
-
-              <button pButton type="button" icon="pi pi-pencil" 
-                      class="p-button-sm p-button-warning" 
-                      (click)="editar(comprobante)"
-                      pTooltip="Editar" tooltipPosition="top"
-                      [disabled]="comprobante?.idestado === 2">
-              </button>
-
-              <button pButton type="button" icon="pi pi-times" 
-                      class="p-button-sm p-button-danger" 
-                      (click)="anularComprobante(comprobante)"
-                      pTooltip="Anular" tooltipPosition="top"
-                      [disabled]="comprobante?.idestado === 2">
-              </button>
-
-              <button pButton type="button" icon="pi pi-refresh" 
-                      class="p-button-sm p-button-secondary" 
-                      (click)="restaurarComprobante(comprobante)"
-                      pTooltip="Restaurar" tooltipPosition="top"
-                      [disabled]="comprobante?.idestado !== 2">
-              </button>
-
-              <button pButton type="button" icon="pi pi-whatsapp" 
-                      class="p-button-sm p-button-success" 
-                      (click)="reenviarComprobante(comprobante)"
-                      pTooltip="Reenviar por WhatsApp" tooltipPosition="top">
-              </button>
-
-              <button pButton type="button" icon="pi pi-trash" 
-                      class="p-button-sm p-button-danger" 
-                      (click)="eliminarComprobante(comprobante)"
-                      pTooltip="Eliminar Permanentemente" tooltipPosition="top">
-              </button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="8" class="text-center py-4">
-            <i class="pi pi-inbox" style="font-size: 2rem;"></i>
-            <p class="text-muted mt-2">No se encontraron comprobantes</p>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
+<!-- overlay de carga -->
+<div class="overlay-loading" *ngIf="loading">
+  <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
 </div>
 
 <!-- Dialog para registrar/editar comprobante -->
@@ -208,8 +212,7 @@
           optionLabel="id" 
           optionValue="id"
           placeholder="Seleccione una venta"
-          [showClear]="true"
-          class="w-100">
+          class="w-full">
           <ng-template let-venta pTemplate="item">
             <div>Venta #{{ venta.id }} - {{ venta.Pedido?.Persona?.nombres || 'Cliente' }}</div>
           </ng-template>
@@ -227,7 +230,7 @@
           optionLabel="nombre"
           optionValue="id"
           placeholder="Seleccione tipo de comprobante"
-          class="w-100">
+          class="w-full">
         </p-select>
         <small *ngIf="comprobanteForm.get('idtipocomprobante')?.invalid && comprobanteForm.get('idtipocomprobante')?.touched" 
                class="text-danger">El tipo de comprobante es requerido</small>
@@ -235,32 +238,32 @@
 
       <div class="mb-3">
         <label for="numserie" class="form-label">Número de Serie *</label>
-        <input type="text" id="numserie" class="form-control" formControlName="numserie" 
-               placeholder="Ej: B-00000001">
+        <input type="text" id="numserie" pInputText formControlName="numserie" 
+               placeholder="Ej: B-00000001" class="w-full">
         <small *ngIf="comprobanteForm.get('numserie')?.invalid && comprobanteForm.get('numserie')?.touched" 
                class="text-danger">El número de serie es requerido</small>
       </div>
 
       <div class="mb-3">
         <label for="igv" class="form-label">IGV *</label>
-        <input type="number" id="igv" class="form-control" formControlName="igv" 
-               step="0.01" min="0" placeholder="0.00">
+        <input type="number" id="igv" pInputText formControlName="igv" 
+               step="0.01" min="0" placeholder="0.00" class="w-full">
         <small *ngIf="comprobanteForm.get('igv')?.invalid && comprobanteForm.get('igv')?.touched" 
                class="text-danger">El IGV es requerido</small>
       </div>
 
       <div class="mb-3">
         <label for="descuento" class="form-label">Descuento *</label>
-        <input type="number" id="descuento" class="form-control" formControlName="descuento" 
-               step="0.01" min="0" placeholder="0.00">
+        <input type="number" id="descuento" pInputText formControlName="descuento" 
+               step="0.01" min="0" placeholder="0.00" class="w-full">
         <small *ngIf="comprobanteForm.get('descuento')?.invalid && comprobanteForm.get('descuento')?.touched" 
                class="text-danger">El descuento es requerido</small>
       </div>
 
       <div class="mb-3">
         <label for="total" class="form-label">Total *</label>
-        <input type="number" id="total" class="form-control" formControlName="total" 
-               step="0.01" min="0" placeholder="0.00">
+        <input type="number" id="total" pInputText formControlName="total" 
+               step="0.01" min="0" placeholder="0.00" class="w-full">
         <small *ngIf="comprobanteForm.get('total')?.invalid && comprobanteForm.get('total')?.touched" 
                class="text-danger">El total es requerido</small>
       </div>
@@ -268,19 +271,19 @@
     </form>
 
     <div class="d-flex justify-content-end gap-2 mt-3">
-      <p-button 
-        label="Cancelar" 
-        icon="pi pi-times" 
-        styleClass="p-button-text" 
-        (click)="mostrarDialogoComprobante = false">
-      </p-button>
+      <button pButton type="button" 
+              label="Cancelar" 
+              icon="pi pi-times" 
+              class="p-button-text" 
+              (click)="mostrarDialogoComprobante = false">
+      </button>
 
-      <p-button 
-        [label]="editarComprobante ? 'Guardar Cambios' : 'Crear Comprobante'" 
-        [icon]="editarComprobante ? 'pi pi-save' : 'pi pi-check'" 
-        (click)="guardarComprobante()"
-        [disabled]="comprobanteForm.invalid">
-      </p-button>
+      <button pButton type="button" 
+              [label]="editarComprobante ? 'Guardar Cambios' : 'Crear Comprobante'" 
+              [icon]="editarComprobante ? 'pi pi-save' : 'pi pi-check'" 
+              (click)="guardarComprobante()"
+              [disabled]="comprobanteForm.invalid">
+      </button>
     </div>
   </div>
 </p-dialog>
@@ -299,7 +302,7 @@
     <div class="row mb-4">
       <div class="col-md-6">
         <div class="info-item">
-          <strong>N° Serie:</strong> {{ comprobanteSeleccionado.numserie }}
+          <strong>N° Serie:</strong> {{ comprobanteSeleccionado.numserie || 'N/A' }}
         </div>
         <div class="info-item">
           <strong>Tipo:</strong> {{ comprobanteSeleccionado.TipoComprobante?.nombre || 'N/A' }}
@@ -312,7 +315,7 @@
         <div class="info-item">
           <strong>Estado:</strong> 
           <span class="badge {{ getEstadoBadgeClass(comprobanteSeleccionado.idestado || 0) }}">
-            {{ getEstadoTexto(comprobanteSeleccionado.idestado || 0) }}
+            {{ comprobanteSeleccionado.Estado?.nombre || 'N/A' }}
           </span>
         </div>
         <div class="info-item">
@@ -325,7 +328,31 @@
         </div>
       </div>
     </div>
-    
+    <!-- Detalle del pedido -->
+<div class="row mb-4" *ngIf="pedidoDetalles.length > 0">
+  <div class="col-12">
+    <h5 class="mb-3">Detalle del Pedido</h5>
+    <p-table [value]="pedidoDetalles">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Precio Unit.</th>
+          <th>Subtotal</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-detalle>
+        <tr>
+          <td>{{ detalle.LoteTalla?.Lote?.Producto?.nombre || 'N/A' }}</td>
+          <td>{{ detalle.cantidad }}</td>
+          <td>S/ {{ detalle.precio | number:'1.2-2' }}</td>
+          <td>S/ {{ (detalle.cantidad * detalle.precio) | number:'1.2-2' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
     <!-- Información del cliente -->
     <div class="row mb-4" *ngIf="comprobanteSeleccionado.Venta?.Pedido?.Persona">
       <div class="col-12">
@@ -349,15 +376,15 @@
       <div class="col-md-6">
         <div class="info-item">
           <strong>Subtotal:</strong> 
-          <span class="fw-bold">S/ {{ (comprobanteSeleccionado?.total || 0 ' - comprobanteSeleccionado?.igv) | number:'1.2-2' }}</span>
+          <span class="fw-bold">S/ {{ ((comprobanteSeleccionado.total || 0) - (comprobanteSeleccionado.igv || 0)) | number:'1.2-2' }}</span>
         </div>
       </div>
       <div class="col-md-6">
         <div class="info-item">
           <strong>Total:</strong> 
-<span class="text-success fw-bold fs-5">
-  S/ {{ (comprobanteSeleccionado.total ) | number:'1.2-2' }}
-</span>
+          <span class="text-success fw-bold fs-5">
+            S/ {{ comprobanteSeleccionado.total | number:'1.2-2' }}
+          </span>
         </div>
       </div>
     </div>

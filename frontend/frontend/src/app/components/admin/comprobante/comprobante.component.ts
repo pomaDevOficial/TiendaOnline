@@ -13,10 +13,13 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { CalendarModule } from 'primeng/calendar';
-import { Comprobante, Venta, TipoComprobante } from '../../../interfaces/interfaces.interface';
+import { Comprobante, Venta, TipoComprobante, PedidoDetalle } from '../../../interfaces/interfaces.interface';
 import { ComprobanteServicio } from '../../../services/Comprobante.service';
 import { VentaServicio } from '../../../services/Venta.service';
 import { TipoComprobanteServicio } from '../../../services/TipoComprobante.service';
+import { WspServicio } from '../../../services/Wsp.service';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { PedidoServicio } from '../../../services/Pedido.service';
 
 @Component({
   selector: 'app-comprobante',
@@ -25,7 +28,7 @@ import { TipoComprobanteServicio } from '../../../services/TipoComprobante.servi
     CommonModule, TableModule, ButtonModule, ReactiveFormsModule, FormsModule,
     ToastModule, ConfirmDialogModule, DialogModule, InputTextModule,
     SelectModule, ButtonModule, IconFieldModule, InputIconModule,
-    TooltipModule, CalendarModule
+    TooltipModule, CalendarModule,ProgressSpinnerModule
   ],
   providers: [ConfirmationService, MessageService],
   styleUrls: ['./comprobante.component.css']
@@ -42,6 +45,7 @@ export class ComprobanteComponent implements OnInit {
   tiposComprobante: TipoComprobante[] = [];
   fechaInicio: Date | null = null;
   fechaFin: Date | null = null;
+  pedidoDetalles: PedidoDetalle[] = [];
 
   constructor(
     private comprobanteService: ComprobanteServicio,
@@ -49,7 +53,10 @@ export class ComprobanteComponent implements OnInit {
     private tipoComprobanteService: TipoComprobanteServicio,
     private fb: FormBuilder,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private wspService: WspServicio, // Inyectar el servicio de WhatsApp
+    private pedidoService: PedidoServicio   // 
+
   ) {}
 
   ngOnInit() {
@@ -222,33 +229,51 @@ cargarComprobantesPorFecha() {
 }
 
   verDetalle(comprobante: Comprobante) {
-    this.comprobanteService.getComprobanteById(comprobante.id).subscribe({
-      next: (response: any) => {
-        let comprobanteCompleto: Comprobante;
-        if (response && typeof response === 'object' && response.id) {
-          comprobanteCompleto = response;
-        } else if (response && response.data && response.data.id) {
-          comprobanteCompleto = response.data;
-        } else if (response && response.comprobante && response.comprobante.id) {
-          comprobanteCompleto = response.comprobante;
-        } else {
-          console.warn('Unexpected comprobante detail response format:', response);
-          comprobanteCompleto = comprobante;
-        }
-
-        this.comprobanteSeleccionado = comprobanteCompleto;
-        this.mostrarDialogoDetalle = true;
-      },
-      error: (err) => {
-        console.error('Error al cargar detalle del comprobante', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cargar el detalle del comprobante'
-        });
+  this.comprobanteService.getComprobanteById(comprobante.id).subscribe({
+    next: (response: any) => {
+      let comprobanteCompleto: Comprobante;
+      if (response && typeof response === 'object' && response.id) {
+        comprobanteCompleto = response;
+      } else if (response && response.data && response.data.id) {
+        comprobanteCompleto = response.data;
+      } else if (response && response.comprobante && response.comprobante.id) {
+        comprobanteCompleto = response.comprobante;
+      } else {
+        console.warn('Unexpected comprobante detail response format:', response);
+        comprobanteCompleto = comprobante;
       }
-    });
-  }
+
+      this.comprobanteSeleccionado = comprobanteCompleto;
+      this.mostrarDialogoDetalle = true;
+
+      // 👇 cargar detalles del pedido
+      const idpedido = comprobanteCompleto?.Venta?.Pedido?.id;
+      if (idpedido) {
+        this.pedidoService.getDetallesByPedido(idpedido).subscribe({
+          next: (resp:any) => {
+            this.pedidoDetalles = resp.data || [];
+            console.log(resp);
+          },
+          error: (err) => {
+            console.error('Error al cargar detalles del pedido', err);
+            this.pedidoDetalles = [];
+          }
+        });
+      } else {
+        this.pedidoDetalles = [];
+      }
+    },
+    error: (err) => {
+      console.error('Error al cargar detalle del comprobante', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo cargar el detalle del comprobante'
+      });
+    }
+  });
+}
+
 
   abrirNuevoComprobante() {
     this.comprobanteForm.reset({
@@ -403,20 +428,43 @@ cargarComprobantesPorFecha() {
   }
 
   reenviarComprobante(comprobante: Comprobante) {
-    this.confirmationService.confirm({
-      message: `¿Está seguro de reenviar el comprobante ${comprobante.numserie} por WhatsApp?`,
-      header: 'Confirmar Reenvío',
-      icon: 'pi pi-whatsapp',
-      accept: () => {
-        // Aquí implementarías la lógica para reenviar el comprobante
-        this.messageService.add({ 
-          severity: 'info', 
-          summary: 'En desarrollo', 
-          detail: 'Función de reenvío en desarrollo' 
-        });
-      }
-    });
-  }
+  this.confirmationService.confirm({
+    message: `¿Está seguro de reenviar el comprobante ${comprobante.numserie} por WhatsApp?`,
+    header: 'Confirmar Reenvío',
+    icon: 'pi pi-whatsapp',
+    accept: () => {
+      this.loading = true;
+      this.wspService.reenviarComprobante(comprobante.id).subscribe({
+        next: (response) => {
+          this.loading = false;
+          if (response.success) {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: response.message || 'Comprobante reenviado correctamente por WhatsApp'
+            });
+          } else {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Advertencia',
+              detail: response.error || 'No se pudo reenviar el comprobante'
+            });
+          }
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('Error al reenviar comprobante por WhatsApp', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al conectar con el servicio de WhatsApp'
+          });
+        }
+      });
+    }
+  });
+}
+
 
   private marcarCamposInvalidos(formGroup: FormGroup) {
     Object.keys(formGroup.controls).forEach(key => {
