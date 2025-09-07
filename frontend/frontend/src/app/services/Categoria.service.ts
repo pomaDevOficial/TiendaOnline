@@ -11,7 +11,7 @@ export class CategoriaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/categorias`;
+    this.apiUrl = `${environment.endpoint}/categorias`;
   }
 
   getCategorias(): Observable<Talla[]> {

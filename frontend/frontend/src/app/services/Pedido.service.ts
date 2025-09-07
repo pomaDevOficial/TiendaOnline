@@ -12,8 +12,8 @@ export class PedidoServicio {
   private apiDetalleUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/pedidos`;
-    this.apiDetalleUrl = `${environment.endpoint}api/v1/pedidos-detalle`;
+    this.apiUrl = `${environment.endpoint}/pedidos`;
+    this.apiDetalleUrl = `${environment.endpoint}/pedidodetalle`;
   }
 
   // ========== SERVICIOS DE PEDIDOS ==========

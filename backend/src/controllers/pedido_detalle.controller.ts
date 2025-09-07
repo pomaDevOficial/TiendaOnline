@@ -415,7 +415,7 @@ export const getDetallesByPedido = async (req: Request, res: Response): Promise<
                 {
                   model: LoteTalla.associations.Lote.target.associations.Producto.target,
                   as: 'Producto',
-                  attributes: ['id', 'nombre','imagen', 'descripcion']
+                  attributes: ['id', 'nombre','imagen']
                 }
               ]
             },

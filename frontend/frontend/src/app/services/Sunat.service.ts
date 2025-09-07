@@ -10,7 +10,7 @@ export class SunatServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/sunat`;
+    this.apiUrl = `${environment.endpoint}/sunat`;
   }
 
   // Consultar DNI

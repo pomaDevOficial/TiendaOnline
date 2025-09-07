@@ -11,7 +11,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
-import { Pedido, Persona, MetodoPago } from '../../../interfaces/interfaces.interface';
+import { Pedido, Persona, MetodoPago, PedidoDetalle } from '../../../interfaces/interfaces.interface';
 import { PersonaServicio } from '../../../services/persona.service';
 import { MetodoPagoServicio } from '../../../services/MetodoPago.service';
 import { TooltipModule } from 'primeng/tooltip';
@@ -39,6 +39,7 @@ export class PedidoComponent implements OnInit {
   pedidoSeleccionado: Pedido | null = null;
   clientes: Persona[] = [];
   metodoPagoOptions: { label: string, value: number }[] = [];
+  pedidoDetalles: PedidoDetalle[] = [];
 
   constructor(
     private pedidoService: PedidoServicio,
@@ -215,7 +216,22 @@ export class PedidoComponent implements OnInit {
         if (!pedidoCompleto.Detalles || !Array.isArray(pedidoCompleto.Detalles)) {
           pedidoCompleto.Detalles = [];
         }
-
+// 👇 cargar detalles del pedido
+      const idpedido = pedidoCompleto.id;
+      if (idpedido) {
+        this.pedidoService.getDetallesByPedido(idpedido).subscribe({
+          next: (resp:any) => {
+            this.pedidoDetalles = resp.data || [];
+            console.log(resp);
+          },
+          error: (err) => {
+            console.error('Error al cargar detalles del pedido', err);
+            this.pedidoDetalles = [];
+          }
+        });
+      } else {
+        this.pedidoDetalles = [];
+      }
         this.pedidoSeleccionado = pedidoCompleto;
         this.mostrarDialogoDetalle = true;
       },
@@ -396,18 +412,18 @@ export class PedidoComponent implements OnInit {
 
   getEstadoBadgeClass(idestado: number): string {
     switch (idestado) {
-      case 6: return 'bg-success';    // aprobado
-      case 7: return 'bg-danger';     // cancelado
-      case 2: return 'bg-warning';    // pendiente
+      case 14: return 'bg-success';    // aprobado
+      case 15: return 'bg-danger';     // cancelado
+      case 13: return 'bg-warning';    // pendiente
       default: return 'bg-secondary';
     }
   }
 
   getEstadoTexto(idestado: number): string {
     switch (idestado) {
-      case 6: return 'Aprobado';
-      case 7: return 'Cancelado';
-      case 2: return 'Pendiente';
+      case 14: return 'Aprobado';
+      case 15: return 'Cancelado';
+      case 13: return 'Pendiente';
       default: return 'Desconocido';
     }
   }

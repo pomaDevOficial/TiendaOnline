@@ -11,7 +11,7 @@ export class UsuarioServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/usuarios`;
+    this.apiUrl = `${environment.endpoint}/usuarios`;
   }
 
   // Crear un nuevo usuario

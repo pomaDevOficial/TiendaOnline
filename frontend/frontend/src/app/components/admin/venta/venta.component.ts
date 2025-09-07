@@ -11,7 +11,7 @@ import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoComplete, AutoCompleteModule } from 'primeng/autocomplete';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { BadgeModule } from 'primeng/badge';
 import { DividerModule } from 'primeng/divider';
@@ -25,7 +25,8 @@ import { MetodoPagoServicio } from '../../../services/MetodoPago.service';
 import { PersonaServicio } from '../../../services/persona.service';
 import { LoteTallaServicio } from '../../../services/LoteTalla.service';
 import { ComprobanteServicio } from '../../../services/Comprobante.service';
-import { Producto, Persona, MetodoPago, Venta, DetalleVenta, LoteTalla } from '../../../interfaces/interfaces.interface';
+import { Producto, Persona, MetodoPago, Venta, DetalleVenta, LoteTalla, Lote } from '../../../interfaces/interfaces.interface';
+import { LoteServicio } from '../../../services/lote.service';
 
 interface CartItem {
   id: number;
@@ -54,7 +55,7 @@ interface CartItem {
     InputNumberModule,
     BadgeModule,
     DividerModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,   
   ],
   providers: [MessageService, ConfirmationService]
 })
@@ -93,9 +94,15 @@ export class VentaComponent implements OnInit {
   productoSeleccionado: any = null; // Producto del catálogo
   tallaSeleccionada: any = null; // Talla específica con precio
   cantidadProducto: number = 1;
+ // Nuevas propiedades para búsqueda de lotes
+  lotesFiltrados: Lote[] = [];
+  loteSeleccionado: Lote | null = null;
+  lotesTalla: LoteTalla[] = [];
+  cargandoLotes: boolean = false;
 
   constructor(
     private productoService: ProductoServicio,
+    private loteService: LoteServicio, // Añade este servicio
     private ventaService: VentaServicio,
     private detalleVentaService: DetalleVentaServicio,
     private metodoPagoService: MetodoPagoServicio,
@@ -244,7 +251,119 @@ export class VentaComponent implements OnInit {
       })
     );
   }
+// Nuevo método para buscar lotes
+  buscarLotes(event: any) {
+    const query = event.query;
+    if (query && query.length > 2) {
+      this.cargandoLotes = true;
+      this.loteService.buscarLotes(query).subscribe({
+        next: (lotes: any) => {
+          this.lotesFiltrados = lotes.data;
+          this.lotesFiltrados = lotes.data.map((lote: any) => ({
+          ...lote,
+          displayName: `${lote.Producto?.nombre} - ${lote.proveedor})`
+        }));
 
+          this.cargandoLotes = false;
+        },
+        error: (error) => {
+          console.error('Error al buscar lotes:', error);
+          this.cargandoLotes = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los lotes'
+          });
+        }
+      });
+    } else {
+      this.lotesFiltrados = [];
+    }
+  }
+
+  // Método cuando se selecciona un lote
+ onLoteSeleccionado(event: any) {
+  this.loteSeleccionado = event.value; // 👈 aquí va el lote real
+  console.log('Lote seleccionado:', this.loteSeleccionado);
+ console.log('Event completo:', event);
+  console.log('Event.value:', event.value);
+  console.log('Estructura del lote:', JSON.stringify(event.value || event, null, 2));
+  
+  if (this.loteSeleccionado && this.loteSeleccionado.id) {
+    this.cargarLotesTallaPorLote(this.loteSeleccionado.id);
+  }
+}
+
+
+  // Cargar lotes_talla por lote
+  cargarLotesTallaPorLote(idlote: number) {
+    this.loteTallaService.getLotesTallaByLote(idlote).subscribe({
+      next: (detalle: any) => {
+        this.lotesTalla = detalle.data;
+        console.log(detalle);
+      },
+      error: (error) => {
+        console.error('Error al cargar lotes talla:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las tallas del lote'
+        });
+      }
+    });
+  }
+
+  // Agregar loteTalla al carrito directamente
+  agregarLoteTallaAlCarrito(loteTalla: LoteTalla) {
+    if (!loteTalla || (loteTalla.stock ?? 0)  <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'No hay stock disponible para esta talla'
+      });
+      return;
+    }
+
+    // Verificar stock
+    this.verificarStockDisponible(loteTalla.id, 1).subscribe({
+      next: (stockDisponible) => {
+        if (!stockDisponible) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Stock insuficiente',
+            detail: 'No hay suficiente stock disponible'
+          });
+          return;
+        }
+
+        const subtotal = 1 * (loteTalla.precioventa ?? 0) ;
+        const cartItem: CartItem = {
+          id: Date.now(),
+          loteTalla: loteTalla,
+          cantidad: 1,
+          precio: (loteTalla.precioventa ?? 0),
+          subtotal: subtotal
+        };
+
+        this.cartItems.push(cartItem);
+        this.calcularTotal();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Producto agregado al carrito'
+        });
+      },
+      error: (error) => {
+        console.error('Error al verificar stock:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo verificar el stock disponible'
+        });
+      }
+    });
+  }
   // Método alternativo para cargar catálogo usando la ruta /catalogo/talla
   cargarCatalogoAlternativo() {
     this.loteTallaService.getProductosDisponiblesPorTalla().subscribe({

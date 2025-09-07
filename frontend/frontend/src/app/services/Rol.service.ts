@@ -11,7 +11,7 @@ export class RolServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/roles`;
+    this.apiUrl = `${environment.endpoint}/roles`;
   }
 
   // Crear un nuevo rol

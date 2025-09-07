@@ -11,7 +11,7 @@ export class MetodoPagoServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/metodopagos`;
+    this.apiUrl = `${environment.endpoint}/metodopagos`;
   }
 
   // Crear un nuevo método de pago

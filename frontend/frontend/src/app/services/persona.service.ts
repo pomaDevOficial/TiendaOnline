@@ -11,7 +11,7 @@ export class PersonaServicio {
   private apiUrl: string;
 
   constructor(private http: HttpClient) {
-    this.apiUrl = `${environment.endpoint}api/v1/personas`;
+    this.apiUrl = `${environment.endpoint}/personas`;
   }
 
   // Crear una nueva persona

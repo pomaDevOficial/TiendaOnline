@@ -226,95 +226,111 @@
   </div>
 </div>
 
-<!-- Diálogo para Agregar Producto -->
+<!-- Diálogo para Agregar Producto - VERSIÓN CORREGIDA -->
+<!-- Diálogo para Agregar Producto - VERSIÓN CORREGIDA -->
 <p-dialog
   [(visible)]="mostrarDialogProducto"
-  header="Seleccionar Producto y Talla"
+  header="Buscar Lote y Seleccionar Talla"
   [modal]="true"
-  [style]="{'width': '600px'}"
+  [style]="{'width': '800px'}"
   [draggable]="false"
   [resizable]="false">
 
-  <div class="mb-3">
-    <label class="form-label">Producto</label>
-    <p-autoComplete
-      [(ngModel)]="productoSeleccionado"
-      [suggestions]="catalogoFiltrado"
-      (completeMethod)="filtrarProductos($event)"
-      (onSelect)="onProductoSeleccionado($event)"
-      field="nombre"
-      placeholder="Buscar producto..."
-      class="w-100"
-      appendTo="body"
-      [style]="{'width': '100%'}">
-      <ng-template let-producto pTemplate="item">
-        <div class="d-flex align-items-center">
-          <div class="ms-2">
-            <div class="fw-bold">{{producto.nombre}}</div>
-            <small class="text-muted">{{producto.marca.nombre}} - {{producto.categoria.nombre}}</small>
-          </div>
-        </div>
-      </ng-template>
-        <!-- Lo que se muestra cuando está seleccionado -->
-    <ng-template let-producto pTemplate="selectedItem">
-      {{ producto.nombre }} ({{ producto.marca.nombre }})
-    </ng-template>
-    </p-autoComplete>
-  </div>
-
-  @if (tallasDisponibles.length > 0) {
-    <div class="mb-3">
-      <label class="form-label">Talla Disponible</label>
-      <p-dropdown
-        [(ngModel)]="tallaSeleccionada"
-        [options]="tallasDisponibles"
-        optionLabel="talla"
-        placeholder="Seleccionar talla"
-        class="w-100"
-        [style]="{'width': '100%'}">
-        <ng-template let-talla pTemplate="item">
-          <div class="d-flex justify-content-between align-items-center">
-            <span>{{talla.nombre}}</span>
-            <div class="text-end">
-              <div class="fw-bold">S/ {{talla.preciocosto | number:'1.2-2'}}</div>
-              <small class="text-muted">Stock: {{talla.stock}}</small>
+  <!-- Búsqueda de Lotes -->
+  <div class="mb-4">
+    <label class="form-label">Buscar Lote</label>
+    <div class="position-relative">
+      <p-autoComplete
+        [(ngModel)]="loteSeleccionado"
+        [suggestions]="lotesFiltrados"
+        (completeMethod)="buscarLotes($event)"
+        (onSelect)="onLoteSeleccionado($event)"
+        optionLabel="displayName"
+        placeholder="Escribe para buscar lotes (mínimo 3 caracteres)..."
+        [minLength]="3"
+        [dropdown]="true"
+        class="w-100">
+        
+        <ng-template let-lote pTemplate="item">
+          <div class="d-flex align-items-center p-2">
+            <i class="pi pi-tag me-3"></i>
+            <div>
+              <div class="fw-bold">{{ lote.Producto?.nombre }}</div>
+              <small class="text-muted">
+                Marca: {{ lote.Producto?.Marca?.nombre || 'N/A' }} | 
+                Proveedor: {{ lote.proveedor || 'N/A' }}
+              </small>
             </div>
           </div>
         </ng-template>
-      </p-dropdown>
-    </div>
-  }
-
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Cantidad</label>
-      <p-inputNumber
-        [(ngModel)]="cantidadProducto"
-        [min]="1"
-        [max]="tallaSeleccionada ? tallaSeleccionada.stock : 999"
-        class="w-100">
-      </p-inputNumber>
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Precio Unitario</label>
-      <p-inputNumber
-        [ngModel]="tallaSeleccionada?.preciocosto || 0"
-        mode="currency"
-        currency="PEN"
-        locale="es-PE"
-        [readonly]="true"
-        class="w-100">
-      </p-inputNumber>
+        
+        <ng-template let-lote pTemplate="selectedItem">
+          {{ lote.displayName }}
+        </ng-template>
+      </p-autoComplete>
+      
+      <!-- Indicador de carga personalizado -->
+      @if (cargandoLotes) {
+        <div class="position-absolute top-50 end-0 translate-middle-y me-3" style="pointer-events: none;">
+          <i class="pi pi-spin pi-spinner text-primary"></i>
+        </div>
+      }
     </div>
   </div>
 
-  @if (tallaSeleccionada && cantidadProducto > 0) {
-    <div class="alert alert-info">
-      <div class="d-flex justify-content-between">
-        <span><strong>Precio unitario:</strong> S/ {{tallaSeleccionada.preciocosto | number:'1.2-2'}}</span>
-        <span><strong>Subtotal:</strong> S/ {{(cantidadProducto * tallaSeleccionada.preciocosto) | number:'1.2-2'}}</span>
+  <!-- Mostrar Tallas del Lote Seleccionado en Cards -->
+  @if (loteSeleccionado && lotesTalla.length > 0) {
+    <div class="mb-3">
+      <h6>Tallas Disponibles para {{loteSeleccionado.Producto?.nombre}}</h6>
+      <div class="row">
+        @for (loteTalla of lotesTalla; track loteTalla.id) {
+          <div class="col-md-4 mb-3">
+            <p-card class="h-100">
+              <ng-template pTemplate="header">
+                <div class="text-center py-2 bg-primary text-white rounded-top">
+                  <h5 class="mb-0">{{loteTalla.Talla?.nombre}}</h5>
+                </div>
+              </ng-template>
+              
+              <div class="text-center">
+                <div class="mb-2">
+                  <strong>Precio: </strong>S/ {{(loteTalla.precioventa || loteTalla.preciocosto) | number:'1.2-2'}}
+                </div>
+                <div class="mb-2">
+                  <strong>Stock: </strong>
+                  <span [class]="(loteTalla.stock ?? 0) > 0 ? 'text-success' : 'text-danger'">
+                    {{loteTalla.stock}}
+                  </span>
+                </div>
+                <!-- @if (loteTalla.color) {
+                  <div class="mb-2">
+                    <strong>Color: </strong>{{loteTalla.color}}
+                  </div>
+                } -->
+              </div>
+              
+              <ng-template pTemplate="footer">
+                <div class="text-center">
+                  <p-button 
+                    icon="pi pi-plus" 
+                    label="Agregar al Carrito"
+                    styleClass="p-button-success p-button-sm w-100"
+                    (click)="agregarLoteTallaAlCarrito(loteTalla)"
+                    [disabled]="(loteTalla.stock ?? 0) <= 0">
+                  </p-button>
+                </div>
+              </ng-template>
+            </p-card>
+          </div>
+        }
       </div>
-      <small class="text-muted">Stock disponible: {{tallaSeleccionada.stock}} unidades</small>
+    </div>
+  }
+
+  @if (loteSeleccionado && lotesTalla.length === 0) {
+    <div class="alert alert-warning text-center">
+      <i class="pi pi-exclamation-triangle me-2"></i>
+      No se encontraron tallas disponibles para este lote
     </div>
   }
 
@@ -323,36 +339,7 @@
       icon="pi pi-times"
       label="Cancelar"
       styleClass="p-button-text"
-      (click)="mostrarDialogProducto = false">
-    </p-button>
-    <p-button
-      icon="pi pi-plus"
-      label="Agregar al Carrito"
-      styleClass="p-button-primary"
-      (click)="agregarProductoAlCarrito()"
-      [disabled]="!productoSeleccionado || !tallaSeleccionada || cantidadProducto <= 0">
-      Agregar {{cantidadProducto}} x {{tallaSeleccionada ? tallaSeleccionada.talla : ''}} al carrito
-    </p-button>
-  </ng-template>
-</p-dialog>
-
-<!-- Diálogo para Nuevo Cliente -->
-<p-dialog
-  [(visible)]="mostrarDialogCliente"
-  header="Registrar Nuevo Cliente"
-  [modal]="true"
-  [style]="{'width': '600px'}"
-  [draggable]="false"
-  [resizable]="false">
-
-  <p class="text-muted">Funcionalidad de registro de nuevo cliente próximamente...</p>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      icon="pi pi-times"
-      label="Cerrar"
-      styleClass="p-button-text"
-      (click)="mostrarDialogCliente = false">
+      (click)="mostrarDialogProducto = false; loteSeleccionado = null; lotesTalla = []">
     </p-button>
   </ng-template>
 </p-dialog>
