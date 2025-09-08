@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, Validators,ReactiveFormsModule } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { CardModule } from 'primeng/card';
@@ -17,6 +17,7 @@ import { BadgeModule } from 'primeng/badge';
 import { DividerModule } from 'primeng/divider';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { SelectModule } from 'primeng/select';
 
 import { ProductoServicio } from '../../../services/producto.service';
 import { VentaServicio } from '../../../services/Venta.service';
@@ -45,6 +46,7 @@ interface CartItem {
   templateUrl: './venta.component.html',
   styleUrls: ['./venta.component.css'],
   imports: [
+    ReactiveFormsModule,
     CommonModule,
     FormsModule,
     CardModule,
@@ -60,6 +62,7 @@ interface CartItem {
     BadgeModule,
     DividerModule,
     ProgressSpinnerModule,   
+    SelectModule
   ],
   providers: [MessageService, ConfirmationService]
 })
@@ -79,7 +82,8 @@ export class VentaComponent implements OnInit {
   clienteSeleccionado: Persona | null = null;
   clientes: Persona[] = [];
   clientesFiltrados: Persona[] = [];
-
+  clienteForm!: FormGroup;
+  mostrarDialogoCliente: boolean = false;
   // Método de pago
   metodoPagoSeleccionado: MetodoPago | null = null;
   metodosPago: MetodoPago[] = [];
@@ -103,8 +107,14 @@ export class VentaComponent implements OnInit {
   loteSeleccionado: Lote | null = null;
   lotesTalla: LoteTalla[] = [];
   cargandoLotes: boolean = false;
+// Opciones para selects
+  tipoIdentidadOptions = [
+    { label: 'DNI', value: 1 },
+    { label: 'RUC', value: 2 }
+  ];
 
   constructor(
+    private fb: FormBuilder,
     private productoService: ProductoServicio,
     private loteService: LoteServicio, // Añade este servicio
     private ventaService: VentaServicio,
@@ -122,8 +132,109 @@ export class VentaComponent implements OnInit {
     this.cargarProductos();
     this.cargarClientes();
     this.cargarMetodosPago();
+     this.initForm();
+
   }
 
+  initForm() {
+    this.clienteForm = this.fb.group({
+      id: [null],
+      nombres: ['', [Validators.required, Validators.minLength(2)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2)]],
+      idtipoidentidad: [1, Validators.required], // DNI por defecto
+      nroidentidad: ['', [Validators.required, Validators.pattern('^[0-9]{8,11}$')]],
+      correo: ['', [Validators.email]],
+      telefono: ['', [Validators.pattern('^[0-9]{9,15}$')]],
+      direccion: ['']
+    });
+  }
+  abrirNuevoCliente() {
+    this.clienteForm.reset({
+      idtipoidentidad: 1, // DNI por defecto
+      idtipopersona: 1    // Siempre será cliente
+    });
+    this.mostrarDialogoCliente = true;
+  }
+
+  guardarCliente() {
+  if (this.clienteForm.invalid) {
+    this.marcarCamposInvalidos(this.clienteForm);
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario incompleto',
+      detail: 'Por favor, complete los campos obligatorios correctamente'
+    });
+    return;
+  }
+
+  const clienteData = {
+    ...this.clienteForm.value,
+    idtipopersona: 1, // Siempre cliente
+    idestado: 2       // REGISTRADO (estado 2)
+  };
+
+  // Verificar DNI/RUC único antes de guardar
+  this.personaService.verificarDni(clienteData.nroidentidad).subscribe({
+    next: (response: any) => {
+      if (response.existe) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Documento existente',
+          detail: 'El número de documento ya está registrado en el sistema'
+        });
+        return;
+      }
+
+      this.personaService.createPersona(clienteData).subscribe({
+        next: (response: any) => {
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Éxito', 
+            detail: 'Cliente creado correctamente' 
+          });
+          const nuevoCliente = response.data;
+          console.log(nuevoCliente);
+          const clienteConDisplayName = {
+            ...nuevoCliente,
+            displayName2: `${nuevoCliente.nombres} ${nuevoCliente.apellidos} - ${nuevoCliente.correo || ''}`
+          };
+
+          this.clienteSeleccionado = clienteConDisplayName;
+          this.clientesFiltrados = [clienteConDisplayName, ...this.clientesFiltrados];
+
+                    // Cerrar diálogo
+          this.mostrarDialogoCliente = false;
+                  },
+        error: (err) => {
+          console.error('Error al crear cliente', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo crear el cliente'
+          });
+        }
+      });
+    },
+    error: (err) => {
+      console.error('Error al verificar documento', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo verificar el documento'
+      });
+    }
+  });
+}
+
+
+  private marcarCamposInvalidos(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control?.invalid) {
+        control.markAsTouched();
+      }
+    });
+  }
   inicializarArrays() {
     this.catalogoProductos = [];
     this.catalogoFiltrado = [];
@@ -421,25 +532,29 @@ agregarLoteTallaAlCarrito(loteTalla: LoteTalla) {
   }
 
 filtrarClientes(event: any) {
-  const query = event.query.trim();
-  if (!query) {
+  const query = event.query;
+  if (query && query.length > 2) {
+    this.personaService.buscarClientes(query).subscribe({
+      next: (clientes: any) => {
+        this.clientesFiltrados = clientes.data.map((cliente: any) => ({
+          ...cliente,
+          displayName2: `${cliente.nombres} ${cliente.apellidos} - ${cliente.correo || ''}`
+        }));
+      },
+      error: (error) => {
+        console.error('Error al buscar clientes:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los clientes'
+        });
+      }
+    });
+  } else {
     this.clientesFiltrados = [];
-    return;
   }
-// Resetear cliente seleccionado si la búsqueda cambia
-  this.clienteSeleccionado = null;
-
-  this.personaService.buscarClientes(query).subscribe({
-    next: (res: any) => {
-      // Solo asignamos el array de clientes
-      this.clientesFiltrados = res.data || [];
-    },
-    error: (err) => {
-      console.error('Error al buscar clientes:', err);
-      this.clientesFiltrados = [];
-    }
-  });
 }
+
 
 
   // Funciones del carrito

@@ -1,6 +1,6 @@
 <div class="container-fluid mt-4">
   <!-- Header -->
-  <div class="card mb-4">
+  <div class="card mb-4 header-card">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -34,31 +34,33 @@
             <div class="row align-items-end">
               <div class="col-md-8">
                 <label class="form-label">Buscar Cliente</label>
-                <p-autoComplete
-                  [(ngModel)]="clienteSeleccionado"
-                  [suggestions]="clientesFiltrados"
-                  (completeMethod)="filtrarClientes($event)"
-                  field="nombres"
-                  placeholder="Buscar por nombre, apellido o email"
-                  class="w-100"
-                  [style]="{'width': '100%'}">
-                  <ng-template let-cliente pTemplate="item">
-                    <div class="d-flex align-items-center">
-                      <i class="pi pi-user me-2"></i>
-                      <div>
-                        <div class="fw-bold">{{cliente.nombres}} {{cliente.apellidos}}</div>
-                        <small class="text-muted">{{cliente.correo}}</small>
+                <div class="autocomplete-container">
+                  <p-autoComplete
+                    [(ngModel)]="clienteSeleccionado"
+                    [suggestions]="clientesFiltrados"
+                    (completeMethod)="filtrarClientes($event)"
+                    optionLabel="displayName2"
+                    placeholder="Buscar por nombre, apellido o email"
+                    [showClear]="true"
+                    inputStyleClass="autocomplete-input">
+                    <ng-template let-cliente pTemplate="item">
+                      <div class="d-flex align-items-center">
+                        <i class="pi pi-user me-2"></i>
+                        <div>
+                          <div class="fw-bold">{{cliente.nombres}} {{cliente.apellidos}}</div>
+                          <small class="text-muted">{{cliente.correo}}</small>
+                        </div>
                       </div>
-                    </div>
-                  </ng-template>
-                </p-autoComplete>
+                    </ng-template>
+                  </p-autoComplete>
+                </div>
               </div>
               <div class="col-md-4">
                 <p-button
                   icon="pi pi-plus"
                   label="Registrar Cliente"
-                  styleClass="p-button-outlined p-button-primary w-100"
-                  (click)="mostrarDialogCliente = true">
+                  styleClass="p-button-outlined p-button-primary w-100 mt-md-0 mt-2"
+                  (click)="abrirNuevoCliente()">
                 </p-button>
               </div>
             </div>
@@ -72,7 +74,7 @@
               <h5 class="card-title mb-0">
                 <i class="pi pi-shopping-bag me-2"></i>Productos en Carrito
               </h5>
-              <div class="d-flex gap-2">
+              <div class="d-flex gap-2 cart-buttons">
                 <p-button
                   icon="pi pi-plus"
                   label="Seleccionar Producto"
@@ -90,13 +92,13 @@
             </div>
 
             @if (cartItems.length === 0) {
-              <div class="text-center py-5">
+              <div class="text-center py-5 empty-cart">
                 <i class="pi pi-shopping-cart" style="font-size: 3rem; color: #ccc;"></i>
                 <h5 class="mt-3 text-muted">Carrito vacío</h5>
                 <p class="text-muted">Seleccione productos y tallas para comenzar la venta</p>
               </div>
             } @else {
-              <div class="table-responsive">
+              <div class="table-responsive cart-table-container">
                 <p-table [value]="cartItems"
                 [scrollable]="true" 
                 scrollHeight="300px"
@@ -111,7 +113,7 @@
                     </tr>
                   </ng-template>
                   <ng-template pTemplate="body" let-item>
-                    <tr>
+                    <tr class="cart-item-row">
                       <td>
                         <div class="d-flex align-items-center">
                           <div class="ms-2">
@@ -121,7 +123,7 @@
                         </div>
                       </td>
                       <td class="text-center">
-                        <span class="badge bg-primary">{{item.cantidad}}</span>
+                        <span class="badge bg-primary quantity-badge">{{item.cantidad}}</span>
                       </td>
                       <td class="text-end">S/ {{item.precio | number:'1.2-2'}}</td>
                       <td class="text-end fw-bold">S/ {{item.subtotal | number:'1.2-2'}}</td>
@@ -145,7 +147,7 @@
     <!-- Panel Lateral - Resumen y Pago -->
     <div class="col-lg-4">
       <!-- Resumen de Venta -->
-      <div class="card mb-4">
+      <div class="card mb-4 summary-card">
         <div class="card-body">
           <h5 class="card-title mb-3">
             <i class="pi pi-receipt me-2"></i>Resumen de Venta
@@ -189,7 +191,7 @@
           <p-button
             label="Procesar Venta"
             icon="pi pi-check"
-            styleClass="p-button-success w-100"
+            styleClass="p-button-success w-100 process-sale-btn"
             [loading]="guardandoVenta"
             [disabled]="cartItems.length === 0 || !clienteSeleccionado || !metodoPagoSeleccionado"
             (click)="guardarVenta()">
@@ -199,7 +201,7 @@
 
       <!-- Información del Cliente Seleccionado -->
       @if (clienteSeleccionado) {
-        <div class="card">
+        <div class="card client-info-card">
           <div class="card-body">
             <h6 class="card-title mb-3">
               <i class="pi pi-user me-2"></i>Cliente Seleccionado
@@ -229,19 +231,20 @@
   </div>
 </div>
 
-<!-- Diálogo para Agregar Producto - VERSIÓN CORREGIDA -->
+<!-- Diálogo para Agregar Producto -->
 <p-dialog
   [(visible)]="mostrarDialogProducto"
   header="Buscar Lote y Seleccionar Talla"
   [modal]="true"
   [style]="{'width': '800px'}"
   [draggable]="false"
-  [resizable]="false">
+  [resizable]="false"
+  class="product-dialog">
 
   <!-- Búsqueda de Lotes -->
   <div class="mb-4">
     <label class="form-label">Buscar Lote</label>
-    <div class="position-relative">
+    <div class="position-relative autocomplete-container">
       <p-autoComplete
         [(ngModel)]="loteSeleccionado"
         [suggestions]="lotesFiltrados"
@@ -251,7 +254,8 @@
         placeholder="Escribe para buscar lotes (mínimo 3 caracteres)..."
         [minLength]="3"
         [dropdown]="true"
-        class="w-100">
+        [showClear]="true"
+        inputStyleClass="autocomplete-input">
         
         <ng-template let-lote pTemplate="item">
           <div class="d-flex align-items-center p-2">
@@ -287,12 +291,11 @@
       <div class="row">
         @for (loteTalla of lotesTalla; track loteTalla.id) {
           <div class="col-md-4 mb-3">
-            <p-card class="h-100">
+            <p-card class="h-100 size-card">
               <ng-template pTemplate="header">
-                <div class="text-center py-2 text-white rounded-top" 
-     style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
-                <h5 class="mb-0">{{loteTalla.Talla?.nombre}}</h5>
-              </div>
+                <div class="text-center py-2 text-white rounded-top size-card-header">
+                  <h5 class="mb-0">{{loteTalla.Talla?.nombre}}</h5>
+                </div>
               </ng-template>
               
               <div class="text-center">
@@ -342,6 +345,104 @@
     </p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Dialog para registrar cliente -->
+<p-dialog 
+  header="Nuevo Cliente"
+  [(visible)]="mostrarDialogoCliente" 
+  [modal]="true" 
+  [style]="{width: '500px'}"
+  [draggable]="false"
+  [resizable]="false"
+  class="client-dialog">
+
+  <div class="p-fluid">
+    <form [formGroup]="clienteForm">
+      
+      <div class="mb-3">
+        <label for="idtipoidentidad" class="form-label">Tipo de Documento *</label>
+        <p-select 
+          id="idtipoidentidad" 
+          formControlName="idtipoidentidad"
+          [options]="tipoIdentidadOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione tipo de documento"
+          class="w-100">
+        </p-select>
+        <small *ngIf="clienteForm.get('idtipoidentidad')?.invalid && clienteForm.get('idtipoidentidad')?.touched" 
+               class="text-danger">El tipo de documento es requerido</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="nroidentidad" class="form-label">N° de Documento *</label>
+        <input type="text" id="nroidentidad" class="form-control" formControlName="nroidentidad" 
+               [placeholder]="clienteForm.get('idtipoidentidad')?.value === 1 ? '8 dígitos' : '11 dígitos'"
+               [maxLength]="clienteForm.get('idtipoidentidad')?.value === 1 ? 8 : 11">
+        <small *ngIf="clienteForm.get('nroidentidad')?.invalid && clienteForm.get('nroidentidad')?.touched" 
+               class="text-danger">
+          {{ clienteForm.get('idtipoidentidad')?.value === 1 ? 'DNI debe tener 8 dígitos' : 'RUC debe tener 11 dígitos' }}
+        </small>
+      </div>
+
+      <div class="mb-3">
+        <label for="nombres" class="form-label">Nombres *</label>
+        <input type="text" id="nombres" class="form-control" formControlName="nombres" 
+               placeholder="Ingrese los nombres">
+        <small *ngIf="clienteForm.get('nombres')?.invalid && clienteForm.get('nombres')?.touched" 
+               class="text-danger">Los nombres son requeridos (mínimo 2 caracteres)</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="apellidos" class="form-label">Apellidos *</label>
+        <input type="text" id="apellidos" class="form-control" formControlName="apellidos" 
+               placeholder="Ingrese los apellidos">
+        <small *ngIf="clienteForm.get('apellidos')?.invalid && clienteForm.get('apellidos')?.touched" 
+               class="text-danger">Los apellidos son requeridos (mínimo 2 caracteres)</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="correo" class="form-label">Correo Electrónico</label>
+        <input type="email" id="correo" class="form-control" formControlName="correo" 
+               placeholder="ejemplo@correo.com">
+        <small *ngIf="clienteForm.get('correo')?.invalid && clienteForm.get('correo')?.touched" 
+               class="text-danger">Ingrese un correo electrónico válido</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="telefono" class="form-label">Teléfono</label>
+        <input type="text" id="telefono" class="form-control" formControlName="telefono" 
+               placeholder="9XXXXXXXX" maxlength="9">
+        <small *ngIf="clienteForm.get('telefono')?.invalid && clienteForm.get('telefono')?.touched" 
+               class="text-danger">Ingrese un número de teléfono válido (9 dígitos)</small>
+      </div>
+
+      <div class="mb-3">
+        <label for="direccion" class="form-label">Dirección</label>
+        <textarea id="direccion" class="form-control" formControlName="direccion" 
+                  rows="3" placeholder="Ingrese la dirección"></textarea>
+      </div>
+
+    </form>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        styleClass="p-button-text" 
+        (click)="mostrarDialogoCliente = false">
+      </p-button>
+
+      <p-button 
+        label="Crear Cliente"
+        icon="pi pi-check"
+        (click)="guardarCliente()"
+        [disabled]="clienteForm.invalid">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
+
 
 <!-- Toast Messages -->
 <p-toast></p-toast>
