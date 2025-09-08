@@ -740,31 +740,31 @@ export const getLotesBuscar = async (req: Request, res: Response): Promise<void>
     const like = `%${q}%`;
 
     const lotes = await Lote.findAll({
-  where: {
-    [Op.or]: [
-      { proveedor: { [Op.like]: like } },
-      { '$Producto.nombre$': { [Op.like]: like } },
-      { '$Producto.Categoria.nombre$': { [Op.like]: like } },
-      { '$Producto.Marca.nombre$': { [Op.like]: like } }
-    ]
-  },
-  include: [
-    {
-      model: Producto,
-      as: 'Producto',
-      attributes: ['id', 'nombre'],
-      required: false,
+      where: {
+        idestado: LoteEstado.DISPONIBLE, // 🔹 Solo lotes disponibles
+        [Op.or]: [
+          { proveedor: { [Op.like]: like } },
+          { '$Producto.nombre$': { [Op.like]: like } },
+          { '$Producto.Categoria.nombre$': { [Op.like]: like } },
+          { '$Producto.Marca.nombre$': { [Op.like]: like } }
+        ]
+      },
       include: [
-        { model: Categoria, as: 'Categoria', attributes: ['id', 'nombre'], required: false },
-        { model: Marca, as: 'Marca', attributes: ['id', 'nombre'], required: false }
-      ]
-    },
-    { model: Estado, as: 'Estado', attributes: ['id', 'nombre'], required: false }
-  ],
-  order: [['fechaingreso', 'DESC']],
-  group: ['Lote.id'] // <-- evita duplicados sin usar "distinct"
-});
-
+        {
+          model: Producto,
+          as: 'Producto',
+          attributes: ['id', 'nombre'],
+          required: false,
+          include: [
+            { model: Categoria, as: 'Categoria', attributes: ['id', 'nombre'], required: false },
+            { model: Marca, as: 'Marca', attributes: ['id', 'nombre'], required: false }
+          ]
+        },
+        { model: Estado, as: 'Estado', attributes: ['id', 'nombre'], required: false }
+      ],
+      order: [['fechaingreso', 'DESC']],
+      group: ['Lote.id'] // evita duplicados sin usar "distinct"
+    });
 
     res.json({
       msg: 'Resultados de búsqueda obtenidos exitosamente',

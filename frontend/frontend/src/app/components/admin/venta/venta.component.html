@@ -97,7 +97,10 @@
               </div>
             } @else {
               <div class="table-responsive">
-                <p-table [value]="cartItems" styleClass="p-datatable-sm">
+                <p-table [value]="cartItems"
+                [scrollable]="true" 
+                scrollHeight="300px"
+                styleClass="p-datatable-sm">
                   <ng-template pTemplate="header">
                     <tr>
                       <th>Producto - Talla</th>

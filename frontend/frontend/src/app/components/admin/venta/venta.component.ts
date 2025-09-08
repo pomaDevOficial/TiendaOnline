@@ -420,14 +420,27 @@ agregarLoteTallaAlCarrito(loteTalla: LoteTalla) {
     );
   }
 
-  filtrarClientes(event: any) {
-    const query = event.query.toLowerCase();
-    this.clientesFiltrados = this.clientes.filter(cliente =>
-      cliente.nombres?.toLowerCase().includes(query) ||
-      cliente.apellidos?.toLowerCase().includes(query) ||
-      cliente.correo?.toLowerCase().includes(query)
-    );
+filtrarClientes(event: any) {
+  const query = event.query.trim();
+  if (!query) {
+    this.clientesFiltrados = [];
+    return;
   }
+// Resetear cliente seleccionado si la búsqueda cambia
+  this.clienteSeleccionado = null;
+
+  this.personaService.buscarClientes(query).subscribe({
+    next: (res: any) => {
+      // Solo asignamos el array de clientes
+      this.clientesFiltrados = res.data || [];
+    },
+    error: (err) => {
+      console.error('Error al buscar clientes:', err);
+      this.clientesFiltrados = [];
+    }
+  });
+}
+
 
   // Funciones del carrito
   abrirDialogProducto() {

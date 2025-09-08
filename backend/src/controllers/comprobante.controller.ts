@@ -3,7 +3,7 @@ import Comprobante from '../models/comprobante.model';
 import Venta from '../models/venta.model';
 import TipoComprobante from '../models/tipo_comprobante.model';
 import Estado from '../models/estado.model';
-import { ComprobanteEstado, EstadoGeneral, PedidoEstado, VentaEstado } from '../estadosTablas/estados.constans';
+import { ComprobanteEstado, EstadoGeneral, PedidoEstado, TipoMovimientoLote, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
 import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
 import PedidoDetalle from '../models/pedido_detalle.model';
@@ -21,6 +21,8 @@ import moment from "moment-timezone";
 import { path } from 'pdfkit';
 import fs from "fs";
 import { generarPDFComprobanteModelo } from '../helper/generarPdf.helper';
+import MovimientoLote from '../models/movimiento_lote.model';
+import sequelize from '../db/connection.db';
 
 
 // CREATE - Insertar nuevo comprobante
@@ -645,16 +647,16 @@ export const deleteComprobante = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ msg: 'Error al eliminar el comprobante' });
   }
 };
-/// METOD COMPLETO DE LA VENTA POR LA ADMINISTRACION
+/// MÉTODO COMPLETO DE LA VENTA POR LA ADMINISTRACIÓN
 export const crearVentaCompletaConComprobanteAdministracion = async (req: Request, res: Response): Promise<void> => {
   const { cliente, metodoPago, productos, total, idusuario, fechaventa } = req.body;
 
-  // Validaciones básicas de entrada
+  // 0) VALIDACIONES BÁSICAS
   if (!cliente?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
     res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
     return;
   }
-  if (!idusuario && !((req as any).user?.id)) {
+  if (!idusuario && !(req as any).user?.id) {
     res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
     return;
   }
@@ -671,36 +673,59 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       idestado: PedidoEstado.EN_ESPERA
     }, { transaction });
 
-    // 2) CREAR DETALLES DE PEDIDO + DESCONTAR STOCK
+    // 2) DETALLES DE PEDIDO + DESCUENTO DE STOCK (ATÓMICO Y CONCURRENTE)
     const pedidoDetalles: PedidoDetalle[] = [];
+
     for (const p of productos) {
       const { loteTalla, cantidad, precio, subtotal } = p;
 
-      // Validaciones mínimas por ítem
       if (!loteTalla?.id || cantidad == null || precio == null) {
         throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
       }
 
-      // Verificar stock
-      const lt = await LoteTalla.findByPk(loteTalla.id, { transaction });
-      if (!lt) throw new Error(`LoteTalla ${loteTalla.id} no existe`);
-      if (Number(lt.stock) < Number(cantidad)) {
-        throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
-      }
+      const cantidadNum = Number(cantidad);
+      const precioNum = Number(precio);
+      const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
+
+      // 🔐 Descontar stock atómicamente
+      const [results, metadata] = await sequelize.query(
+  `
+  UPDATE LoteTalla
+  SET stock = stock - :cantidad
+  WHERE id = :id AND stock >= :cantidad
+  `,
+  {
+    replacements: { id: loteTalla.id, cantidad: cantidadNum },
+    transaction
+  }
+) as [any, { affectedRows: number }];
+
+
+      // Validar que se haya actualizado (stock suficiente)
+      if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
+  throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+}
+
 
       // Crear detalle de pedido
       const det = await PedidoDetalle.create({
         idpedido: pedido.id,
         idlote_talla: loteTalla.id,
-        cantidad: Number(cantidad),
-        precio: Number(precio),
-        subtotal: subtotal != null ? Number(subtotal) : Number(cantidad) * Number(precio)
+        cantidad: cantidadNum,
+        precio: precioNum,
+        subtotal: subtotalNum
       }, { transaction });
 
       pedidoDetalles.push(det);
 
-      // Descontar stock
-      await lt.update({ stock: Number(lt.stock) - Number(cantidad) }, { transaction });
+      // Registrar movimiento de salida
+      await MovimientoLote.create({
+        idlote_talla: loteTalla.id,
+        tipomovimiento: TipoMovimientoLote.SALIDA,
+        cantidad: cantidadNum,
+        fechamovimiento: moment().tz("America/Lima").toDate(),
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
     }
 
     // 3) CREAR VENTA
@@ -711,7 +736,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       idestado: VentaEstado.REGISTRADO
     }, { transaction });
 
-    // 4) CREAR DETALLES DE VENTA (a partir de PedidoDetalle)
+    // 4) CREAR DETALLES DE VENTA
     const detallesVentaCreados: DetalleVenta[] = [];
     for (const det of pedidoDetalles) {
       const dv = await DetalleVenta.create({
@@ -724,15 +749,15 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       detallesVentaCreados.push(dv);
     }
 
-    // 5) DETERMINAR COMPROBANTE (Boleta/Factura) según Persona
+    // 5) DETERMINAR COMPROBANTE
     const persona = await Persona.findByPk(cliente.id, { transaction });
-    const idTipoComprobante = (persona?.idtipopersona === 2) ? 2 : 1; // 2: FACTURA, 1: BOLETA
+    const idTipoComprobante = (persona?.idtipopersona === 2) ? 2 : 1; // 2=Factura, 1=Boleta
 
     const tipoComprobante = await TipoComprobante.findByPk(idTipoComprobante, { transaction });
     if (!tipoComprobante) throw new Error('Tipo de comprobante no encontrado');
 
     const totalNum = Number(total) || 0;
-    const igv = Number((totalNum * 0.18).toFixed(2));
+    const igv = 0;
 
     const comprobante = await Comprobante.create({
       idventa: nuevaVenta.id,
@@ -744,16 +769,23 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       idestado: ComprobanteEstado.REGISTRADO
     }, { transaction });
 
-    // 6) ACTUALIZAR ESTADOS Y CONFIRMAR TRANSACCIÓN
+    // 6) ACTUALIZAR ESTADOS
     await pedido.update({ idestado: PedidoEstado.PAGADO }, { transaction });
 
+    // ✅ CONFIRMAR TRANSACCIÓN
     await transaction.commit();
 
-    // 7) RECUPERAR DATOS ENRIQUECIDOS PARA PDF/WS (fuera de la tx)
+    // 7) RECUPERAR DATOS ENRIQUECIDOS (fuera de la tx)
     const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
       include: [
         { model: Usuario, as: 'Usuario' },
-        { model: Pedido, as: 'Pedido', include: [{ model: Persona, as: 'Persona' }, { model: MetodoPago, as: 'MetodoPago' }] }
+        {
+          model: Pedido, as: 'Pedido',
+          include: [
+            { model: Persona, as: 'Persona' },
+            { model: MetodoPago, as: 'MetodoPago' }
+          ]
+        }
       ]
     });
 
@@ -788,7 +820,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       ]
     });
 
-    // 8) GENERAR PDF Y ENVIAR POR WHATSAPP (si hay teléfono válido)
+    // 8) GENERAR PDF Y ENVIAR POR WHATSAPP
     const telefonoRaw = cliente?.telefono ?? ventaCompleta?.Pedido?.Persona?.telefono ?? '';
     const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
     const phoneRegex = /^\d{9,15}$/;
@@ -798,7 +830,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
         const nombreArchivo = await generarPDFComprobante(
           comprobanteCompleto,
           ventaCompleta,
-          ventaCompleta?.Pedido,           // incluye Persona y MetodoPago
+          ventaCompleta?.Pedido,
           detallesVentaCompletos
         );
 
@@ -807,26 +839,15 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
           nombreArchivo,
           `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
         );
-
-        res.status(201).json({
-          msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
-          data: {
-            pedido,
-            venta: ventaCompleta,
-            comprobante: comprobanteCompleto,
-            detallesVenta: detallesVentaCompletos
-          }
-        });
-        return;
       } catch (err) {
         console.error('Error al generar/enviar comprobante por WhatsApp:', err);
-        // sigue sin cortar la respuesta exitosa
+        // seguimos igual, no rompemos la venta
       }
     }
 
-    // Si no hay teléfono válido o falló el envío:
+    // RESPUESTA FINAL
     res.status(201).json({
-      msg: 'Venta, detalles y comprobante creados exitosamente (sin envío por WhatsApp)',
+      msg: `Venta, detalles y comprobante creados exitosamente${telefono ? ' (intento de envío por WhatsApp)' : ''}`,
       data: {
         pedido,
         venta: ventaCompleta,
@@ -834,6 +855,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
         detallesVenta: detallesVentaCompletos
       }
     });
+
   } catch (error) {
     await transaction.rollback();
     console.error('Error en crearVentaCompletaConComprobante:', error);
@@ -843,6 +865,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
     });
   }
 };
+
 
 export const crearVentaCompletaConComprobante = async (req: Request, res: Response): Promise<void> => {
   const { fechaventa, idusuario, idpedido, detallesVenta } = req.body;
