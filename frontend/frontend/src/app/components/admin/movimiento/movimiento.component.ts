@@ -408,8 +408,9 @@ export class MovimientoComponent implements OnInit {
 
   getEstadoBadgeClass(idestado: number): string {
     switch (idestado) {
-      case 1: return 'bg-success';    // registrado
-      case 2: return 'bg-danger';     // eliminado
+      case 2: return 'bg-success';    // registrado
+      case 3: return 'bg-success';    // registrado
+      case 4: return 'bg-danger';     // eliminado
       default: return 'bg-secondary';
     }
   }

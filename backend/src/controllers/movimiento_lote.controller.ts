@@ -4,6 +4,8 @@ import LoteTalla from '../models/lote_talla.model';
 import Estado from '../models/estado.model';
 import { EstadoGeneral } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
+import Producto from '../models/producto.model';
+import moment from "moment-timezone";
 
 // CREATE - Insertar nuevo movimiento de lote
 export const createMovimientoLote = async (req: Request, res: Response): Promise<void> => {
@@ -39,7 +41,7 @@ export const createMovimientoLote = async (req: Request, res: Response): Promise
       idlote_talla,
       tipomovimiento: tipomovimiento.toUpperCase(),
       cantidad,
-      fechamovimiento: fechamovimiento || new Date(),
+      fechamovimiento: moment().tz("America/Lima").toDate(),
       idestado: EstadoGeneral.REGISTRADO
     });
 
@@ -183,7 +185,8 @@ export const getMovimientosLote = async (req: Request, res: Response): Promise<v
             {
               model: LoteTalla.associations.Lote.target,
               as: 'Lote',
-              attributes: ['id', 'proveedor', 'fechaingreso']
+              attributes: ['id', 'proveedor', 'fechaingreso'],
+              include: [{ model: Producto, as: 'Producto' }]
             },
             {
               model: LoteTalla.associations.Talla.target,
@@ -270,7 +273,8 @@ export const getMovimientoLoteById = async (req: Request, res: Response): Promis
             {
               model: LoteTalla.associations.Lote.target,
               as: 'Lote',
-              attributes: ['id', 'proveedor', 'fechaingreso']
+              attributes: ['id', 'proveedor', 'fechaingreso'],
+              include: [{ model: Producto, as: 'Producto' }]
             },
             {
               model: LoteTalla.associations.Talla.target,
@@ -450,12 +454,16 @@ export const getMovimientosByFecha = async (req: Request, res: Response): Promis
       return;
     }
 
+    // ✅ Convertir a rango de Lima
+    const inicio = moment.tz(fechaInicio as string, "America/Lima").startOf("day").toDate();
+    const fin = moment.tz(fechaFin as string, "America/Lima").endOf("day").toDate();
+
     const movimientos = await MovimientoLote.findAll({
       where: {
         fechamovimiento: {
-          [Op.between]: [new Date(fechaInicio as string), new Date(fechaFin as string)]
+          [Op.between]: [inicio, fin],
         },
-        idestado: { [Op.ne]: EstadoGeneral.ELIMINADO }
+        idestado: { [Op.ne]: EstadoGeneral.ELIMINADO },
       },
       include: [
         { 

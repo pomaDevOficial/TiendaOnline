@@ -9,7 +9,8 @@ import {
     getPersonasEliminadas,
     restaurarPersona,
     verificarDni,
-    listarClientes
+    listarClientes,
+    buscarClientes
 } from '../controllers/persona.controller';
 
 const PersonaRouter = Router();
@@ -18,6 +19,7 @@ PersonaRouter.post('/', createPersona); // Crear una nueva persona
 PersonaRouter.get('/', getPersonas); // Obtener la lista de todas las personas
 // ⚠️ Coloca primero las rutas “literales”
 PersonaRouter.get('/clientes', listarClientes);
+PersonaRouter.get("/buscarclientes", buscarClientes);
 PersonaRouter.get('/registradas', getPersonasRegistradas); // Obtener solo personas registradas/actualizadas
 PersonaRouter.get('/eliminadas', getPersonasEliminadas); // Obtener solo personas eliminadas
 PersonaRouter.get('/verificar-dni/:nroidentidad', verificarDni); // Verificar si existe una persona con el DNI

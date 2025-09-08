@@ -6,9 +6,10 @@ import Estado from '../models/estado.model';
 import Producto from '../models/producto.model';
 import Categoria from '../models/categoria.model';
 import Marca from '../models/marca.model';
-import { EstadoGeneral, LoteEstado } from '../estadosTablas/estados.constans';
+import { EstadoGeneral, LoteEstado, TipoMovimientoLote } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
 import MovimientoLote from '../models/movimiento_lote.model';
+import moment from "moment-timezone";
 
 // CREATE - Insertar nuevo lote_talla
 export const createLoteTalla = async (req: Request, res: Response): Promise<void> => {
@@ -1064,9 +1065,9 @@ export const agregarStockPorLoteTalla = async (req: Request, res: Response): Pro
     // Crear movimiento de ingreso
     const nuevoMovimiento: any = await MovimientoLote.create({
       idlote_talla: idLoteTalla,
-      tipomovimiento: 'INGRESO',
+      tipomovimiento: TipoMovimientoLote.ENTRADA,
       cantidad: cantidad,
-      fechamovimiento: new Date(),
+      fechamovimiento: moment().tz("America/Lima").toDate(),
       idestado: EstadoGeneral.REGISTRADO
     });
 
@@ -1491,6 +1492,17 @@ export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Respons
             precioventa: precioventa || 0,
             idestado: LoteEstado.DISPONIBLE
           });
+
+          // Registrar movimiento de ENTRADA por el stock inicial
+              if (stock && stock > 0) {
+                await MovimientoLote.create({
+                  idlote_talla: loteTalla.id,
+                  tipomovimiento: TipoMovimientoLote.ENTRADA,
+                  cantidad: Number(stock),
+                  fechamovimiento: moment().tz("America/Lima").toDate(),
+                  idestado: EstadoGeneral.REGISTRADO
+                });
+              }
         }
 
         await loteTalla.save();

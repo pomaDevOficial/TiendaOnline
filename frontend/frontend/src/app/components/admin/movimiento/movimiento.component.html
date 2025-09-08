@@ -2,12 +2,12 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Gestión de Movimientos de Lote</h2>
     <div class="d-flex gap-2">
-      <p-button 
+      <!-- <p-button 
         (click)="abrirNuevoMovimiento()" 
         label="Nuevo Movimiento" 
         icon="pi pi-plus" 
         styleClass="p-button-success">
-      </p-button>
+      </p-button> -->
       <p-button 
         (click)="cargarMovimientos()" 
         label="Actualizar" 
@@ -59,7 +59,7 @@
         </p-calendar>
       </div>
       
-      <div class="col-lg-4 col-md-4 col-sm-6">
+      <!-- <div class="col-lg-4 col-md-4 col-sm-6">
         <label class="form-label small mb-1">Lote-Talla</label>
         <p-select 
           [(ngModel)]="idLoteTallaFiltro"
@@ -74,24 +74,24 @@
             <div class="small">Lote #{{ lote.id }} - {{ lote.Lote?.Producto?.nombre || 'Producto' }}</div>
           </ng-template>
         </p-select>
-      </div>
+      </div> -->
       
       <!-- Botones en una columna compacta -->
       <div class="col-lg-2 col-md-12 d-flex flex-lg-column flex-md-row gap-1">
         <p-button 
-          label="Por Fecha"
+          label="Filtrar"
           icon="pi pi-calendar" 
           (click)="cargarMovimientosPorFecha()"
           size="small"
           styleClass="p-button-primary flex-fill">
         </p-button>
-        <p-button 
+        <!-- <p-button 
           label="Por Lote"
           icon="pi pi-box" 
           (click)="cargarMovimientosPorLoteTalla()"
           size="small"
           styleClass="p-button-primary flex-fill">
-        </p-button>
+        </p-button> -->
       </div>
     </div>
   </div>
@@ -153,7 +153,7 @@
           <td>{{ movimiento?.fechamovimiento | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>
             <span class="badge {{ getEstadoBadgeClass(movimiento?.idestado || 0) }}">
-              {{ getEstadoTexto(movimiento?.idestado || 0) }}
+              {{ movimiento.Estado?.nombre }}
             </span>
           </td>
           <td>
@@ -182,7 +182,7 @@
                       class="p-button-sm p-button-secondary" 
                       (click)="restaurarMovimiento(movimiento)"
                       pTooltip="Restaurar" tooltipPosition="top"
-                      [disabled]="movimiento?.idestado !== 2">
+                      [disabled]="movimiento?.idestado !== 31 || 2">
               </button>
             </div>
           </td>
@@ -319,7 +319,7 @@
         <div class="info-item">
           <strong>Estado:</strong> 
           <span class="badge {{ getEstadoBadgeClass(movimientoSeleccionado.idestado || 0) }}">
-            {{ getEstadoTexto(movimientoSeleccionado.idestado || 0) }}
+            {{ movimientoSeleccionado.Estado?.nombre  }}
           </span>
         </div>
       </div>

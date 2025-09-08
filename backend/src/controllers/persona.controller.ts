@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Persona from '../models/persona.model';
 import Estado from '../models/estado.model';
 import { EstadoGeneral } from '../estadosTablas/estados.constans';
+import { Op } from 'sequelize';
 
 // CREATE - Insertar nueva persona
 export const createPersona = async (req: Request, res: Response): Promise<void> => {
@@ -362,5 +363,55 @@ export const listarClientes = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error('Error en listarClientes:', error);
     res.status(500).json({ msg: 'Error al obtener clientes' });
+  }
+};
+
+// READ - Buscar clientes para select/autocomplete
+export const buscarClientes = async (req: Request, res: Response): Promise<void> => {
+  const qraw = req.query.q;
+  const q = typeof qraw === "string" ? qraw.trim() : "";
+
+  // Parámetros opcionales: limit (máx resultados)
+  const limit = req.query.limit ? Number(req.query.limit) : 20;
+
+  try {
+    if (!q) {
+      res.status(400).json({ msg: "El parámetro q (búsqueda) es obligatorio" });
+      return;
+    }
+
+    const like = `%${q}%`;
+
+    const clientes = await Persona.findAll({
+      where: {
+        idtipopersona: 1, // solo clientes
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO],
+        [Op.or]: [
+          { nombres: { [Op.like]: like } },
+          { apellidos: { [Op.like]: like } },
+          { nroidentidad: { [Op.like]: like } },
+          { correo: { [Op.like]: like } },
+          { telefono: { [Op.like]: like } }
+        ],
+      },
+      include: [
+        {
+          model: Estado,
+          as: "Estado",
+          attributes: ["id", "nombre"],
+          required: false,
+        },
+      ],
+      order: [["apellidos", "ASC"], ["nombres", "ASC"]],
+      limit, // ⬅️ limita resultados
+    });
+
+    res.json({
+      msg: "Resultados de búsqueda de clientes obtenidos exitosamente",
+      data: clientes,
+    });
+  } catch (error) {
+    console.error("Error en buscarClientes:", error);
+    res.status(500).json({ msg: "Error al buscar clientes" });
   }
 };

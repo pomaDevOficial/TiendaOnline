@@ -63,4 +63,11 @@ export class PersonaServicio {
   getClientes(): Observable<Persona[]> {
     return this.http.get<Persona[]>(`${this.apiUrl}/clientes`);
   }
+  // Buscar clientes (para autocomplete o select dinámico)
+  buscarClientes(query: string, limit: number = 10): Observable<Persona[]> {
+    return this.http.get<Persona[]>(
+      `${this.apiUrl}/buscarclientes?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
+  }
+
 }
