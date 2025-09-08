@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createLoteCompleto = exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.getLoteObtenerInformacion = exports.updateLote = exports.createLote = void 0;
+exports.getLotesBuscar = exports.createLoteCompleto = exports.restaurarLote = exports.getLotesEliminados = exports.deleteLote = exports.cambiarEstadoLote = exports.getLotesByProducto = exports.getLoteById = exports.getLotesDisponibles = exports.getLotes = exports.getLoteObtenerInformacion = exports.updateLote = exports.createLote = void 0;
 const lote_model_1 = __importDefault(require("../models/lote.model"));
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
@@ -696,3 +696,48 @@ const createLoteCompleto = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.createLoteCompleto = createLoteCompleto;
+const getLotesBuscar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const qraw = req.query.q;
+    const q = typeof qraw === 'string' ? qraw.trim() : '';
+    try {
+        if (!q) {
+            res.status(400).json({ msg: 'El parámetro q (búsqueda) es obligatorio' });
+            return;
+        }
+        const like = `%${q}%`;
+        const lotes = yield lote_model_1.default.findAll({
+            where: {
+                [sequelize_1.Op.or]: [
+                    { proveedor: { [sequelize_1.Op.like]: like } },
+                    { '$Producto.nombre$': { [sequelize_1.Op.like]: like } },
+                    { '$Producto.Categoria.nombre$': { [sequelize_1.Op.like]: like } },
+                    { '$Producto.Marca.nombre$': { [sequelize_1.Op.like]: like } }
+                ]
+            },
+            include: [
+                {
+                    model: producto_model_1.default,
+                    as: 'Producto',
+                    attributes: ['id', 'nombre'],
+                    required: false,
+                    include: [
+                        { model: categoria_model_1.default, as: 'Categoria', attributes: ['id', 'nombre'], required: false },
+                        { model: marca_model_1.default, as: 'Marca', attributes: ['id', 'nombre'], required: false }
+                    ]
+                },
+                { model: estado_model_1.default, as: 'Estado', attributes: ['id', 'nombre'], required: false }
+            ],
+            order: [['fechaingreso', 'DESC']],
+            group: ['Lote.id'] // <-- evita duplicados sin usar "distinct"
+        });
+        res.json({
+            msg: 'Resultados de búsqueda obtenidos exitosamente',
+            data: lotes
+        });
+    }
+    catch (error) {
+        console.error('Error en getLotesBuscar:', error);
+        res.status(500).json({ msg: 'Error al buscar lotes' });
+    }
+});
+exports.getLotesBuscar = getLotesBuscar;

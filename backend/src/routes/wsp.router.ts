@@ -1,5 +1,6 @@
 // routes/wsp.ts
 import { Router } from 'express';
+
 import { 
   enviarMensaje,
   enviarComprobante, 
@@ -14,6 +15,7 @@ import {
 const routerWsp = Router();
 
 // ============== RUTAS PRINCIPALES ==============
+
 
 /**
  * @route POST /api/v1/wsp/enviar-mensaje

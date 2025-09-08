@@ -50,7 +50,14 @@
         <i class="bx bx-archive me-2"></i> Inventario
         <i class="bx bx-chevron-down toggle-icon"></i>
       </a>
-      <div class="collapse" [ngClass]="{'show': isRutaActiva(['/Admin/inventario/marca','/Admin/inventario/talla','/Admin/inventario/categoria','/Admin/inventario/producto', '/Admin/inventario/lote','/Admin/inventario/movimiento'])}" id="inventarioMenu">
+      <div class="collapse" [ngClass]="{'show': isRutaActiva([
+      '/Admin/inventario/marca',
+      '/Admin/inventario/talla',
+      '/Admin/inventario/categoria',
+      '/Admin/inventario/producto', 
+      '/Admin/inventario/lote',
+      '/Admin/inventario/venta',
+      '/Admin/inventario/movimiento'])}" id="inventarioMenu">
         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
           <li><a href="#" class="nav-link text-white 1" [routerLink]="['/Admin/inventario/marca']" routerLinkActive="active"><i class="bx bx-cube me-1"></i> Marca</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/inventario/talla']" routerLinkActive="active"><i class="bx bx-ruler me-1"></i> Talla</a></li>
@@ -68,7 +75,11 @@
         <i class="bx bx-cart me-2"></i> Ventas
         <i class="bx bx-chevron-down toggle-icon"></i>
       </a>
-      <div class="collapse" id="ventasMenu">
+      <div class="collapse" id="ventasMenu" [ngClass]="{'show': isRutaActiva([
+      '/Admin/pedido',
+      '/Admin/venta',
+      '/Admin/cliente',
+      '/Admin/comprobante'])}">
         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/pedido']" routerLinkActive="active"><i class="bx bx-user me-1" ></i> Pedidos</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/venta']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Ventas</a></li>
@@ -98,7 +109,9 @@
     <i class="bx bx-cog me-2"></i> Configuración
     <i class="bx bx-chevron-down toggle-icon"></i>
   </a>
-  <div class="collapse" id="configMenu">
+  <div class="collapse" id="configMenu" [ngClass]="{'show': isRutaActiva([
+      '/Admin/persona',
+      '/Admin/usuario'])}">
     <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
       <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/persona']" routerLinkActive="active"><i class="bx bx-id-card me-1" ></i> Persona</a></li>
       <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/usuario']" routerLinkActive="active"><i class="bx bx-group me-1"></i> Usuarios</a></li>

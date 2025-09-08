@@ -16,8 +16,10 @@ import Lote from '../models/lote.model';
 import Producto from '../models/producto.model';
 
 // Configuración de GreenAPI
-const ID_INSTANCE = "7105309578";
-const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
+//const ID_INSTANCE = "7105309578";
+const ID_INSTANCE = "7105309584";
+// const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
+const API_TOKEN_INSTANCE = "bfb0408724134cb59d908715edf9e3967519705a04be4227b5";
 
 // Función para generar PDF en formato voucher
 export const generarPDFComprobante = async (comprobante: any, venta: any, pedido: any, detallesVenta: any[]): Promise<string> => {
@@ -25,8 +27,9 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
     try {
       // Crear nombre de archivo único
       const filename = `comprobante_${comprobante.numserie}.pdf`;
-      const filePath = path.join(__dirname, '../uploads', filename);
-      
+     /// path.join(__dirname, "../../dist/uploads");
+      const filePath = path.join(__dirname, "../../dist/uploads", filename);
+      console.log(filePath)
       // Crear directorio si no existe
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -112,7 +115,6 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
          .stroke();
       
       doc.moveDown(0.5);
-
       // Productos
       detallesVenta.forEach(detalle => {
         const producto = detalle.PedidoDetalle?.LoteTalla?.Lote?.Producto?.nombre || 'Producto';
@@ -171,11 +173,11 @@ export const generarPDFComprobante = async (comprobante: any, venta: any, pedido
     }
   });
 };
-
 // Función para enviar archivo por WhatsApp
 export const enviarArchivoWSP = async (phone: string, filename: string, caption: string = "📄 Comprobante de Venta"): Promise<any> => {
-  const localPath = path.join(__dirname, "../uploads", filename);
-
+  const localPath = path.join(__dirname, "../../dist/uploads", filename);
+console.log(localPath)
+console.log(phone)
   if (!fs.existsSync(localPath)) {
     throw new Error("Archivo no encontrado en el servidor");
   }
@@ -192,7 +194,7 @@ export const enviarArchivoWSP = async (phone: string, filename: string, caption:
     const sendResponse = await axios.post(greenUrl, form, {
       headers: form.getHeaders(),
     });
-
+    console.log(sendResponse)
     // Eliminar el archivo después de enviarlo
     fs.unlinkSync(localPath);
 

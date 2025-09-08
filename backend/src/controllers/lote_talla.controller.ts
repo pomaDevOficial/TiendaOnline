@@ -1150,6 +1150,222 @@ export const agregarStockPorLoteTalla = async (req: Request, res: Response): Pro
     res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
   }
 };
+// READ - Obtener productos en formato similar al servicio (valores estáticos)
+// export const getProductosFormatoService = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     // Obtener productos con sus relaciones
+//     const productos = await Producto.findAll({
+//       where: { idestado: EstadoGeneral.REGISTRADO },
+//       include: [
+//         {
+//           model: Categoria,
+//           as: 'Categoria',
+//           attributes: ['id', 'nombre']
+//         },
+//         {
+//           model: Marca,
+//           as: 'Marca',
+//           attributes: ['id', 'nombre']
+//         },
+//         {
+//           model: Lote,
+//           as: 'Lotes',
+//           where: { idestado: LoteEstado.DISPONIBLE },
+//           required: false,
+//           include: [
+//             {
+//               model: LoteTalla,
+//               as: 'LoteTallas',
+//               where: { idestado: LoteEstado.DISPONIBLE, stock: { [Op.gt]: 0 } },
+//               required: false,
+//               include: [
+//                 {
+//                   model: Talla,
+//                   as: 'Talla',
+//                   attributes: ['id', 'nombre']
+//                 }
+//               ]
+//             }
+//           ]
+//         }
+//       ],
+//       order: [['id', 'ASC']]
+//     });
+
+//     // Transformar los datos al formato del servicio
+//     const productosFormateados = productos.map((producto: any, index: number) => {
+//       // Obtener tallas disponibles
+//       const tallasDisponibles = producto.Lotes?.flatMap((lote: any) =>
+//         lote.LoteTallas?.map((lt: any) => lt.Talla?.nombre).filter(Boolean)
+//       ).filter((value: string, index: number, self: string[]) => self.indexOf(value) === index) || [];
+
+//       // Calcular stock total
+//       const stockTotal = producto.Lotes?.reduce((total: number, lote: any) =>
+//         total + (lote.LoteTallas?.reduce((subtotal: number, lt: any) => subtotal + (lt.stock || 0), 0) || 0), 0
+//       ) || 0;
+
+//       // Obtener precio (usar el precio de venta del primer lote_talla disponible)
+//       const precio = producto.Lotes?.[0]?.LoteTallas?.[0]?.precioventa || 0;
+
+//       // Generar colores basados en la marca (simulación)
+//       const coloresPorMarca: { [key: string]: string[] } = {
+//         'Nike': ['Blanco', 'Negro', 'Azul'],
+//         'Adidas': ['Blanco', 'Negro', 'Rojo'],
+//         'Puma': ['Negro', 'Azul', 'Rosa'],
+//         'Levi\'s': ['Azul', 'Negro', 'Gris'],
+//         'H&M': ['Blanco', 'Rosa', 'Azul'],
+//         'Zara': ['Beige', 'Azul', 'Negro']
+//       };
+
+//       const colores = coloresPorMarca[producto.Marca?.nombre] || ['Negro', 'Blanco', 'Gris'];
+
+//       // Generar imágenes placeholder
+//       const imagenes = [
+//         `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+1`,
+//         `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+2`,
+//         `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+3`
+//       ];
+
+//       return {
+//         id: producto.id || index + 1,
+//         nombre: producto.nombre || 'Producto sin nombre',
+//         marca: producto.Marca?.nombre || 'Sin marca',
+//         precio: precio,
+//         descripcion: producto.descripcion || `Descripción del producto ${producto.nombre}`,
+//         imagenes: imagenes,
+//         categoria: producto.Categoria?.nombre || 'Sin categoría',
+//         genero: producto.Lotes?.[0]?.LoteTallas?.[0]?.esGenero === 1 ? 'Hombre' :
+//                producto.Lotes?.[0]?.LoteTallas?.[0]?.esGenero === 2 ? 'Mujer' : 'Unisex',
+//         tallas: tallasDisponibles.length > 0 ? tallasDisponibles : ['Única'],
+//         colores: colores,
+//         stock: stockTotal
+//       };
+//     });
+
+//     res.json({
+//       msg: 'Productos obtenidos en formato servicio exitosamente',
+//       data: productosFormateados
+//     });
+//   } catch (error) {
+//     console.error('Error en getProductosFormatoService:', error);
+//     res.status(500).json({ msg: 'Error al obtener productos en formato servicio' });
+//   }
+// };
+export const getProductosFormatoService = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Obtener productos disponibles siguiendo el patrón de consultas existentes
+    const lotesTalla = await LoteTalla.findAll({
+      where: {
+        idestado: LoteEstado.DISPONIBLE,
+        stock: { [Op.gt]: 0 }
+      },
+      include: [
+        {
+          model: Lote,
+          as: 'Lote',
+          where: { idestado: LoteEstado.DISPONIBLE },
+          include: [
+            {
+              model: Producto,
+              as: 'Producto',
+              where: { idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO] },
+              include: [
+                {
+                  model: Categoria,
+                  as: 'Categoria',
+                  attributes: ['id', 'nombre']
+                },
+                {
+                  model: Marca,
+                  as: 'Marca',
+                  attributes: ['id', 'nombre']
+                }
+              ]
+            }
+          ]
+        },
+        {
+          model: Talla,
+          as: 'Talla',
+          attributes: ['id', 'nombre']
+        }
+      ],
+      order: [
+        [{ model: Lote, as: 'Lote' }, { model: Producto, as: 'Producto' }, 'nombre', 'ASC']
+      ]
+    });
+
+    // Agrupar por producto para evitar duplicados
+    const productosMap = new Map();
+
+    lotesTalla.forEach((item: any) => {
+      const producto = item.Lote?.Producto;
+      if (!producto) return;
+
+      const productoId = producto.id;
+
+      if (!productosMap.has(productoId)) {
+        // Generar colores basados en la marca (simulación)
+        const coloresPorMarca: { [key: string]: string[] } = {
+          'Nike': ['Blanco', 'Negro', 'Azul'],
+          'Adidas': ['Blanco', 'Negro', 'Rojo'],
+          'Puma': ['Negro', 'Azul', 'Rosa'],
+          'Levi\'s': ['Azul', 'Negro', 'Gris'],
+          'H&M': ['Blanco', 'Rosa', 'Azul'],
+          'Zara': ['Beige', 'Azul', 'Negro']
+        };
+
+        const colores = coloresPorMarca[producto.Marca?.nombre] || ['Negro', 'Blanco', 'Gris'];
+
+        // Generar imágenes placeholder
+        const imagenes = [
+          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+1`,
+          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+2`,
+          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+3`
+        ];
+
+        productosMap.set(productoId, {
+          id: producto.id,
+          nombre: producto.nombre || 'Producto sin nombre',
+          marca: producto.Marca?.nombre || 'Sin marca',
+          precio: item.precioventa || 0,
+          preciosPorTalla: {}, // Nuevo campo para precios por talla
+          descripcion: producto.descripcion || `Descripción del producto ${producto.nombre}`,
+          imagenes: imagenes,
+          categoria: producto.Categoria?.nombre || 'Sin categoría',
+          genero: item.esGenero === 1 ? 'Hombre' : item.esGenero === 2 ? 'Mujer' : 'Unisex',
+          tallas: [],
+          colores: colores,
+          stock: 0
+        });
+      }
+
+      // Agregar talla y precio por talla si no existe
+      const productoData = productosMap.get(productoId);
+      if (item.Talla?.nombre && !productoData.tallas.includes(item.Talla.nombre)) {
+        productoData.tallas.push(item.Talla.nombre);
+        // Agregar precio por talla usando preciocosto
+        productoData.preciosPorTalla[item.Talla.nombre] = item.preciocosto || 0;
+      }
+
+      // Sumar stock
+      productoData.stock += item.stock || 0;
+    });
+
+    // Convertir el mapa a array
+    const productosFormateados = Array.from(productosMap.values());
+
+    res.json({
+      msg: 'Productos obtenidos en formato servicio exitosamente',
+      data: productosFormateados
+    });
+  } catch (error) {
+    console.error('Error en getProductosFormatoService:', error);
+    res.status(500).json({ msg: 'Error al obtener productos en formato servicio' });
+  }
+};
+
+
 
 // UPDATE OR CREATE MULTIPLE - Crear o actualizar múltiples lote_talla
 export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Response): Promise<void> => {
