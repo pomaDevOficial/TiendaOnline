@@ -127,7 +127,8 @@ class Server {
     'http://localhost:4200',   // frontend cliente
     'http://localhost:4300',    // frontend admin
     'http://localhost:50913',    // frontend admin 50913
-    'http://localhost:49565',    // frontend admin 49565, 52015
+    'http://localhost:51963',    // frontend admin 50913
+    'http://localhost:49565',    // frontend admin 49565, 52015 51963
     'http://localhost:52015',    // frontend admin 
 
       ],

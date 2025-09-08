@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listarClientes = exports.restaurarPersona = exports.getPersonasEliminadas = exports.deletePersona = exports.updatePersona = exports.verificarDni = exports.getPersonaById = exports.getPersonasRegistradas = exports.getPersonas = exports.createPersona = void 0;
+exports.buscarClientes = exports.listarClientes = exports.restaurarPersona = exports.getPersonasEliminadas = exports.deletePersona = exports.updatePersona = exports.verificarDni = exports.getPersonaById = exports.getPersonasRegistradas = exports.getPersonas = exports.createPersona = void 0;
 const persona_model_1 = __importDefault(require("../models/persona.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
+const sequelize_1 = require("sequelize");
 // CREATE - Insertar nueva persona
 const createPersona = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idtipopersona, nombres, apellidos, idtipoidentidad, nroidentidad, correo, telefono } = req.body;
@@ -362,3 +363,49 @@ const listarClientes = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.listarClientes = listarClientes;
+// READ - Buscar clientes para select/autocomplete
+const buscarClientes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const qraw = req.query.q;
+    const q = typeof qraw === "string" ? qraw.trim() : "";
+    // Parámetros opcionales: limit (máx resultados)
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    try {
+        if (!q) {
+            res.status(400).json({ msg: "El parámetro q (búsqueda) es obligatorio" });
+            return;
+        }
+        const like = `%${q}%`;
+        const clientes = yield persona_model_1.default.findAll({
+            where: {
+                idtipopersona: 1, // solo clientes
+                idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO],
+                [sequelize_1.Op.or]: [
+                    { nombres: { [sequelize_1.Op.like]: like } },
+                    { apellidos: { [sequelize_1.Op.like]: like } },
+                    { nroidentidad: { [sequelize_1.Op.like]: like } },
+                    { correo: { [sequelize_1.Op.like]: like } },
+                    { telefono: { [sequelize_1.Op.like]: like } }
+                ],
+            },
+            include: [
+                {
+                    model: estado_model_1.default,
+                    as: "Estado",
+                    attributes: ["id", "nombre"],
+                    required: false,
+                },
+            ],
+            order: [["apellidos", "ASC"], ["nombres", "ASC"]],
+            limit, // ⬅️ limita resultados
+        });
+        res.json({
+            msg: "Resultados de búsqueda de clientes obtenidos exitosamente",
+            data: clientes,
+        });
+    }
+    catch (error) {
+        console.error("Error en buscarClientes:", error);
+        res.status(500).json({ msg: "Error al buscar clientes" });
+    }
+});
+exports.buscarClientes = buscarClientes;

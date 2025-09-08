@@ -7,6 +7,7 @@ PersonaRouter.post('/', persona_controller_1.createPersona); // Crear una nueva 
 PersonaRouter.get('/', persona_controller_1.getPersonas); // Obtener la lista de todas las personas
 // ⚠️ Coloca primero las rutas “literales”
 PersonaRouter.get('/clientes', persona_controller_1.listarClientes);
+PersonaRouter.get("/buscarclientes", persona_controller_1.buscarClientes);
 PersonaRouter.get('/registradas', persona_controller_1.getPersonasRegistradas); // Obtener solo personas registradas/actualizadas
 PersonaRouter.get('/eliminadas', persona_controller_1.getPersonasEliminadas); // Obtener solo personas eliminadas
 PersonaRouter.get('/verificar-dni/:nroidentidad', persona_controller_1.verificarDni); // Verificar si existe una persona con el DNI

@@ -1,0 +1,205 @@
+<div class="container">
+
+  <div class="card">
+    <h2>🔔 Sistema de Notificaciones WhatsApp</h2>
+    <p>Estado: <span [class]="status === 'Conectado' ? 'connected' : 'disconnected'">{{ status }}</span></p>
+    <button (click)="checkStatus()">Actualizar Estado</button>
+
+    <div *ngIf="status === 'Conectado'" class="success-message">
+      ✅ WhatsApp conectado. El sistema maneja notificaciones y comprobantes internamente.
+    </div>
+
+    <div *ngIf="status === 'Desconectado'" class="disconnection-alert">
+      🚫 WhatsApp desconectado. Escanea el QR para activar el sistema de notificaciones.
+    </div>
+
+    <div *ngIf="isReconnecting" class="reconnecting-message">
+      🔄 Generando nuevo código QR...
+    </div>
+
+    <div *ngIf="qrImage && status !== 'Conectado'" class="qr-section">
+      <h3>Escanea este código QR para enlazar:</h3>
+      <img [src]="qrImage" alt="QR Code" class="qr-image" />
+      <p class="qr-instruction">Abre WhatsApp → Menú → WhatsApp Web → Escanea para recibir notificaciones</p>
+    </div>
+  </div>
+
+  <div class="response">
+    <p>{{ response }}</p>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+
+  .card {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+  .card h2 {
+    margin-top: 0;
+    color: #555;
+  }
+
+  .card p {
+    margin: 10px 0;
+    color: #666;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  .response {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e7f3e7;
+    border: 1px solid #4CAF50;
+    border-radius: 4px;
+  }
+
+  .response p {
+    margin: 0;
+    color: #2e7d32;
+  }
+
+  .connected {
+    color: #4CAF50;
+    font-weight: bold;
+  }
+
+  .disconnected {
+    color: #f44336;
+    font-weight: bold;
+  }
+
+  .qr-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .qr-image {
+    max-width: 300px;
+    width: 100%;
+    height: auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+
+  .qr-instruction {
+    font-size: 14px;
+    color: #666;
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+
+  .success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-weight: bold;
+  }
+
+  .reconnecting-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-weight: bold;
+    border: 1px solid #ffeaa7;
+    animation: pulse 2s infinite;
+  }
+
+  .disconnection-alert {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 16px;
+    border: 2px solid #f5c6cb;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .disconnection-warning {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid #f5c6cb;
+    font-weight: bold;
+  }
+
+  .card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    background-color: #f8f9fa;
+  }
+
+  .card.disabled input,
+  .card.disabled button {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    border-color: #ced4da;
+  }
+
+  .card.disabled input::placeholder {
+    color: #6c757d;
+  }
+
+  .notification-placeholder {
+    background-color: #f0f8ff;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+    color: #666;
+    border: 1px solid #b3d9ff;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+</style>

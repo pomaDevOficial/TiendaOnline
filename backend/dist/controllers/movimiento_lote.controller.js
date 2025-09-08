@@ -18,6 +18,8 @@ const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model")
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
+const producto_model_1 = __importDefault(require("../models/producto.model"));
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 // CREATE - Insertar nuevo movimiento de lote
 const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idlote_talla, tipomovimiento, cantidad, fechamovimiento } = req.body;
@@ -48,7 +50,7 @@ const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
             idlote_talla,
             tipomovimiento: tipomovimiento.toUpperCase(),
             cantidad,
-            fechamovimiento: fechamovimiento || new Date(),
+            fechamovimiento: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener el movimiento creado con sus relaciones
@@ -186,7 +188,8 @@ const getMovimientosLote = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         {
                             model: lote_talla_model_1.default.associations.Lote.target,
                             as: 'Lote',
-                            attributes: ['id', 'proveedor', 'fechaingreso']
+                            attributes: ['id', 'proveedor', 'fechaingreso'],
+                            include: [{ model: producto_model_1.default, as: 'Producto' }]
                         },
                         {
                             model: lote_talla_model_1.default.associations.Talla.target,
@@ -272,7 +275,8 @@ const getMovimientoLoteById = (req, res) => __awaiter(void 0, void 0, void 0, fu
                         {
                             model: lote_talla_model_1.default.associations.Lote.target,
                             as: 'Lote',
-                            attributes: ['id', 'proveedor', 'fechaingreso']
+                            attributes: ['id', 'proveedor', 'fechaingreso'],
+                            include: [{ model: producto_model_1.default, as: 'Producto' }]
                         },
                         {
                             model: lote_talla_model_1.default.associations.Talla.target,
@@ -442,12 +446,15 @@ const getMovimientosByFecha = (req, res) => __awaiter(void 0, void 0, void 0, fu
             });
             return;
         }
+        // ✅ Convertir a rango de Lima
+        const inicio = moment_timezone_1.default.tz(fechaInicio, "America/Lima").startOf("day").toDate();
+        const fin = moment_timezone_1.default.tz(fechaFin, "America/Lima").endOf("day").toDate();
         const movimientos = yield movimiento_lote_model_1.default.findAll({
             where: {
                 fechamovimiento: {
-                    [sequelize_1.Op.between]: [new Date(fechaInicio), new Date(fechaFin)]
+                    [sequelize_1.Op.between]: [inicio, fin],
                 },
-                idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO },
             },
             include: [
                 {
