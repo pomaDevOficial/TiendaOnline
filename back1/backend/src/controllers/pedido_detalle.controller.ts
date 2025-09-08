@@ -392,10 +392,10 @@ export const getPedidoDetalleById = async (req: Request, res: Response): Promise
 // READ - Obtener detalles por pedido
 export const getDetallesByPedido = async (req: Request, res: Response): Promise<void> => {
   const { idpedido } = req.params;
-
+console.log(idpedido)
   try {
     const detalles = await PedidoDetalle.findAll({
-      where: { idpedido },
+      where: { idpedido: Number(idpedido) },
       include: [
         { 
           model: Pedido, 
@@ -415,7 +415,7 @@ export const getDetallesByPedido = async (req: Request, res: Response): Promise<
                 {
                   model: LoteTalla.associations.Lote.target.associations.Producto.target,
                   as: 'Producto',
-                  attributes: ['id', 'nombre','imagen', 'descripcion']
+                  attributes: ['id', 'nombre','imagen']
                 }
               ]
             },
