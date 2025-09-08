@@ -18,7 +18,7 @@ import Pedido from '../models/pedido.model';
 import MetodoPago from '../models/metodo_pago.model';
 import Talla from '../models/talla.model';
 import moment from "moment-timezone";
-import { path } from 'pdfkit';
+import { server } from '../server';
 import fs from "fs";
 import { generarPDFComprobanteModelo } from '../helper/generarPdf.helper';
 import MovimientoLote from '../models/movimiento_lote.model';
@@ -689,22 +689,22 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
       // 🔐 Descontar stock atómicamente
       const [results, metadata] = await sequelize.query(
-  `
-  UPDATE LoteTalla
-  SET stock = stock - :cantidad
-  WHERE id = :id AND stock >= :cantidad
-  `,
-  {
-    replacements: { id: loteTalla.id, cantidad: cantidadNum },
-    transaction
-  }
-) as [any, { affectedRows: number }];
+            `
+            UPDATE Lote_Talla
+            SET stock = stock - :cantidad
+            WHERE id = :id AND stock >= :cantidad
+            `,
+            {
+              replacements: { id: loteTalla.id, cantidad: cantidadNum },
+              transaction
+            }
+          ) as [any, { affectedRows: number }];
 
 
       // Validar que se haya actualizado (stock suficiente)
       if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
-  throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
-}
+        throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+      }
 
 
       // Crear detalle de pedido
@@ -827,18 +827,41 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
     if (telefono && phoneRegex.test(telefono)) {
       try {
-        const nombreArchivo = await generarPDFComprobante(
+        // const nombreArchivo = await generarPDFComprobante(
+        //   comprobanteCompleto,
+        //   ventaCompleta,
+        //   ventaCompleta?.Pedido,
+        //   detallesVentaCompletos
+        // );
+
+        // await enviarArchivoWSP(
+        //   telefono,
+        //   nombreArchivo,
+        //   `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+        // );
+         // Usar la función del servidor para enviar el comprobante
+        const resultadoEnvio = await server.sendComprobanteWhatsApp(
+          telefono,
           comprobanteCompleto,
           ventaCompleta,
           ventaCompleta?.Pedido,
           detallesVentaCompletos
         );
 
-        await enviarArchivoWSP(
-          telefono,
-          nombreArchivo,
-          `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-        );
+        if (!resultadoEnvio.success) {
+          throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+        }
+
+        res.status(201).json({
+          msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+          data: {
+            pedido,
+            venta: ventaCompleta,
+            comprobante: comprobanteCompleto,
+            detallesVenta: detallesVentaCompletos
+          }
+        });
+        return;
       } catch (err) {
         console.error('Error al generar/enviar comprobante por WhatsApp:', err);
         // seguimos igual, no rompemos la venta
@@ -856,7 +879,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       }
     });
 
-  } catch (error) {
+  }catch (error) {
     await transaction.rollback();
     console.error('Error en crearVentaCompletaConComprobante:', error);
     res.status(500).json({

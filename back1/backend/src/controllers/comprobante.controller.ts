@@ -787,19 +787,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
     if (telefono && phoneRegex.test(telefono)) {
       try {
-        console.log("cliente")
-        console.log( cliente?.telefono )
-        console.log("venta")
-        console.log( ventaCompleta?.Pedido?.Persona?.telefono  )
-        console.log( ventaCompleta?.Pedido )
-        console.log( ventaCompleta?.Pedido?.Persona )
-        // const nombreArchivo = await generarPDFComprobante(
-        //   comprobanteCompleto,
-        //   ventaCompleta,
-        //   ventaCompleta?.Pedido,           // incluye Persona y MetodoPago
-        //   detallesVentaCompletos
-        // );
-
+       
        // Usar la función del servidor para enviar el comprobante
         const resultadoEnvio = await server.sendComprobanteWhatsApp(
           telefono,

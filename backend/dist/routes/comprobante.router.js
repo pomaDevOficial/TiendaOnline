@@ -12,6 +12,7 @@ ComprobanteRouter.get('/', comprobante_controller_1.getComprobantes); // Obtener
 ComprobanteRouter.get('/registrados', comprobante_controller_1.getComprobantesRegistrados); // Obtener comprobantes registrados
 ComprobanteRouter.get('/anulados', comprobante_controller_1.getComprobantesAnulados); // Obtener comprobantes anulados
 ComprobanteRouter.get('/fecha', comprobante_controller_1.getComprobantesByFecha); // Obtener comprobantes por rango de fechas
+ComprobanteRouter.get('/descargar/:id', comprobante_controller_1.descargarComprobante); // Obtener comprobantes por rango de fechas
 ComprobanteRouter.get('/venta/:idventa', comprobante_controller_1.getComprobantesByVenta); // Obtener comprobantes por venta
 ComprobanteRouter.get('/:id', comprobante_controller_1.getComprobanteById); // Obtener un comprobante por ID
 // UPDATE
