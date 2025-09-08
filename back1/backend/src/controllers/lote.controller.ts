@@ -114,18 +114,23 @@ export const updateLote = async (req: Request, res: Response): Promise<void> => 
         return;
       }
     }
+    console.log(idproducto, proveedor, fechaingreso )
+       // Construir objeto con solo los campos que llegan
+    const camposActualizar: any = {};
+   camposActualizar.idproducto = idproducto;
+   camposActualizar.proveedor = proveedor;
+    camposActualizar.fechaingreso = fechaingreso;
 
-    // Actualizar campos
-    if (idproducto) lote.idproducto = idproducto;
-    if (proveedor) lote.proveedor = proveedor;
-    if (fechaingreso) lote.fechaingreso = fechaingreso;
-    
     // Cambiar estado a ACTUALIZADO si no está eliminado
     if (lote.idestado !== LoteEstado.ELIMINADO) {
-      lote.idestado = LoteEstado.DISPONIBLE;
+      camposActualizar.idestado = LoteEstado.DISPONIBLE;
     }
 
-    await lote.save();
+    console.log("Valores a actualizar:", camposActualizar);
+
+    // Actualizar en BD
+    await Lote.update(camposActualizar, { where: { id } });
+   
 
     // Obtener el lote actualizado con relaciones
     const loteActualizado = await Lote.findByPk(id, {
@@ -203,7 +208,7 @@ export const getLoteObtenerInformacion = async (req: Request, res: Response): Pr
       return;
     }
     const detalles = await LoteTalla.findAll({
-      where: { idlote: id },
+      where: { idlote: id ,   idestado: [LoteEstado.DISPONIBLE] },
     });
     res.json({
       msg: 'Lote obtenido exitosamente',

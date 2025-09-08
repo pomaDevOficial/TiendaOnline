@@ -26,7 +26,7 @@ LoteRouter.get('/eliminados', getLotesEliminados); // Obtener solo lotes elimina
 LoteRouter.get('/producto/:idproducto', getLotesByProducto); // Obtener lotes por producto
 LoteRouter.get('/:id', getLoteById); // Obtener un lote por ID
 LoteRouter.get('/buscar/lote', getLotesBuscar); // Buscar lotes por texto
-LoteRouter.put('/:id', updateLote); // Actualizar un lote por ID
+LoteRouter.put('/lote/actualizar/:id', updateLote); // Actualizar un lote por ID
 LoteRouter.patch('/:id/estado', cambiarEstadoLote); // Cambiar estado del lote (disponible/agotado)
 LoteRouter.patch('/:id/eliminar', deleteLote); // Eliminar lógicamente un lote (cambiar estado a eliminado)
 LoteRouter.patch('/:id/restaurar', restaurarLote); // Restaurar un lote eliminado
