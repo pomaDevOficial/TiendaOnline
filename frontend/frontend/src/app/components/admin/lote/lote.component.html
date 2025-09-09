@@ -179,7 +179,7 @@
         <div *ngFor="let d of detalles.controls; let i = index" [formGroupName]="i" class="mb-2 border rounded p-2">
 
           <div class="grid">
-            <div class="col-3">
+            <div class="col-2">
               <p-dropdown 
                 [options]="tallas" 
                 optionLabel="nombre" 
@@ -206,18 +206,25 @@
               </p-dropdown>
               
             </div>
-            <div class="col-3">
+            <div class="col-2">
               <input type="number" placeholder="Precio" pInputText formControlName="precioventa" class="w-full"/>
             </div>
             <div class="col-2">
               <input type="number" placeholder="Stock" pInputText formControlName="stock" class="w-full"/>
             </div>
-            <div class="col-1 flex align-items-center justify-content-center">
+            <div class="col-2 flex align-items-center justify-content-center">
+              <p-button 
+                icon="pi pi-plus-circle" 
+                styleClass="p-button-text p-button-success" 
+                (click)="abrirDialogoAgregarStock(d)">
+              </p-button>
+
               <p-button 
                 icon="pi pi-trash" 
                 styleClass="p-button-text p-button-danger" 
-                (click)="eliminarDetalle(i)">
+                (click)="eliminarLoteTalla(d.get('id')?.value)">
               </p-button>
+
             </div>
           </div>
 
@@ -242,5 +249,41 @@
     </div>
   </div>
 </p-dialog>
+
+<p-dialog 
+  header="Agregar Stock" 
+  [(visible)]="dialogoStock" 
+  [modal]="true" 
+  [closable]="true" 
+  [style]="{width: '30vw'}">
+
+  <div class="p-fluid">
+    <div class="field">
+      <label for="cantidad">Cantidad a agregar</label>
+      <input 
+        id="cantidad" 
+        type="number" 
+        pInputText 
+        [(ngModel)]="cantidadAgregarDialog"/>
+    </div>
+  </div>
+
+  <!-- Footer con botones -->
+  <ng-template pTemplate="footer">
+    <p-button 
+      label="Cancelar" 
+      icon="pi pi-times" 
+      (click)="dialogoStock=false">
+    </p-button>
+    <p-button 
+      label="Agregar" 
+      icon="pi pi-check" 
+      (click)="confirmarAgregarStock()">
+    </p-button>
+  </ng-template>
+
+</p-dialog>
+
+
 <p-confirmDialog></p-confirmDialog>
 <p-toast></p-toast>

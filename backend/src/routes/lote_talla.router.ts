@@ -34,6 +34,7 @@ LoteTallaRouter.get('/catalogo', getProductosDisponibles); // Catálogo con filt
 LoteTallaRouter.get('/tallas', getTallasDisponibles); // Tallas por producto
 LoteTallaRouter.get('/stock', verificarStock); // Verificación de stock
 LoteTallaRouter.put('/multiple', updateOrCreateMultipleLoteTalla);
+LoteTallaRouter.patch('/agregar-stock', agregarStockPorLoteTalla); // Agregar stock a un lote_talla específico
 LoteTallaRouter.get('/:id', getLoteTallaById); // Obtener un lote_talla por ID
 LoteTallaRouter.put('/:id', updateLoteTalla); // Actualizar un lote_talla por ID
 LoteTallaRouter.patch('/:id/estado', cambiarEstadoLoteTalla); // Cambiar estado del lote_talla (disponible/agotado)
@@ -42,6 +43,5 @@ LoteTallaRouter.patch('/:id/restaurar', restaurarLoteTalla); // Restaurar un lot
 // En tu archivo de rutas
 
 // NUEVA RUTA PARA AGREGAR STOCK
-LoteTallaRouter.patch('/agregar-stock', agregarStockPorLoteTalla); // Agregar stock a un lote_talla específico
 
 export default LoteTallaRouter;

@@ -10,6 +10,7 @@ import { EstadoGeneral, LoteEstado, TipoMovimientoLote } from '../estadosTablas/
 import { Op } from 'sequelize';
 import MovimientoLote from '../models/movimiento_lote.model';
 import moment from "moment-timezone";
+import sequelize from '../db/connection.db';
 
 // CREATE - Insertar nuevo lote_talla
 export const createLoteTalla = async (req: Request, res: Response): Promise<void> => {
@@ -996,160 +997,123 @@ export const verificarStock = async (req: Request, res: Response): Promise<void>
 export const agregarStockPorLoteTalla = async (req: Request, res: Response): Promise<void> => {
   const { idLoteTalla, cantidad } = req.body;
 
+  const transaction = await sequelize.transaction(); // 🔹 iniciamos transacción
+
   try {
-    // Validaciones
+    // Validaciones iniciales
     if (!idLoteTalla || cantidad === undefined) {
-      res.status(400).json({ 
-        msg: 'Los campos idLoteTalla y cantidad son obligatorios' 
-      });
+      res.status(400).json({ msg: 'Los campos idLoteTalla y cantidad son obligatorios' });
       return;
     }
 
     if (cantidad <= 0) {
-      res.status(400).json({ 
-        msg: 'La cantidad debe ser un valor positivo' 
-      });
+      res.status(400).json({ msg: 'La cantidad debe ser un valor positivo' });
       return;
     }
 
-    // Buscar el detalle de lote_talla existente
+    // Buscar el detalle de lote_talla existente con sus relaciones
     const loteTalla = await LoteTalla.findByPk(idLoteTalla, {
       include: [
-        { 
-          model: Talla, 
-          as: 'Talla',
-          attributes: ['id', 'nombre'] 
-        },
+        { model: Talla, as: 'Talla', attributes: ['id', 'nombre'] },
         {
           model: Lote,
           as: 'Lote',
-          include: [
-            { 
-              model: Estado, 
-              as: 'Estado',
-              attributes: ['id', 'nombre'] 
-            }
-          ]
-        }
-      ]
+          include: [{ model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }]
+        },
+        { model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }
+      ],
+      transaction
     });
 
     if (!loteTalla) {
+      await transaction.rollback();
       res.status(404).json({ msg: 'El detalle de lote-talla no existe' });
       return;
     }
 
     // Verificar que el lote esté disponible
     if (loteTalla.Lote?.idestado !== LoteEstado.DISPONIBLE) {
-      res.status(400).json({ 
-        msg: 'No se puede agregar stock a un lote no disponible' 
-      });
+      await transaction.rollback();
+      res.status(400).json({ msg: 'No se puede agregar stock a un lote no disponible' });
       return;
     }
 
     // Verificar que el detalle de lote-talla esté disponible
     if (loteTalla.idestado !== LoteEstado.DISPONIBLE) {
-      res.status(400).json({ 
-        msg: 'No se puede agregar stock a un detalle no disponible' 
-      });
+      await transaction.rollback();
+      res.status(400).json({ msg: 'No se puede agregar stock a un detalle no disponible' });
       return;
     }
 
-    // Actualizar el stock sumando la nueva cantidad
-    const nuevoStock = loteTalla.stock + cantidad;
-    await LoteTalla.update(
-      { stock: nuevoStock },
-      { where: { id: idLoteTalla } }
-    );
+    // 🔹 Incrementar stock de forma segura
+    await loteTalla.increment('stock', { by: cantidad, transaction });
 
     // Crear movimiento de ingreso
     const nuevoMovimiento: any = await MovimientoLote.create({
       idlote_talla: idLoteTalla,
       tipomovimiento: TipoMovimientoLote.ENTRADA,
-      cantidad: cantidad,
+      cantidad,
       fechamovimiento: moment().tz("America/Lima").toDate(),
       idestado: EstadoGeneral.REGISTRADO
-    });
+    }, { transaction });
+
+    // Confirmar la transacción
+    await transaction.commit();
 
     // Obtener el movimiento creado con sus relaciones
     const movimientoCreado = await MovimientoLote.findByPk(nuevoMovimiento.id, {
       include: [
-        { 
-          model: LoteTalla, 
+        {
+          model: LoteTalla,
           as: 'LoteTalla',
           attributes: ['id', 'stock', 'esGenero', 'preciocosto', 'precioventa'],
           include: [
-            {
-              model: Talla,
-              as: 'Talla',
-              attributes: ['id', 'nombre']
-            },
+            { model: Talla, as: 'Talla', attributes: ['id', 'nombre'] },
             {
               model: Lote,
               as: 'Lote',
               attributes: ['id', 'proveedor', 'fechaingreso'],
-              include: [
-                {
-                  model: Producto,
-                  as: 'Producto',
-                  attributes: ['id', 'nombre']
-                }
-              ]
+              include: [{ model: Producto, as: 'Producto', attributes: ['id', 'nombre'] }]
             }
           ]
         },
-        { 
-          model: Estado, 
-          as: 'Estado',
-          attributes: ['id', 'nombre'] 
-        }
+        { model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }
       ]
     });
 
     // Obtener el detalle actualizado
     const loteTallaActualizado = await LoteTalla.findByPk(idLoteTalla, {
       include: [
-        { 
-          model: Talla, 
-          as: 'Talla',
-          attributes: ['id', 'nombre'] 
-        },
+        { model: Talla, as: 'Talla', attributes: ['id', 'nombre'] },
         {
           model: Lote,
           as: 'Lote',
           include: [
-            { 
-              model: Producto, 
-              as: 'Producto',
-              attributes: ['id', 'nombre'] 
-            },
-            { 
-              model: Estado, 
-              as: 'Estado',
-              attributes: ['id', 'nombre'] 
-            }
+            { model: Producto, as: 'Producto', attributes: ['id', 'nombre'] },
+            { model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }
           ]
         },
-        { 
-          model: Estado, 
-          as: 'Estado',
-          attributes: ['id', 'nombre'] 
-        }
+        { model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }
       ]
     });
 
     res.status(200).json({
       msg: 'Stock agregado exitosamente',
+      idLoteTalla,
+      idMovimiento: nuevoMovimiento.id,
       data: {
         loteTalla: loteTallaActualizado,
         movimiento: movimientoCreado
       }
     });
-  } catch (error) {
-    console.error('Error en agregarStockPorLoteTalla:', error);
+
+  } catch (error: any) {
+    await transaction.rollback();
+    console.error('Error en agregarStockPorLoteTalla:', error.message, error.stack);
     res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
   }
 };
+
 // READ - Obtener productos en formato similar al servicio (valores estáticos)
 // export const getProductosFormatoService = async (req: Request, res: Response): Promise<void> => {
 //   try {

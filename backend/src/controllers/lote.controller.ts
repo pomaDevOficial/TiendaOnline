@@ -166,8 +166,8 @@ export const updateLote = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-export const getLoteObtenerInformacion = async (req: Request, res: Response): Promise<void> =>{
-    const { id } = req.params;
+export const getLoteObtenerInformacion = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
 
   try {
     const lote = await Lote.findByPk(id, {
@@ -177,24 +177,11 @@ export const getLoteObtenerInformacion = async (req: Request, res: Response): Pr
           as: 'Producto',
           attributes: ['id', 'nombre'],
           include: [
-            {
-              model: Categoria,
-              as: 'Categoria',
-              attributes: ['id', 'nombre']
-            },
-            {
-              model: Marca,
-              as: 'Marca',
-              attributes: ['id', 'nombre']
-            }
+            { model: Categoria, as: 'Categoria', attributes: ['id', 'nombre'] },
+            { model: Marca, as: 'Marca', attributes: ['id', 'nombre'] }
           ]
         },
-        { 
-          model: Estado, 
-          as: 'Estado',
-          attributes: ['id', 'nombre'] 
-        },
-         
+        { model: Estado, as: 'Estado', attributes: ['id', 'nombre'] }
       ]
     });
 
@@ -202,20 +189,24 @@ export const getLoteObtenerInformacion = async (req: Request, res: Response): Pr
       res.status(404).json({ msg: 'Lote no encontrado' });
       return;
     }
+
     const detalles = await LoteTalla.findAll({
-      where: { idlote: id },
+      where: { 
+        idlote: id,
+        idestado: { [Op.ne]: LoteEstado.ELIMINADO } // 🚀 excluye los eliminados
+      },
     });
+
     res.json({
       msg: 'Lote obtenido exitosamente',
       data: lote,
       detalles
     });
   } catch (error) {
-    console.error('Error en getLoteById:', error);
+    console.error('Error en getLoteObtenerInformacion:', error);
     res.status(500).json({ msg: 'Error al obtener el lote' });
   }
-
-}
+};
 // READ - Listar todos los lotes
 export const getLotes = async (req: Request, res: Response): Promise<void> => {
   try {

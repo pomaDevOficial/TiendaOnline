@@ -47,6 +47,9 @@ export class LoteComponent implements OnInit {
   { label: 'Mujer', value: 2},
   { label: 'Unisex', value: 3 }
 ];
+dialogoStock: boolean = false;
+cantidadAgregarDialog: number = 0;
+loteTallaSeleccionado: any = null;
 
   maxDate: Date | undefined;
   constructor(private lote: LoteServicio,
@@ -91,6 +94,8 @@ export class LoteComponent implements OnInit {
   get detalles(): FormArray {
     return this.loteForm.get('detalles') as FormArray;
   }
+
+  
   agregarDetalle() {
       const idLoteActual = this.loteForm.get('id')?.value;
 
@@ -104,9 +109,87 @@ export class LoteComponent implements OnInit {
     this.detalles.push(detalle);
   }
 
-   eliminarDetalle(i: number) {
-    this.detalles.removeAt(i);
+  eliminarLoteTalla(id: number) {
+  this.confirmationService.confirm({
+    message: '¿Seguro que deseas eliminar esta talla del lote?',
+    header: 'Confirmación',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Sí, eliminar',
+    rejectLabel: 'Cancelar',
+    acceptButtonStyleClass: 'p-button-danger p-button-sm',
+    rejectButtonStyleClass: 'p-button-secondary p-button-sm',
+    accept: () => {
+      this.loteTallaServicio.deleteLoteTalla(id).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Eliminado',
+            detail: 'La talla fue eliminada correctamente'
+          });
+
+          // Recargar los detalles del lote actual
+          const loteId = this.loteForm.get('id')?.value;
+          this.editarLote({ id: loteId } as Lote); // 🔄 reutilizamos tu método
+        },
+        error: (err) => {
+          console.error('Error al eliminar talla', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar la talla'
+          });
+        }
+      });
+    }
+  });
+}
+
+  abrirDialogoAgregarStock(detalle: any) {
+  // Aquí detalle es un FormGroup
+  this.loteTallaSeleccionado = {
+    id: detalle.get('id')?.value,
+    stock: detalle.get('stock')?.value,
+    idtalla: detalle.get('idtalla')?.value,
+    esGenero: detalle.get('esGenero')?.value,
+    precioventa: detalle.get('precioventa')?.value
+  };
+
+  this.cantidadAgregarDialog = 0;
+  this.dialogoStock = true;
+
+  console.log("LoteTalla seleccionado:", this.loteTallaSeleccionado);
+}
+
+
+confirmarAgregarStock() {
+  if (!this.cantidadAgregarDialog || this.cantidadAgregarDialog <= 0) {
+    this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Ingrese una cantidad válida' });
+    return;
   }
+
+  const payload = {
+    idLoteTalla: this.loteTallaSeleccionado.id,
+    cantidad: this.cantidadAgregarDialog
+  };
+
+  // 👇 Ver lo que envías
+  console.log("Payload que se envía al backend:", payload);
+
+  this.loteTallaServicio.agregarStockPorLoteTalla(payload).subscribe({
+    next: () => {
+      this.messageService.add({ severity: 'success', summary: 'Stock actualizado', detail: 'Se agregó correctamente' });
+          this.cantidadAgregarDialog = 0;
+            this.dialogoStock = false;
+          const loteId = this.loteForm.get('id')?.value;
+          this.editarLote({ id: loteId } as Lote); // 🔄 reutilizamos tu método
+    },
+    error: (err) => {
+      console.error('Error al agregar stock', err);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el stock' });
+    }
+  });
+}
+
   cargarLotes() {
     this.lote.getLotes().subscribe({
       next: (res:any) => {
@@ -275,9 +358,9 @@ async guardarEdicion() {
   }
 }
 
-  eliminarLotes(categoria: Lote) {
+  eliminarLotes(lote: Lote) {
       this.confirmationService.confirm({
-        message: '¿Seguro que deseas eliminar esta talla?',
+        message: '¿Seguro que deseas eliminar este Lote?',
         header: 'Confirmación',
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Sí, eliminar',
@@ -285,7 +368,7 @@ async guardarEdicion() {
         acceptButtonStyleClass: 'p-button-danger p-button-sm', // 🔴 Rojo
         rejectButtonStyleClass: 'p-button-secondary p-button-sm', // ⚪ Gris
         accept: () => {
-          this.lote.eliminarLote(categoria.id!, '').subscribe(() => {
+          this.lote.eliminarLote(lote.id!, '').subscribe(() => {
             this.cargarLotes();
             this.messageService.add({
               severity: 'success',
