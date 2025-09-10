@@ -7,7 +7,6 @@ import { LoginGuard } from './services/login.guard';
 import { TallaComponent } from './components/admin/talla/talla.component';
 import { CategoriaComponent } from './components/admin/categoria/categoria.component';
 import { MarcaComponent } from './components/admin/marca/marca.component';
-import { HomeComponent } from './components/client/home/home.component';
 import { PersonaComponent } from './components/admin/persona/persona.component';
 import { UsuarioComponent } from './components/admin/usuario/usuario.component';
 import { ProductoComponent } from './components/admin/producto/producto.component';
