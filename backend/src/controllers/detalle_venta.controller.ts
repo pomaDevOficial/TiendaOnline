@@ -5,6 +5,7 @@ import Venta from '../models/venta.model';
 import Estado from '../models/estado.model';
 import { VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
+import moment from 'moment-timezone';
 
 // CREATE - Insertar nuevo detalle de venta
 export const createDetalleVenta = async (req: Request, res: Response): Promise<void> => {
@@ -95,7 +96,7 @@ export const createDetalleVenta = async (req: Request, res: Response): Promise<v
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -344,7 +345,7 @@ export const updateDetalleVenta = async (req: Request, res: Response): Promise<v
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -416,7 +417,7 @@ export const getDetallesVenta = async (req: Request, res: Response): Promise<voi
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -491,7 +492,7 @@ export const getDetallesVentaRegistrados = async (req: Request, res: Response): 
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -565,7 +566,7 @@ export const getDetalleVentaById = async (req: Request, res: Response): Promise<
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -644,7 +645,7 @@ export const getDetallesVentaByVenta = async (req: Request, res: Response): Prom
             {
               model: Venta.associations.Usuario.target,
               as: 'Usuario',
-              attributes: ['id', 'nombre', 'email']
+              attributes: ['id', 'usuario']
             },
             {
               model: Venta.associations.Pedido.target,
@@ -810,32 +811,33 @@ export const deleteDetalleVenta = async (req: Request, res: Response): Promise<v
 // READ - Obtener productos más vendidos con filtro por mes
 export const getProductosMasVendidos = async (req: Request, res: Response): Promise<void> => {
   const { año, mes, limite } = req.query;
+  const tz = 'America/Lima';
 
   try {
     let whereCondition: any = {
       idestado: VentaEstado.REGISTRADO
     };
 
-    // Construir condición de fecha para la venta
+    // Condición de fechas
     let ventaWhereCondition: any = {};
-    
-    if (año) {
-      const yearStart = new Date(`${año}-01-01`);
-      const yearEnd = new Date(`${año}-12-31 23:59:59`);
-      
+
+    if (año && mes) {
+      const monthStart = moment.tz(`${año}-${mes}`, 'YYYY-MM', tz).startOf('month').toDate();
+      const monthEnd = moment.tz(`${año}-${mes}`, 'YYYY-MM', tz).endOf('month').toDate();
+
+      ventaWhereCondition.fechaventa = {
+        [Op.between]: [monthStart, monthEnd]
+      };
+    } else if (año) {
+      const yearStart = moment.tz(`${año}`, 'YYYY', tz).startOf('year').toDate();
+      const yearEnd = moment.tz(`${año}`, 'YYYY', tz).endOf('year').toDate();
+
       ventaWhereCondition.fechaventa = {
         [Op.between]: [yearStart, yearEnd]
       };
     }
 
-    if (mes && año) {
-      const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
-      const monthEnd = new Date(parseInt(año as string), parseInt(mes as string), 0, 23, 59, 59);
-      
-      ventaWhereCondition.fechaventa = {
-        [Op.between]: [monthStart, monthEnd]
-      };
-    }
+    console.log('Filtro fechas:', ventaWhereCondition.fechaventa);
 
     const detallesVenta = await DetalleVenta.findAll({
       where: whereCondition,
@@ -913,11 +915,11 @@ export const getProductosMasVendidos = async (req: Request, res: Response): Prom
       }
     });
 
-    // Convertir a array y ordenar por cantidad vendida
+    // Convertir a array y ordenar
     let ranking = Object.values(productosVendidos)
       .sort((a, b) => b.cantidadVendida - a.cantidadVendida);
 
-    // Aplicar límite si se proporciona
+    // Aplicar límite si existe
     if (limite) {
       const limiteNumero = parseInt(limite as string);
       ranking = ranking.slice(0, limiteNumero);

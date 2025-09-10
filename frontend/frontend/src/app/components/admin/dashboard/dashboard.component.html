@@ -79,7 +79,7 @@
           <div class="d-flex align-items-center">
             <div class="flex-grow-1">
               <h6 class="text-white-50 small">Total Ventas</h6>
-              <h3 class="mb-0">S/ {{totalVentas | number:'1.2-2'}}</h3>
+              <h3 class="mb-0">{{totalTransacciones | number}}</h3>
             </div>
             <div class="flex-shrink-0">
               <i class="pi pi-shopping-cart fs-1 opacity-50"></i>
@@ -94,11 +94,11 @@
         <div class="card-body">
           <div class="d-flex align-items-center">
             <div class="flex-grow-1">
-              <h6 class="text-white-50 small">Promedio Mensual</h6>
-              <h3 class="mb-0">S/ {{promedioMensual | number:'1.2-2'}}</h3>
+              <h6 class="text-white-50 small">Total Ingresos</h6>
+              <h3 class="mb-0">S/ {{totalIngresos | number:'1.2-2'}}</h3>
             </div>
             <div class="flex-shrink-0">
-              <i class="pi pi-chart-bar fs-1 opacity-50"></i>
+              <i class="pi pi-money-bill fs-1 opacity-50"></i>
             </div>
           </div>
         </div>
@@ -110,11 +110,11 @@
         <div class="card-body">
           <div class="d-flex align-items-center">
             <div class="flex-grow-1">
-              <h6 class="text-dark-50 small">Mejor Mes</h6>
-              <h3 class="mb-0">{{mesMejorVenta}}</h3>
+              <h6 class="text-dark-50 small">Promedio Ventas/Mes</h6>
+              <h3 class="mb-0">{{promedioVentasMensual | number:'1.0-0'}}</h3>
             </div>
             <div class="flex-shrink-0">
-              <i class="pi pi-star fs-1 opacity-50"></i>
+              <i class="pi pi-chart-bar fs-1 opacity-50"></i>
             </div>
           </div>
         </div>
@@ -141,47 +141,43 @@
   <!-- Gráficas -->
   <div class="row">
     <!-- Gráfica de Ventas por Mes -->
-   <!-- Gráfica de Ventas por Mes -->
-<div class="col-xl-8 col-lg-7 mb-4">
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">Ventas por Mes</h5>
-      @if (loadingVentas) {
-        <div class="d-flex flex-column gap-3">
-          <p-skeleton width="100%" height="30px"></p-skeleton>
-          <p-skeleton width="100%" height="300px"></p-skeleton>
+    <div class="col-xl-8 col-lg-7 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Ventas por Mes</h5>
+          @if (loadingVentas) {
+            <div class="d-flex flex-column gap-3">
+              <p-skeleton width="100%" height="30px"></p-skeleton>
+              <p-skeleton width="100%" height="300px"></p-skeleton>
+            </div>
+          } @else {
+            <div class="chart-container">
+              <p-chart type="line" [data]="ventasPorMesData" [options]="ventasPorMesOptions" [style]="{'width': '100%', 'height': '350px'}"></p-chart>
+            </div>
+          }
         </div>
-      } @else {
-        <div class="chart-container">
-          <div class="chart-wrapper">
-            <p-chart type="line" [data]="ventasPorMesData" [options]="ventasPorMesOptions"></p-chart>
-          </div>
-        </div>
-      }
+      </div>
     </div>
-  </div>
-</div>
 
     <!-- Gráfica de Productos Más Vendidos -->
-<div class="col-xl-4 col-lg-5 mb-4">
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">Productos Más Vendidos</h5>
-      @if (loadingProductos) {
-        <div class="d-flex flex-column gap-3">
-          <p-skeleton width="100%" height="30px"></p-skeleton>
-          <p-skeleton width="100%" height="300px"></p-skeleton>
+    <div class="col-xl-4 col-lg-5 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Productos Más Vendidos</h5>
+          @if (loadingProductos) {
+            <div class="d-flex flex-column gap-3">
+              <p-skeleton width="100%" height="30px"></p-skeleton>
+              <p-skeleton width="100%" height="300px"></p-skeleton>
+            </div>
+          } @else {
+            <div class="chart-container">
+              <p-chart type="bar" [data]="productosMasVendidosData" [options]="productosMasVendidosOptions" [style]="{'width': '100%', 'height': '350px'}"></p-chart>
+            </div>
+          }
         </div>
-      } @else {
-        <div class="chart-container">
-          <div class="chart-wrapper">
-            <p-chart type="bar" [data]="productosMasVendidosData" [options]="productosMasVendidosOptions"></p-chart>
-          </div>
-        </div>
-      }
+      </div>
     </div>
   </div>
-</div>
 
   <!-- Tabla de Productos Más Vendidos -->
   <div class="row">
@@ -221,9 +217,9 @@
                         #{{i + 1}}
                       </span>
                     </td>
-                    <td>{{producto.producto || 'N/A'}}</td>
-                    <td>{{producto.cantidad_vendida | number}}</td>
-                    <td>S/ {{producto.total_vendido | number:'1.2-2'}}</td>
+                    <td>{{producto.producto.nombre || 'N/A'}}</td>
+                    <td>{{producto.cantidadVendida | number}}</td>
+                    <td>S/ {{producto.totalIngresos | number:'1.2-2'}}</td>
                     <td>
                       <div class="progress" style="height: 8px;">
                         <div class="progress-bar" 

@@ -23,8 +23,7 @@ import { DetalleVentaServicio } from '../../../services/DetalleVenta.Service';
     DropdownModule,
     ButtonModule,
     SkeletonModule,
-    TableModule,
-    ChartModule
+    TableModule
   ],
   styleUrls: ['./dashboard.component.css']
 })
@@ -74,8 +73,9 @@ export class DashboardComponent implements OnInit {
   loadingProductos: boolean = true;
 
   // Estadísticas
-  totalVentas: number = 0;
-  promedioMensual: number = 0;
+  totalTransacciones: number = 0;
+  totalIngresos: number = 0;
+  promedioVentasMensual: number = 0;
   mesMejorVenta: string = '';
   productoMasVendido: string = '';
 
@@ -105,7 +105,7 @@ export class DashboardComponent implements OnInit {
     this.loadingVentas = true;
     this.ventaService.getVentasPorMes(this.anioSeleccionado, this.mesSeleccionado || undefined).subscribe({
       next: (response: any) => {
-        this.ventasMensuales = Array.isArray(response) ? response : response?.data || [];
+        this.ventasMensuales = response?.data || [];
         this.calcularEstadisticasVentas();
         this.inicializarGraficaVentas();
         this.loadingVentas = false;
@@ -121,7 +121,8 @@ export class DashboardComponent implements OnInit {
     this.loadingProductos = true;
     this.detalleVentaService.getProductosMasVendidos(this.anioSeleccionado, this.mesSeleccionado || undefined, this.limiteProductos).subscribe({
       next: (response: any) => {
-        this.productosMasVendidos = Array.isArray(response) ? response : response?.data || [];
+        this.productosMasVendidos = response?.data || [];
+        this.calcularEstadisticasProductos();
         this.inicializarGraficaProductos();
         this.loadingProductos = false;
       },
@@ -133,34 +134,75 @@ export class DashboardComponent implements OnInit {
   }
 
   calcularEstadisticasVentas() {
-    this.totalVentas = this.ventasMensuales.reduce((sum, item) => sum + (item.total || 0), 0);
-    this.promedioMensual = this.ventasMensuales.length > 0 ? this.totalVentas / this.ventasMensuales.length : 0;
+    // Calcular total de transacciones (número de ventas)
+    this.totalTransacciones = this.ventasMensuales.reduce((sum, item) => sum + (item.cantidad || 0), 0);
     
+    // Calcular total de ingresos (monto total de ventas)
+    this.totalIngresos = this.ventasMensuales.reduce((sum, item) => sum + (item.total || 0), 0);
+    
+    // Calcular promedio mensual de ventas (número de transacciones)
+    this.promedioVentasMensual = this.ventasMensuales.length > 0 ? this.totalTransacciones / this.ventasMensuales.length : 0;
+    
+    // Encontrar el mes con mejor venta (por cantidad de transacciones)
     const mejorMes = this.ventasMensuales.reduce((max, item) => 
-      (item.total > max.total) ? item : max, { total: 0, mes: '' }
+      ((item.cantidad || 0) > (max.cantidad || 0)) ? item : max, { cantidad: 0, mes: '' }
     );
-    this.mesMejorVenta = mejorMes.mes || 'N/A';
+    
+    // Formatear el mes para mostrar
+    if (mejorMes.mes) {
+      if (mejorMes.mes.includes('-')) {
+        const partes = mejorMes.mes.split('-');
+        const numeroMes = parseInt(partes[1]);
+        const nombresMeses = [
+          'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+        this.mesMejorVenta = `${nombresMeses[numeroMes - 1] || mejorMes.mes} (${mejorMes.cantidad || 0} ventas)`;
+      } else {
+        this.mesMejorVenta = `${mejorMes.mes} (${mejorMes.cantidad || 0} ventas)`;
+      }
+    } else {
+      this.mesMejorVenta = 'N/A';
+    }
+  }
+
+  calcularEstadisticasProductos() {
+    // Obtener el producto más vendido (por cantidad)
+    const productoTop = this.productosMasVendidos[0];
+    this.productoMasVendido = productoTop ? 
+      `${productoTop.producto.nombre} (${productoTop.cantidadVendida} unidades)` : 'N/A';
   }
 
   inicializarGraficaVentas() {
     const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
-    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+    const textColor = documentStyle.getPropertyValue('--text-color') || '#495057';
+    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary') || '#6c757d';
+    const surfaceBorder = documentStyle.getPropertyValue('--surface-border') || '#dee2e6';
 
-    const meses = this.ventasMensuales.map(item => item.mes);
-    const totales = this.ventasMensuales.map(item => item.total);
+    // Obtener nombres de meses formateados
+    const meses = this.ventasMensuales.map(item => {
+      if (item.mes && item.mes.includes('-')) {
+        const partes = item.mes.split('-');
+        const numeroMes = parseInt(partes[1]);
+        const nombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return nombresMeses[numeroMes - 1] || item.mes;
+      }
+      return item.mes;
+    });
+    
+    // Datos para transacciones (cantidad)
+    const transacciones = this.ventasMensuales.map(item => item.cantidad || 0);
 
     this.ventasPorMesData = {
       labels: meses,
       datasets: [
         {
-          label: 'Ventas por Mes',
-          data: totales,
-          fill: false,
-          borderColor: documentStyle.getPropertyValue('--primary-500'),
+          label: 'Número de Ventas',
+          data: transacciones,
+          fill: true,
+          borderColor: documentStyle.getPropertyValue('--primary-500') || '#4f46e5',
+          backgroundColor: 'rgba(79, 70, 229, 0.2)',
           tension: 0.4,
-          backgroundColor: 'rgba(99, 102, 241, 0.2)',
           borderWidth: 2
         }
       ]
@@ -169,14 +211,6 @@ export class DashboardComponent implements OnInit {
     this.ventasPorMesOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      layout: {
-        padding: {
-          left: 20,
-          right: 20,
-          top: 30,
-          bottom: 30
-        }
-      },
       plugins: {
         legend: {
           labels: {
@@ -217,12 +251,14 @@ export class DashboardComponent implements OnInit {
           }
         },
         y: {
+          beginAtZero: true,
           ticks: {
             color: textColorSecondary,
             font: {
               size: 11
             },
-            padding: 5
+            padding: 5,
+            stepSize: 1
           },
           grid: {
             color: surfaceBorder,
@@ -234,109 +270,119 @@ export class DashboardComponent implements OnInit {
   }
 
   inicializarGraficaProductos() {
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary');
-    const surfaceBorder = documentStyle.getPropertyValue('--surface-border');
+  const documentStyle = getComputedStyle(document.documentElement);
+  const textColor = documentStyle.getPropertyValue('--text-color') || '#495057';
+  const textColorSecondary = documentStyle.getPropertyValue('--text-color-secondary') || '#6c757d';
+  const surfaceBorder = documentStyle.getPropertyValue('--surface-border') || '#dee2e6';
 
-    const productos = this.productosMasVendidos.map(item => item.producto);
-    const cantidades = this.productosMasVendidos.map(item => item.cantidad_vendida);
-
-    // Encontrar el producto más vendido
-    const productoTop = this.productosMasVendidos[0];
-    this.productoMasVendido = productoTop ? `${productoTop.producto} (${productoTop.cantidad_vendida} unidades)` : 'N/A';
-
+  // Verificar que hay datos
+  if (!this.productosMasVendidos || this.productosMasVendidos.length === 0) {
     this.productosMasVendidosData = {
-      labels: productos,
-      datasets: [
-        {
-          label: 'Unidades Vendidas',
-          data: cantidades,
-          backgroundColor: [
-            documentStyle.getPropertyValue('--primary-500'),
-            documentStyle.getPropertyValue('--primary-400'),
-            documentStyle.getPropertyValue('--primary-300'),
-            documentStyle.getPropertyValue('--primary-200'),
-            documentStyle.getPropertyValue('--primary-100'),
-            documentStyle.getPropertyValue('--blue-500'),
-            documentStyle.getPropertyValue('--green-500'),
-            documentStyle.getPropertyValue('--yellow-500'),
-            documentStyle.getPropertyValue('--cyan-500'),
-            documentStyle.getPropertyValue('--pink-500')
-          ],
-          borderColor: documentStyle.getPropertyValue('--surface-border'),
-          borderWidth: 1
-        }
-      ]
+      labels: ['Sin datos'],
+      datasets: [{
+        label: 'Sin datos disponibles',
+        data: [0],
+        backgroundColor: ['#e9ecef']
+      }]
     };
-
+    
     this.productosMasVendidosOptions = {
       responsive: true,
-      maintainAspectRatio: false,
-      layout: {
-        padding: {
-          left: 20,
-          right: 20,
-          top: 30,
-          bottom: 40
+      maintainAspectRatio: false
+    };
+    
+    return;
+  }
+
+  const productos = this.productosMasVendidos.map(item => item.producto?.nombre || 'Sin nombre');
+  const cantidades = this.productosMasVendidos.map(item => item.cantidadVendida || 0);
+
+  // Colores dinámicos
+  const colores = [
+    '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', 
+    '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
+  ];
+
+  this.productosMasVendidosData = {
+    labels: productos,
+    datasets: [
+      {
+        label: 'Unidades Vendidas',
+        data: cantidades,
+        backgroundColor: colores.slice(0, productos.length),
+        borderColor: '#ffffff',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  this.productosMasVendidosOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y', // Esto hace que las barras sean horizontales
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: textColor,
+          font: {
+            size: 12
+          }
         }
       },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            color: textColor,
-            font: {
-              size: 12
-            }
-          }
+      title: {
+        display: true,
+        text: `Top ${this.productosMasVendidos.length} Productos - ${this.anioSeleccionado}`,
+        color: textColor,
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        padding: {
+          top: 10,
+          bottom: 20
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          color: textColorSecondary,
+          font: {
+            size: 11
+          },
+          stepSize: 1
+        },
+        grid: {
+          color: surfaceBorder,
+          drawBorder: false
         },
         title: {
           display: true,
-          text: `Productos Más Vendidos - ${this.anioSeleccionado}`,
+          text: 'Cantidad Vendida',
           color: textColor,
           font: {
-            size: 16,
+            size: 12,
             weight: 'bold'
-          },
-          padding: {
-            top: 10,
-            bottom: 20
           }
         }
       },
-      scales: {
-        x: {
-          ticks: {
-            color: textColorSecondary,
-            font: {
-              size: 10
-            },
-            maxRotation: 45,
-            minRotation: 45,
-            padding: 5
-          },
-          grid: {
-            color: surfaceBorder,
-            drawBorder: false
+      y: {
+        ticks: {
+          color: textColorSecondary,
+          font: {
+            size: 11
           }
         },
-        y: {
-          ticks: {
-            color: textColorSecondary,
-            font: {
-              size: 11
-            },
-            padding: 5
-          },
-          grid: {
-            color: surfaceBorder,
-            drawBorder: false
-          }
+        grid: {
+          color: surfaceBorder,
+          drawBorder: false
         }
       }
-    };
-  }
+    }
+  };
+}
 
   aplicarFiltros() {
     this.cargarVentasPorMes();
@@ -350,15 +396,14 @@ export class DashboardComponent implements OnInit {
     this.aplicarFiltros();
   }
 
-  // Y agrega estos métodos para los cálculos de porcentaje:
-getProgressWidth(producto: any): string {
-  const maxValue = this.productosMasVendidos[0]?.cantidad_vendida || 1;
-  return `${(producto.cantidad_vendida / maxValue) * 100}%`;
-}
+  // Métodos para cálculos de porcentaje en la tabla
+  getProgressWidth(producto: any): string {
+    const maxValue = this.productosMasVendidos[0]?.cantidadVendida || 1;
+    return `${(producto.cantidadVendida / maxValue) * 100}%`;
+  }
 
-getProgressPercentage(producto: any): number {
-  const maxValue = this.productosMasVendidos[0]?.cantidad_vendida || 1;
-  return (producto.cantidad_vendida / maxValue) * 100;
-}
-
+  getProgressPercentage(producto: any): number {
+    const maxValue = this.productosMasVendidos[0]?.cantidadVendida || 1;
+    return (producto.cantidadVendida / maxValue) * 100;
+  }
 }

@@ -963,7 +963,7 @@ export const crearVentaCompletaConComprobante = async (req: Request, res: Respon
           idventa: nuevaVenta.id,
           precio_venta_real: detalle.precio_venta_real,
           subtotal_real: subtotal,
-          idestado: EstadoGeneral.REGISTRADO
+          idestado: VentaEstado.REGISTRADO
         }, { transaction });
 
         detallesVentaCreados.push(nuevoDetalleVenta);
