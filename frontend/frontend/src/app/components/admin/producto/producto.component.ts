@@ -33,7 +33,7 @@ import { environment } from '../../../enviroments/environment';
 export class ProductoComponent implements OnInit {
 
   loading: boolean = true;
-  rutaUrl : string = environment.endpoint+"uploads/productos/"
+  rutaUrl : string = environment.endpointWs+"/uploads/productos/"
   editarProducto: boolean = false;
   abrirModalProducto: boolean = false;
   abrirModalMarca: boolean = false;
