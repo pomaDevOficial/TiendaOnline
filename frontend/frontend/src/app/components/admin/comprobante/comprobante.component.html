@@ -352,7 +352,7 @@
       </ng-template>
       <ng-template pTemplate="body" let-detalle>
         <tr>
-          <td>{{ detalle.LoteTalla?.Lote?.Producto?.nombre || 'N/A' }}</td>
+          <td>{{ detalle.LoteTalla?.Lote?.Producto?.nombre || 'N/A' }} {{ detalle.LoteTalla?.Talla?.nombre || 'N/A' }} </td>
           <td>{{ detalle.cantidad }}</td>
           <td>S/ {{ detalle.precio | number:'1.2-2' }}</td>
           <td>S/ {{ (detalle.cantidad * detalle.precio) | number:'1.2-2' }}</td>

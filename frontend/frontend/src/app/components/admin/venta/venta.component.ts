@@ -731,4 +731,44 @@ filtrarClientes(event: any) {
   getTotalItems(): number {
     return this.cartItems.reduce((total, item) => total + item.cantidad, 0);
   }
+
+  aumentarCantidad(item: CartItem) {
+  const nuevaCantidad = item.cantidad + 1;
+
+  this.verificarStockDisponible(item.loteTallaId, nuevaCantidad).subscribe({
+    next: (stockDisponible) => {
+      if (!stockDisponible) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Stock insuficiente',
+          detail: 'No hay suficiente stock para aumentar la cantidad'
+        });
+        return;
+      }
+
+      item.cantidad = nuevaCantidad;
+      item.subtotal = item.cantidad * item.precio;
+      this.calcularTotal();
+    },
+    error: () => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo verificar el stock'
+      });
+    }
+  });
+}
+
+disminuirCantidad(item: CartItem) {
+  if (item.cantidad > 1) {
+    item.cantidad -= 1;
+    item.subtotal = item.cantidad * item.precio;
+    this.calcularTotal();
+  } else {
+    // Si baja a 0, lo eliminamos
+    this.eliminarDelCarrito(item);
+  }
+}
+
 }

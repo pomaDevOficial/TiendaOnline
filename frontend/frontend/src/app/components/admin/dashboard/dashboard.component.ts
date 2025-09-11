@@ -382,7 +382,7 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
-}
+}  
 
   aplicarFiltros() {
     this.cargarVentasPorMes();

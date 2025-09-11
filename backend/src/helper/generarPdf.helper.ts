@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode'; // Asegúrate de instalar esta dependencia: npm install qrcode
 import Comprobante from '../models/comprobante.model';
 import Venta from '../models/venta.model';
 import Pedido from '../models/pedido.model';
@@ -19,9 +20,26 @@ import Producto from '../models/producto.model';
 const ID_INSTANCE = "7105309578";
 const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
 
-// Función para generar PDF en formato voucher
+// Función para generar QR
+const generarQR = async (datos: string): Promise<string> => {
+  try {
+    return await QRCode.toDataURL(datos, {
+      width: 100,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+  } catch (err) {
+    console.error('Error generando QR:', err);
+    return '';
+  }
+};
+
+// Función para generar PDF en formato voucher mejorado
 export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, pedido: any, detallesVenta: any[]): Promise<string> => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       // Crear nombre de archivo único
       const filename = `comprobante_${comprobante.numserie}.pdf`;
@@ -32,127 +50,366 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
       }
 
-      // Crear documento PDF (tamaño voucher: 80mm ancho ≈ 226.77 puntos)
+      // Crear documento PDF (tamaño ticket 80mm = 226.77 puntos de ancho)
       const doc = new PDFDocument({ 
-        size: [226.77, 600], // Ancho fijo, alto variable
-        margin: 10 
+        size: [226.77, 800], // Aumentamos el alto inicial
+        margin: 8 
       });
 
       // Pipe el PDF a un archivo
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      // Estilos
-      const fontSizeSmall = 8;
-      const fontSizeNormal = 10;
-      const fontSizeLarge = 12;
-      const lineHeight = 5;
+      // Configuración de estilos
+      const styles = {
+        header: { size: 14, font: 'Helvetica-Bold' },
+        subheader: { size: 10, font: 'Helvetica-Bold' },
+        normal: { size: 9, font: 'Helvetica' },
+        small: { size: 7, font: 'Helvetica' },
+        tiny: { size: 6, font: 'Helvetica' }
+      };
 
-      // Encabezado
-      doc.fontSize(fontSizeLarge)
-         .font('Helvetica-Bold')
-         .text('MI EMPRESA', { align: 'center' });
+      const pageWidth = 226.77 - 16; // Ancho menos márgenes
+      let currentY = 15;
+
+      // === ENCABEZADO EMPRESA ===
+      doc.fontSize(styles.header.size)
+         .font(styles.header.font)
+         .text('MI TIENDA DE ROPA', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
       
-      doc.moveDown(0.5);
-      doc.fontSize(fontSizeNormal)
-         .text('RUC: 20123456789', { align: 'center' });
+      currentY += 20;
+
+      doc.fontSize(styles.small.size)
+         .font(styles.normal.font)
+         .text('Av. Principal 123, Lima - Peru', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
       
-      doc.moveDown(0.5);
-      doc.text('BOLETA DE VENTA ELECTRÓNICA', { align: 'center' });
+      currentY += 12;
+
+      doc.text('Telf: (01) 234-5678 | Cel: 987-654-321', 8, currentY, { 
+        width: pageWidth, 
+        align: 'center' 
+      });
       
-      // Línea separadora
-      doc.moveTo(doc.x, doc.y + lineHeight)
-         .lineTo(doc.x + 206.77, doc.y + lineHeight)
+      currentY += 12;
+
+      doc.text('RUC: 20123456789', 8, currentY, { 
+        width: pageWidth, 
+        align: 'center' 
+      });
+      
+      currentY += 15;
+
+      // Línea decorativa
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(1)
          .stroke();
       
-      doc.moveDown();
+      currentY += 10;
 
-      // Información del comprobante
-      doc.fontSize(fontSizeNormal)
-         .font('Helvetica-Bold')
-         .text(`${comprobante.TipoComprobante?.nombre || 'BOLETA'}: ${comprobante.numserie}`, { align: 'left' });
+      // === TIPO DE COMPROBANTE ===
+      const tipoComprobante = comprobante.TipoComprobante?.nombre || 'BOLETA DE VENTA';
+      doc.fontSize(styles.subheader.size)
+         .font(styles.subheader.font)
+         .text(`${tipoComprobante} ELECTRONICA`, 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
       
-      doc.font('Helvetica')
-         .fontSize(fontSizeSmall)
-         .text(`Fecha: ${new Date(venta.fechaventa).toLocaleDateString()}`, { align: 'left' });
-      
-      doc.moveDown();
+      currentY += 15;
 
-      // Información del cliente
-      doc.font('Helvetica-Bold')
-         .text('CLIENTE:', { align: 'left' });
+      doc.fontSize(styles.normal.size)
+         .font(styles.subheader.font)
+         .text(`N ${comprobante.numserie}`, 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
       
-      doc.font('Helvetica')
-         .text(`${pedido.Persona?.nombre || 'CLIENTE GENERAL'}`, { align: 'left' });
-      
-      if (pedido.Persona?.documento) {
-        doc.text(`DOC: ${pedido.Persona.documento}`, { align: 'left' });
-      }
-      
-      doc.moveDown();
+      currentY += 20;
 
       // Línea separadora
-      doc.moveTo(doc.x, doc.y + lineHeight)
-         .lineTo(doc.x + 206.77, doc.y + lineHeight)
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(0.5)
          .stroke();
       
-      doc.moveDown();
+      currentY += 8;
 
-      // Detalles de productos
-      doc.font('Helvetica-Bold')
-         .text('DESCRIPCIÓN', 10, doc.y, { width: 120, align: 'left' })
-         .text('CANT', 130, doc.y, { width: 30, align: 'right' })
-         .text('TOTAL', 160, doc.y, { width: 50, align: 'right' });
-      
-      doc.moveDown(0.5);
-
-      // Línea separadora
-      doc.moveTo(doc.x, doc.y + lineHeight)
-         .lineTo(doc.x + 206.77, doc.y + lineHeight)
-         .stroke();
-      
-      doc.moveDown(0.5);
-
-      // Productos
-      detallesVenta.forEach(detalle => {
-        const producto = detalle.PedidoDetalle?.LoteTalla?.Lote?.Producto?.nombre || 'Producto';
-        const cantidad = detalle.PedidoDetalle?.cantidad || 0;
-        const precio = detalle.precio_venta_real || 0;
-        const total = cantidad * precio;
-
-        doc.font('Helvetica')
-           .fontSize(fontSizeSmall)
-           .text(producto.substring(0, 20), 10, doc.y, { width: 120, align: 'left' })
-           .text(cantidad.toString(), 130, doc.y, { width: 30, align: 'right' })
-           .text(`S/. ${total}`, 160, doc.y, { width: 50, align: 'right' });
-        
-        doc.moveDown(0.5);
+      // === INFORMACIÓN DE LA VENTA ===
+      const fechaVenta = new Date(venta.fechaventa);
+      const fechaFormateada = fechaVenta.toLocaleDateString('es-PE', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+      });
+      const horaFormateada = fechaVenta.toLocaleTimeString('es-PE', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
 
-      // Línea separadora
-      doc.moveTo(doc.x, doc.y + lineHeight)
-         .lineTo(doc.x + 206.77, doc.y + lineHeight)
+      doc.fontSize(styles.normal.size)
+         .font(styles.normal.font)
+         .text(`Fecha: ${fechaFormateada}`, 8, currentY)
+         .text(`Hora: ${horaFormateada}`, 8, currentY + 12);
+      
+      currentY += 30;
+
+      // === INFORMACIÓN DEL CLIENTE ===
+      doc.fontSize(styles.subheader.size)
+         .font(styles.subheader.font)
+         .text('CLIENTE:', 8, currentY);
+      
+      currentY += 12;
+
+      const clienteNombre = pedido.Persona?.nombres 
+        ? `${pedido.Persona.nombres} ${pedido.Persona.apellidos || ''}`.trim()
+        : 'CLIENTE GENERAL';
+
+      doc.fontSize(styles.normal.size)
+         .font(styles.normal.font)
+         .text(clienteNombre.substring(0, 28), 8, currentY);
+      
+      currentY += 12;
+
+      if (pedido.Persona?.nroidentidad) {
+        const tipoDoc = pedido.Persona?.TipoIdentidad?.nombre || 'DOC';
+        doc.text(`${tipoDoc}: ${pedido.Persona.nroidentidad}`, 8, currentY);
+        currentY += 12;
+      }
+
+      if (pedido.Persona?.telefono) {
+        doc.text(`Telf: ${pedido.Persona.telefono}`, 8, currentY);
+        currentY += 12;
+      }
+      
+      currentY += 8;
+
+      // Línea separadora doble
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(1)
          .stroke();
       
-      doc.moveDown();
+      currentY += 5;
 
-      // Totales
-      doc.font('Helvetica-Bold')
-         .text(`SUBTOTAL: S/. ${(comprobante.total - comprobante.igv)}`, { align: 'right' });
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(0.5)
+         .stroke();
       
-      doc.text(`IGV (18%): S/. ${comprobante.igv}`, { align: 'right' });
-      
-      doc.fontSize(fontSizeLarge)
-         .text(`TOTAL: S/. ${comprobante.total}`, { align: 'right' });
-      
-      doc.moveDown();
+      currentY += 10;
 
-      // Pie de página
-      doc.fontSize(fontSizeSmall)
-         .font('Helvetica')
-         .text('¡Gracias por su compra!', { align: 'center' });
+      // === ENCABEZADO DE PRODUCTOS ===
+      doc.fontSize(styles.small.size)
+         .font(styles.subheader.font)
+         .text('DESCRIPCION', 8, currentY, { width: 120, align: 'left' })
+         .text('CANT', 130, currentY, { width: 35, align: 'center' })
+         .text('P.UNIT', 165, currentY, { width: 30, align: 'right' })
+         .text('TOTAL', 195, currentY, { width: 30, align: 'right' });
       
-      doc.text('Contacto: +51 987 654 321', { align: 'center' });
+      currentY += 10;
+
+      // Línea separadora
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(0.5)
+         .stroke();
+      
+      currentY += 8;
+
+      // === DETALLES DE PRODUCTOS ===
+      let subtotalGeneral = 0;
+
+      detallesVenta.forEach((detalle, index) => {
+        const producto = detalle.PedidoDetalle?.LoteTalla?.Lote?.Producto;
+        const nombreProducto = producto?.nombre || 'Producto sin nombre';
+        const marca = producto?.Marca?.nombre || '';
+        const talla = detalle.PedidoDetalle?.LoteTalla?.Talla?.nombre || '';
+        
+        const cantidad = detalle.PedidoDetalle?.cantidad || 0;
+        const precioUnitario = detalle.precio_venta_real || 0;
+        const total = cantidad * precioUnitario;
+        subtotalGeneral += total;
+
+        // Formatear números a dos decimales
+        const precioFormateado = Math.round(precioUnitario * 100) / 100;
+        const totalFormateado = Math.round(total * 100) / 100;
+
+        // Nombre del producto (dividir en líneas si es muy largo)
+        let descripcion = nombreProducto;
+        if (marca) descripcion += ` ${marca}`;
+        if (talla) descripcion += ` - T.${talla}`;
+
+        // Dividir descripción si es muy larga
+        const maxChars = 18;
+        if (descripcion.length > maxChars) {
+          const linea1 = descripcion.substring(0, maxChars);
+          const linea2 = descripcion.substring(maxChars, maxChars * 2);
+          
+          doc.fontSize(styles.small.size)
+             .font(styles.normal.font)
+             .text(linea1, 8, currentY, { width: 120, align: 'left' });
+          currentY += 9;
+          
+          if (linea2) {
+            doc.text(linea2, 8, currentY, { width: 120, align: 'left' });
+            currentY += 9;
+          }
+        } else {
+          doc.fontSize(styles.small.size)
+             .font(styles.normal.font)
+             .text(descripcion, 8, currentY, { width: 120, align: 'left' });
+          currentY += 9;
+        }
+
+        // Cantidad, precio unitario y total (en la última línea del producto)
+        const lineaTotal = currentY - 9;
+        doc.text(cantidad.toString(), 130, lineaTotal, { width: 35, align: 'center' })
+           .text(precioFormateado.toString(), 165, lineaTotal, { width: 30, align: 'right' })
+           .text(totalFormateado.toString(), 195, lineaTotal, { width: 30, align: 'right' });
+
+        // Espacio entre productos
+        if (index < detallesVenta.length - 1) {
+          currentY += 5;
+          // Línea punteada sutil
+          doc.moveTo(8, currentY)
+             .lineTo(pageWidth + 8, currentY)
+             .lineWidth(0.2)
+             .dash(2, { space: 2 })
+             .stroke()
+             .undash();
+          currentY += 5;
+        } else {
+          currentY += 8;
+        }
+      });
+
+      // === TOTALES ===
+      // Línea separadora doble para totales
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(1)
+         .stroke();
+      
+      currentY += 8;
+
+      // Calcular IGV (0.00 en tu caso)
+      const igv = 0.00;
+      const total = comprobante.total || 0;
+      const subtotal = total - igv;
+
+      doc.fontSize(styles.normal.size)
+         .font(styles.normal.font);
+
+      // Mostrar subtotal e IGV (siempre 0.00)
+      doc.text('SUBTOTAL:', 120, currentY, { width: 60, align: 'left' })
+         .text(`S/ ${subtotal.toString()}`, 180, currentY, { width: 40, align: 'right' });
+      currentY += 12;
+
+      // IGV siempre 0.00
+      doc.text('IGV (0%):', 120, currentY, { width: 60, align: 'left' })
+         .text(`S/ ${igv.toString()}`, 180, currentY, { width: 40, align: 'right' });
+      currentY += 15;
+
+      // Total final
+      doc.fontSize(styles.subheader.size)
+         .font(styles.subheader.font)
+         .text('TOTAL:', 120, currentY, { width: 60, align: 'left' })
+         .text(`S/ ${total.toString()}`, 180, currentY, { width: 40, align: 'right' });
+      
+      currentY += 20;
+
+      // === PREPARAR DATOS PARA EL QR ===
+      const datosQR = {
+        empresa: 'MI TIENDA DE ROPA',
+        ruc: '20123456789',
+        comprobante: tipoComprobante,
+        serie: comprobante.numserie,
+        fecha: fechaFormateada,
+        hora: horaFormateada,
+        cliente: clienteNombre,
+        total: total.toString(),
+        igv: igv.toString()
+      };
+
+      const datosQRString = JSON.stringify(datosQR);
+      const qrCodeDataURL = await generarQR(datosQRString);
+
+      // === PIE DE PÁGINA ===
+      // Línea decorativa
+      doc.moveTo(8, currentY)
+         .lineTo(pageWidth + 8, currentY)
+         .lineWidth(0.5)
+         .stroke();
+      
+      currentY += 12;
+
+      doc.fontSize(styles.normal.size)
+         .font(styles.subheader.font)
+         .text('GRACIAS POR SU COMPRA!', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
+      
+      currentY += 15;
+
+      // === CÓDIGO QR ===
+      if (qrCodeDataURL) {
+        // Agregar código QR al PDF
+        doc.image(qrCodeDataURL, pageWidth / 2 - 30, currentY, { 
+          width: 60, 
+          height: 60 
+        });
+        currentY += 70;
+      }
+
+      doc.fontSize(styles.small.size)
+         .font(styles.normal.font)
+         .text('Su satisfaccion es nuestra prioridad', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
+      
+      currentY += 12;
+
+      doc.text('WhatsApp: +51 987-654-321', 8, currentY, { 
+        width: pageWidth, 
+        align: 'center' 
+      });
+      
+      currentY += 10;
+
+      doc.fontSize(styles.tiny.size)
+         .text('Email: ventas@mitienda.com', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
+      
+      currentY += 10;
+
+      doc.text('Web: www.mitienda.com', 8, currentY, { 
+        width: pageWidth, 
+        align: 'center' 
+      });
+
+      currentY += 15;
+      doc.fontSize(styles.tiny.size)
+         .text('----- COMPROBANTE ELECTRONICO -----', 8, currentY, { 
+           width: pageWidth, 
+           align: 'center' 
+         });
+
+      currentY += 8;
+      doc.text(`Serie: ${comprobante.numserie}`, 8, currentY, { 
+        width: pageWidth, 
+        align: 'center' 
+      });
 
       // Finalizar documento
       doc.end();
@@ -171,4 +428,3 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
     }
   });
 };
-
