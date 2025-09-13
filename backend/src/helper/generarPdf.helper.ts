@@ -2,23 +2,25 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import FormData from 'form-data';
 import PDFDocument from 'pdfkit';
-import QRCode from 'qrcode'; // Asegúrate de instalar esta dependencia: npm install qrcode
-import Comprobante from '../models/comprobante.model';
-import Venta from '../models/venta.model';
-import Pedido from '../models/pedido.model';
-import Persona from '../models/persona.model';
-import TipoComprobante from '../models/tipo_comprobante.model';
-import DetalleVenta from '../models/detalle_venta.model';
-import PedidoDetalle from '../models/pedido_detalle.model';
-import LoteTalla from '../models/lote_talla.model';
-import Lote from '../models/lote.model';
-import Producto from '../models/producto.model';
+import QRCode from 'qrcode';
+import dotenv from 'dotenv';
 
-// Configuración de GreenAPI
-const ID_INSTANCE = "7105309578";
-const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
+dotenv.config();
+
+// Configuración de la empresa desde variables de entorno
+const empresaConfig = {
+  nombre: process.env.EMPRESA_NOMBRE || 'MI TIENDA DE ROPA',
+  direccion: process.env.EMPRESA_DIRECCION || 'Av. Principal 123, Lima - Peru',
+  telefono: process.env.EMPRESA_TELEFONO || '(01) 234-5678',
+  celular: process.env.EMPRESA_CELULAR || '987-654-321',
+  ruc: process.env.EMPRESA_RUC || '20123456789',
+  email: process.env.EMPRESA_EMAIL || 'ventas@mitienda.com',
+  web: process.env.EMPRESA_WEB || 'www.mitienda.com',
+  whatsapp: process.env.EMPRESA_WHATSAPP || '+51 987-654-321',
+  igv: parseFloat(process.env.IMPUESTO_IGV || '0.00'),
+  porcentajeIgv: parseInt(process.env.IMPUESTO_PORCENTAJE || '0')
+};
 
 // Función para generar QR
 const generarQR = async (datos: string): Promise<string> => {
@@ -75,7 +77,7 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
       // === ENCABEZADO EMPRESA ===
       doc.fontSize(styles.header.size)
          .font(styles.header.font)
-         .text('MI TIENDA DE ROPA', 8, currentY, { 
+         .text(empresaConfig.nombre, 8, currentY, { 
            width: pageWidth, 
            align: 'center' 
          });
@@ -84,21 +86,21 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
 
       doc.fontSize(styles.small.size)
          .font(styles.normal.font)
-         .text('Av. Principal 123, Lima - Peru', 8, currentY, { 
+         .text(empresaConfig.direccion, 8, currentY, { 
            width: pageWidth, 
            align: 'center' 
          });
       
       currentY += 12;
 
-      doc.text('Telf: (01) 234-5678 | Cel: 987-654-321', 8, currentY, { 
+      doc.text(`Telf: ${empresaConfig.telefono} | Cel: ${empresaConfig.celular}`, 8, currentY, { 
         width: pageWidth, 
         align: 'center' 
       });
       
       currentY += 12;
 
-      doc.text('RUC: 20123456789', 8, currentY, { 
+      doc.text(`RUC: ${empresaConfig.ruc}`, 8, currentY, { 
         width: pageWidth, 
         align: 'center' 
       });
@@ -299,43 +301,46 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
       
       currentY += 8;
 
-      // Calcular IGV (0.00 en tu caso)
-      const igv = 0.00;
-      const total = comprobante.total || 0;
-      const subtotal = total - igv;
+      // Calcular IGV según configuración
+      const igv = empresaConfig.porcentajeIgv > 0 
+        ? (subtotalGeneral * empresaConfig.porcentajeIgv) / 100 
+        : 0.00;
+      
+      const totalVenta = subtotalGeneral + igv;
+      const subtotal = subtotalGeneral;
 
       doc.fontSize(styles.normal.size)
          .font(styles.normal.font);
 
-      // Mostrar subtotal e IGV (siempre 0.00)
+      // Mostrar subtotal
       doc.text('SUBTOTAL:', 120, currentY, { width: 60, align: 'left' })
-         .text(`S/ ${subtotal.toString()}`, 180, currentY, { width: 40, align: 'right' });
+         .text(`S/ ${subtotal.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
       currentY += 12;
 
-      // IGV siempre 0.00
-      doc.text('IGV (0%):', 120, currentY, { width: 60, align: 'left' })
-         .text(`S/ ${igv.toString()}`, 180, currentY, { width: 40, align: 'right' });
+      // Mostrar IGV con el porcentaje configurado
+      doc.text(`IGV (${empresaConfig.porcentajeIgv}%):`, 120, currentY, { width: 60, align: 'left' })
+         .text(`S/ ${igv.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
       currentY += 15;
 
       // Total final
       doc.fontSize(styles.subheader.size)
          .font(styles.subheader.font)
          .text('TOTAL:', 120, currentY, { width: 60, align: 'left' })
-         .text(`S/ ${total.toString()}`, 180, currentY, { width: 40, align: 'right' });
+         .text(`S/ ${totalVenta.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
       
       currentY += 20;
 
       // === PREPARAR DATOS PARA EL QR ===
       const datosQR = {
-        empresa: 'MI TIENDA DE ROPA',
-        ruc: '20123456789',
+        empresa: empresaConfig.nombre,
+        ruc: empresaConfig.ruc,
         comprobante: tipoComprobante,
         serie: comprobante.numserie,
         fecha: fechaFormateada,
         hora: horaFormateada,
         cliente: clienteNombre,
-        total: total.toString(),
-        igv: igv.toString()
+        total: totalVenta.toFixed(2),
+        igv: igv.toFixed(2)
       };
 
       const datosQRString = JSON.stringify(datosQR);
@@ -378,7 +383,7 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
       
       currentY += 12;
 
-      doc.text('WhatsApp: +51 987-654-321', 8, currentY, { 
+      doc.text(`WhatsApp: ${empresaConfig.whatsapp}`, 8, currentY, { 
         width: pageWidth, 
         align: 'center' 
       });
@@ -386,14 +391,14 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
       currentY += 10;
 
       doc.fontSize(styles.tiny.size)
-         .text('Email: ventas@mitienda.com', 8, currentY, { 
+         .text(`Email: ${empresaConfig.email}`, 8, currentY, { 
            width: pageWidth, 
            align: 'center' 
          });
       
       currentY += 10;
 
-      doc.text('Web: www.mitienda.com', 8, currentY, { 
+      doc.text(`Web: ${empresaConfig.web}`, 8, currentY, { 
         width: pageWidth, 
         align: 'center' 
       });
