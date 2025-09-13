@@ -1,0 +1,76 @@
+<!-- Overlay -->
+<div class="cart-overlay" [class.active]="isOpen" (click)="onClose()"></div>
+
+<!-- Carrito Lateral -->
+<div class="cart-modal" [class.active]="isOpen">
+  <div class="cart-header">
+    <h3 class="cart-title">
+      <i class="fas fa-shopping-bag"></i>
+      Mi Carrito
+    </h3>
+    <button class="cart-close" (click)="onClose()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div class="cart-content">
+    <!-- Estado vacío -->
+    <div class="cart-empty" *ngIf="cartItems.length === 0">
+      <div class="cart-empty-icon">🛒</div>
+      <h3>Tu carrito está vacío</h3>
+      <p>Explora nuestros productos y encuentra las mejores ofertas.</p>
+      <button class="cart-empty-btn" (click)="onClose()">
+        Explorar Productos
+      </button>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="cart-items" *ngIf="cartItems.length > 0">
+      <div class="cart-item" *ngFor="let item of cartItems">
+        <div class="cart-item-image">{{ item.nombre.charAt(0) }}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">{{ item.nombre }}</div>
+          <div class="cart-item-category">{{ item.categoria }}{{ item.talla ? ' | Talla: ' + item.talla : '' }}</div>
+          <div class="cart-item-price">S/ {{ item.precio.toFixed(2) }}</div>
+          <div class="cart-item-controls">
+            <div class="quantity-controls">
+              <button class="quantity-btn" (click)="updateQuantity(item, -1)">−</button>
+              <span class="quantity-display">{{ item.quantity }}</span>
+              <button class="quantity-btn" (click)="updateQuantity(item, 1)">+</button>
+            </div>
+            <button class="remove-item" (click)="removeItem(item)" title="Eliminar producto">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-footer" *ngIf="cartItems.length > 0">
+    <div class="cart-summary">
+      <div class="cart-summary-row">
+        <span>Subtotal:</span>
+        <span>S/ {{ subtotal.toFixed(2) }}</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>Envío:</span>
+        <span>{{ shipping === 0 ? 'Gratis' : 'S/ ' + shipping.toFixed(2) }}</span>
+      </div>
+      <div class="cart-summary-row total">
+        <span>Total:</span>
+        <span>S/ {{ total.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="cart-actions">
+      <button class="checkout-btn" (click)="checkout()">
+        <i class="fas fa-credit-card"></i>
+        Proceder al Pago
+      </button>
+      <button class="continue-shopping" (click)="onClose()">
+        Seguir Comprando
+      </button>
+    </div>
+  </div>
+</div>

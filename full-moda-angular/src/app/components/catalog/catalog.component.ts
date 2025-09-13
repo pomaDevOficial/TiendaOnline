@@ -1,0 +1,368 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil, combineLatest, debounceTime, distinctUntilChanged } from 'rxjs';
+import { ProductService, Product } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
+import { CartStateService } from '../../services/cart-state.service';
+import { ProductCardComponent } from '../product-card/product-card.component';
+import { CartComponent } from '../cart/cart.component';
+
+@Component({
+  selector: 'app-catalog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    ProductCardComponent
+  ],
+  templateUrl: './catalog.component.html',
+  styleUrl: './catalog.component.scss'
+})
+export class CatalogComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  filterForm!: FormGroup;
+  products: Product[] = [];
+  filteredProducts: Product[] = [];
+  brands: string[] = [];
+  categories: string[] = [];
+  isPreviewOpen = false;
+  selectedProduct: Product | null = null;
+  isSearching = false;
+  selectedSize: string = '';
+  previewQuantity: number = 1;
+  currentImageIndex = 0;
+  isImageZoomed = false;
+  currentStock: number = 0;
+
+  // Notification properties
+  showNotification = false;
+  notificationProduct: Product | null = null;
+  notificationQuantity: number = 1;
+
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+    private cartService: CartService,
+    private cartStateService: CartStateService
+  ) {}
+
+  ngOnInit(): void {
+    this.initializeForm();
+    this.loadData();
+    // Configurar filtros después de que los datos estén cargados
+    setTimeout(() => {
+      this.setupFilters();
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeForm(): void {
+    this.filterForm = this.fb.group({
+      search: [''],
+      gender: ['todos'],
+      brand: ['todas'],
+      sort: ['default']
+    });
+  }
+
+  private loadData(): void {
+    // Cargar productos directamente del servicio
+    this.products = this.productService.getCurrentProducts();
+    this.filteredProducts = [...this.products];
+
+    // Cargar marcas
+    this.brands = this.productService.getBrands();
+
+    // Cargar categorías
+    this.categories = this.productService.getCategories();
+  }
+
+  private setupFilters(): void {
+    // Configurar listeners simples para cada control
+    const searchControl = this.filterForm.get('search')!;
+    const genderControl = this.filterForm.get('gender')!;
+    const brandControl = this.filterForm.get('brand')!;
+    const sortControl = this.filterForm.get('sort')!;
+
+    // Listener para búsqueda con debounce manual
+    let searchTimeout: any;
+    searchControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        this.applyFiltersFromForm();
+      }, 300);
+    });
+
+    // Listeners simples para otros controles
+    genderControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFiltersFromForm();
+    });
+
+    brandControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFiltersFromForm();
+    });
+
+    sortControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFiltersFromForm();
+    });
+
+    // Aplicar filtros iniciales
+    this.applyFiltersFromForm();
+  }
+
+  applyFiltersFromForm(): void {
+    const search = this.filterForm.get('search')!.value || '';
+    const gender = this.filterForm.get('gender')!.value || 'todos';
+    const brand = this.filterForm.get('brand')!.value || 'todas';
+    const sort = this.filterForm.get('sort')!.value || 'default';
+
+    this.applyFilters(search, gender, brand, sort);
+  }
+
+  private applyFilters(search: string, gender: string, brand: string, sort: string): void {
+    // Activar indicador de búsqueda si hay término de búsqueda
+    this.isSearching = !!(search && search.trim());
+
+    let filtered = [...this.products];
+
+    // Filtro de búsqueda
+    if (search && search.trim()) {
+      const searchTerm = search.toLowerCase().trim();
+      filtered = filtered.filter(product =>
+        product.nombre.toLowerCase().includes(searchTerm) ||
+        product.marca.toLowerCase().includes(searchTerm) ||
+        product.categoria.toLowerCase().includes(searchTerm) ||
+        product.descripcion.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Filtro de género
+    if (gender && gender !== 'todos') {
+      filtered = filtered.filter(product => product.genero === gender);
+    }
+
+    // Filtro de marca
+    if (brand && brand !== 'todas') {
+      filtered = filtered.filter(product => product.marca === brand);
+    }
+
+    // Ordenamiento
+    this.sortProducts(filtered, sort);
+
+    this.filteredProducts = filtered;
+
+    // Desactivar indicador de búsqueda después de un breve delay
+    if (this.isSearching) {
+      setTimeout(() => {
+        this.isSearching = false;
+      }, 200);
+    }
+  }
+
+  private sortProducts(products: Product[], sort: string): void {
+    switch (sort) {
+      case 'precio-asc':
+        products.sort((a, b) => a.precio - b.precio);
+        break;
+      case 'precio-desc':
+        products.sort((a, b) => b.precio - a.precio);
+        break;
+      case 'nombre-asc':
+        products.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        break;
+      case 'nombre-desc':
+        products.sort((a, b) => b.nombre.localeCompare(a.nombre));
+        break;
+      case 'marca-asc':
+        products.sort((a, b) => a.marca.localeCompare(b.marca));
+        break;
+      default:
+        // Mantener orden original
+        break;
+    }
+  }
+
+  onProductAdded(product: Product): void {
+    this.showProductNotification(product, 1);
+  }
+
+  private showProductNotification(product: Product, quantity: number): void {
+    this.notificationProduct = product;
+    this.notificationQuantity = quantity;
+    this.showNotification = true;
+
+    // Auto-hide notification after 3 seconds
+    setTimeout(() => {
+      this.hideNotification();
+    }, 3000);
+  }
+
+  hideNotification(): void {
+    this.showNotification = false;
+    this.notificationProduct = null;
+    this.notificationQuantity = 1;
+  }
+
+  clearFilters(): void {
+    this.filterForm.patchValue({
+      search: '',
+      gender: 'todos',
+      brand: 'todas',
+      sort: 'default'
+    });
+    this.applyFiltersFromForm();
+  }
+
+  clearSearch(): void {
+    this.filterForm.patchValue({
+      search: ''
+    });
+    this.applyFiltersFromForm();
+  }
+
+  setSearchTerm(term: string): void {
+    this.filterForm.patchValue({
+      search: term
+    });
+    this.applyFiltersFromForm();
+  }
+
+  onSearchInput(event: any): void {
+    // Aplicar filtros inmediatamente cuando el usuario escribe
+    this.applyFiltersFromForm();
+  }
+
+  onGenderChange(): void {
+    this.applyFiltersFromForm();
+  }
+
+  onBrandChange(): void {
+    this.applyFiltersFromForm();
+  }
+
+  onSortChange(): void {
+    this.applyFiltersFromForm();
+  }
+
+
+  openProductPreview(event: {product: Product, selectedSize: string} | Product): void {
+    let product: Product;
+    let selectedSize: string = '';
+
+    if ('product' in event) {
+      product = event.product;
+      selectedSize = event.selectedSize;
+    } else {
+      product = event;
+    }
+
+    this.selectedProduct = product;
+    this.isPreviewOpen = true;
+    this.previewQuantity = 1;
+    this.currentImageIndex = 0;
+    this.isImageZoomed = false;
+
+    // Usar la talla seleccionada en el card, o la primera por defecto
+    if (selectedSize) {
+      this.selectedSize = selectedSize;
+    } else if (product.tallas && product.tallas.length > 0) {
+      this.selectedSize = product.tallas[0];
+    } else {
+      this.selectedSize = '';
+    }
+
+    // Set initial stock
+    this.currentStock = product.stockPorTalla?.[this.selectedSize] || product.stock;
+  }
+
+  closeProductPreview(): void {
+    this.isPreviewOpen = false;
+    this.selectedProduct = null;
+  }
+
+  addToCart(product: Product): void {
+    if (product && this.selectedSize) {
+      this.cartService.addToCart(product, this.previewQuantity, this.selectedSize);
+      this.showProductNotification(product, this.previewQuantity);
+    }
+  }
+
+  getProductCount(): number {
+    return this.filteredProducts.length;
+  }
+
+  selectSize(size: string): void {
+    this.selectedSize = size;
+    if (this.selectedProduct) {
+      this.currentStock = this.selectedProduct.stockPorTalla?.[size] || this.selectedProduct.stock;
+      // Reset quantity if it exceeds the new stock
+      if (this.previewQuantity > this.currentStock) {
+        this.previewQuantity = this.currentStock;
+      }
+    }
+  }
+
+  increaseQuantity(): void {
+    if (this.selectedProduct && this.previewQuantity < this.currentStock) {
+      this.previewQuantity++;
+    }
+  }
+
+  decreaseQuantity(): void {
+    if (this.previewQuantity > 1) {
+      this.previewQuantity--;
+    }
+  }
+
+  nextImage(): void {
+    if (this.selectedProduct?.imagenes) {
+      this.currentImageIndex = (this.currentImageIndex + 1) % this.selectedProduct.imagenes.length;
+    }
+  }
+
+  previousImage(): void {
+    if (this.selectedProduct?.imagenes) {
+      this.currentImageIndex = this.currentImageIndex === 0
+        ? this.selectedProduct.imagenes.length - 1
+        : this.currentImageIndex - 1;
+    }
+  }
+
+  goToImage(index: number): void {
+    if (this.selectedProduct?.imagenes && index >= 0 && index < this.selectedProduct.imagenes.length) {
+      this.currentImageIndex = index;
+    }
+  }
+
+  toggleImageZoom(): void {
+    this.isImageZoomed = !this.isImageZoomed;
+  }
+
+  closeImageZoom(): void {
+    this.isImageZoomed = false;
+  }
+
+  downloadImage(): void {
+    if (this.selectedProduct?.imagenes && this.selectedProduct.imagenes[this.currentImageIndex]) {
+      const link = document.createElement('a');
+      link.href = this.selectedProduct.imagenes[this.currentImageIndex];
+      link.download = `${this.selectedProduct.nombre}-imagen-${this.currentImageIndex + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  openCart(): void {
+    this.cartStateService.openCart();
+  }
+
+}

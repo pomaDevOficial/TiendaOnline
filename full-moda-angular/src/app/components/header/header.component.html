@@ -1,0 +1,140 @@
+<!-- Header Moderno -->
+<header class="header">
+  <div class="container flex justify-between items-center px-4 h-full">
+  <div class="flex items-center gap-2">
+    <div class="group text-center leading-tight cursor-pointer select-none">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150" class="w-auto h-20">
+          <!-- Texto FULL MODA -->
+          <text x="50%" y="60" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="48"
+                font-weight="800"
+                fill="black">
+            FULL MODA
+          </text>
+          
+          <!-- Texto ELURBISA E.I.R.L -->
+          <text x="50%" y="110" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="18"
+                font-weight="600"
+                fill="gray">
+            ELURBISA E.I.R.L
+          </text>
+        </svg>
+    </div>
+  </div>
+
+
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center gap-6">
+      <ul class="flex space-x-4">
+        <li><a routerLink="/" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-medium transition duration-300" style="text-decoration: none;">Inicio</a></li>
+        <li><a routerLink="/catalog" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-medium transition duration-300" style="text-decoration: none;">Catálogo</a></li>
+      </ul>
+      <button class="cart-btn truck-btn" [class.animating]="isTruckAnimating" (click)="toggleCart()">
+        <div class="truck-container">
+          <i class="fas fa-truck truck-icon" [class.animating]="isTruckAnimating"></i>
+          <div class="smoke-container" [class.active]="isTruckAnimating">
+            <div class="smoke smoke-1"></div>
+            <div class="smoke smoke-2"></div>
+            <div class="smoke smoke-3"></div>
+          </div>
+        </div>
+        <span class="cart-count" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+      </button>
+    </nav>
+
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden flex items-center gap-4">
+      <button class="cart-btn truck-btn mobile-cart" [class.animating]="isTruckAnimating" (click)="toggleCart()">
+        <div class="truck-container">
+          <i class="fas fa-truck truck-icon" [class.animating]="isTruckAnimating"></i>
+          <div class="smoke-container" [class.active]="isTruckAnimating">
+            <div class="smoke smoke-1"></div>
+            <div class="smoke smoke-2"></div>
+            <div class="smoke smoke-3"></div>
+          </div>
+        </div>
+        <span class="cart-count" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+      </button>
+      <button class="hamburger-btn" (click)="toggleMobileMenu()" [class.active]="isMobileMenuOpen">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer" [class.open]="isMobileMenuOpen">
+    <div class="drawer-overlay" (click)="closeMobileMenu()"></div>
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="logo-container-mobile group">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150" class="w-auto h-20">
+          <!-- Texto FULL MODA -->
+          <text x="50%" y="60" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="48"
+                font-weight="800"
+                fill="black">
+            FULL MODA
+          </text>
+          
+          <!-- Texto ELURBISA E.I.R.L -->
+          <text x="50%" y="110" text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="18"
+                font-weight="600"
+                fill="gray">
+            ELURBISA E.I.R.L
+          </text>
+        </svg>
+          </div>
+        </div>
+        <button class="close-drawer-btn" (click)="closeMobileMenu()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <nav class="drawer-nav">
+        <ul class="drawer-nav-list">
+          <li class="drawer-nav-item">
+            <a routerLink="/" class="drawer-nav-link" (click)="closeMobileMenu()">
+              <i class="fas fa-home mr-3"></i>
+              <span>Inicio</span>
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a routerLink="/catalog" class="drawer-nav-link" (click)="closeMobileMenu()">
+              <i class="fas fa-store mr-3"></i>
+              <span>Catálogo</span>
+            </a>
+          </li>
+          <li class="drawer-nav-item">
+            <a href="#ubicacion" class="drawer-nav-link" (click)="scrollToUbicacion(); closeMobileMenu()">
+              <i class="fas fa-map-marker-alt mr-3"></i>
+              <span>Ubicación</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="drawer-footer">
+        <div class="contact-info">
+          <div class="flex items-center gap-3 mb-2">
+            <i class="fas fa-phone text-purple-600"></i>
+            <span class="text-sm text-gray-600">+51 957 086 227</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <i class="fab fa-whatsapp text-green-600"></i>
+            <span class="text-sm text-gray-600">+51 974 684 266</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

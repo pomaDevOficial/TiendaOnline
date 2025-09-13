@@ -1,0 +1,235 @@
+<!-- Header -->
+<header class="header">
+  <div class="container flex justify-between items-center px-4 py-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+        TP
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-gray-800">Pedido Confirmado</h1>
+      </div>
+    </div>
+    <nav>
+      <ul class="flex space-x-6">
+        <li><a routerLink="/" class="text-gray-700 hover:text-purple-600 font-medium transition duration-300">Inicio</a></li>
+        <li><a routerLink="/catalog" class="text-gray-700 hover:text-purple-600 font-medium transition duration-300">Catálogo</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="container px-4 py-8" style="margin-top: 100px;">
+  <!-- Success Message -->
+  <div class="text-center mb-8">
+    <div class="success-animation inline-block mb-6">
+      <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center">
+        <i class="fas fa-check text-white text-3xl"></i>
+      </div>
+    </div>
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">¡Pedido Confirmado!</h1>
+    <p class="text-xl text-gray-600 mb-6">Tu pedido ha sido procesado exitosamente</p>
+    <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">
+      <i class="fas fa-clock mr-2"></i>
+      Procesando pedido...
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Detalles del Pedido -->
+    <div class="lg:col-span-2">
+      <!-- Información del Pedido -->
+      <div class="order-card">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">
+              <i class="fas fa-shopping-bag mr-3 text-purple-600"></i>
+              Detalles del Pedido
+            </h3>
+            <p class="text-gray-600">ID del Pedido: <span class="font-mono font-semibold">{{ pedido?.id }}</span></p>
+          </div>
+          <div class="status-badge status-confirmed">
+            <i class="fas fa-check-circle mr-1"></i>
+            Confirmado
+          </div>
+        </div>
+
+        <!-- Timeline de Estados -->
+        <div class="timeline mb-6">
+          <div class="timeline-item active">
+            <div class="font-semibold text-gray-800">Pedido Confirmado</div>
+            <div class="text-sm text-gray-600">Tu pedido ha sido recibido y confirmado</div>
+          </div>
+          <div class="timeline-item pending">
+            <div class="font-semibold text-gray-800">Preparando Pedido</div>
+            <div class="text-sm text-gray-600">Estamos preparando tu pedido para envío</div>
+          </div>
+          <div class="timeline-item pending">
+            <div class="font-semibold text-gray-800">En Camino</div>
+            <div class="text-sm text-gray-600">Tu pedido está en camino hacia tu dirección</div>
+          </div>
+          <div class="timeline-item pending">
+            <div class="font-semibold text-gray-800">Entregado</div>
+            <div class="text-sm text-gray-600">Pedido entregado exitosamente</div>
+          </div>
+        </div>
+
+        <!-- Productos del Pedido -->
+        <div>
+          <h4 class="text-lg font-semibold text-gray-800 mb-4">Productos</h4>
+          <div id="order-products">
+            <div class="order-item" *ngFor="let producto of pedido?.productos">
+              <div class="order-item-image">{{ producto.icon || producto.nombre.charAt(0) }}</div>
+              <div class="order-item-info">
+                <div class="order-item-name">{{ producto.nombre }}</div>
+                <div class="order-item-details">
+                  Cantidad: {{ producto.quantity }}{{ producto.talla ? ' | Talla: ' + producto.talla : '' }}
+                </div>
+              </div>
+              <div class="order-item-price">S/ {{ (producto.precio * producto.quantity).toFixed(2) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de Envío -->
+      <div class="order-card">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-truck mr-3 text-purple-600"></i>
+          Información de Envío
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div id="shipping-info" *ngIf="pedido?.cliente">
+            <div class="space-y-3">
+              <div>
+                <span class="font-semibold text-gray-700">Destinatario:</span>
+                <div class="text-gray-600">{{ pedido?.cliente?.nombre }}</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">Dirección:</span>
+                <div class="text-gray-600">{{ pedido?.cliente?.direccion }}</div>
+                <div class="text-sm text-gray-500" *ngIf="pedido?.cliente?.referencias">Ref: {{ pedido?.cliente?.referencias }}</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">Teléfono:</span>
+                <div class="text-gray-600">{{ pedido?.cliente?.telefono }}</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">Email:</span>
+                <div class="text-gray-600">{{ pedido?.cliente?.email }}</div>
+              </div>
+            </div>
+          </div>
+          <div id="payment-info" *ngIf="pedido?.cliente">
+            <div class="space-y-3">
+              <div>
+                <span class="font-semibold text-gray-700">Método de Pago:</span>
+                <div class="text-gray-600">{{ getMetodoPagoTexto(pedido?.cliente?.metodoPago) }}</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">Estado:</span>
+                <div class="text-green-600 font-semibold">Pago Confirmado</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">Fecha:</span>
+                <div class="text-gray-600">{{ getFechaFormateada(pedido?.fecha) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen y Acciones -->
+    <div class="lg:col-span-1">
+      <div class="order-card">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-receipt mr-2 text-purple-600"></i>
+          Resumen
+        </h3>
+
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Subtotal:</span>
+            <span class="font-semibold">S/ {{ getSubtotal().toFixed(2) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Envío:</span>
+            <span class="font-semibold">{{ getShipping() === 0 ? 'Gratis' : 'S/ ' + getShipping().toFixed(2) }}</span>
+          </div>
+          <div class="border-t pt-3">
+            <div class="flex justify-between text-lg font-bold">
+              <span>Total:</span>
+              <span class="text-purple-600">S/ {{ pedido?.total?.toFixed(2) || '0.00' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de Contacto -->
+        <div class="bg-blue-50 p-4 rounded-lg mb-6">
+          <h4 class="font-semibold text-blue-800 mb-2">
+            <i class="fas fa-info-circle mr-2"></i>
+            ¿Necesitas Ayuda?
+          </h4>
+          <div class="space-y-2 text-sm text-blue-700">
+            <div>
+              <i class="fas fa-envelope mr-2"></i>
+              soporte&#64;tiendaproductos.com
+            </div>
+            <div>
+              <i class="fas fa-phone mr-2"></i>
+              +51 999 999 999
+            </div>
+            <div>
+              <i class="fab fa-whatsapp mr-2"></i>
+              WhatsApp: +51 999 999 999
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="space-y-3">
+          <button (click)="printOrder()" class="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
+            <i class="fas fa-print mr-2"></i>
+            Imprimir Recibo
+          </button>
+          <button routerLink="/catalog" class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition duration-300">
+            <i class="fas fa-shopping-bag mr-2"></i>
+            Seguir Comprando
+          </button>
+          <button routerLink="/" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300">
+            <i class="fas fa-home mr-2"></i>
+            Volver al Inicio
+          </button>
+        </div>
+      </div>
+
+      <!-- Información Adicional -->
+      <div class="order-card">
+        <h4 class="font-semibold text-gray-800 mb-4">
+          <i class="fas fa-shield-alt mr-2 text-green-600"></i>
+          Información Importante
+        </h4>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li>
+            <i class="fas fa-check text-green-500 mr-2"></i>
+            Recibirás un email de confirmación
+          </li>
+          <li>
+            <i class="fas fa-check text-green-500 mr-2"></i>
+            Te notificaremos cuando tu pedido sea enviado
+          </li>
+          <li>
+            <i class="fas fa-check text-green-500 mr-2"></i>
+            Tienes 30 días para cambios o devoluciones
+          </li>
+          <li>
+            <i class="fas fa-check text-green-500 mr-2"></i>
+            Compra protegida con garantía
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>

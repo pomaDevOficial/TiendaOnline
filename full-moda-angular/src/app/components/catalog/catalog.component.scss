@@ -1,0 +1,136 @@
+/* Notification Animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out;
+}
+
+/* Notification Styles */
+.notification-container {
+  position: fixed;
+  top: 100px;
+  right: 16px;
+  z-index: 50;
+  max-width: 400px;
+  width: 100%;
+}
+
+.product-notification {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.notification-icon {
+  width: 3rem;
+  height: 3rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.notification-product {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.notification-quantity {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.notification-close {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s ease;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.notification-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notification-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.notification-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .notification-container {
+    right: 8px;
+    left: 8px;
+    max-width: none;
+  }
+
+  .product-notification {
+    padding: 1rem;
+  }
+
+  .notification-header {
+    gap: 0.5rem;
+  }
+
+  .notification-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .notification-title {
+    font-size: 1rem;
+  }
+}

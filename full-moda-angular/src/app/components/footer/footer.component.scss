@@ -1,0 +1,168 @@
+// Footer Logo Styles
+.footer-logo-container {
+  position: relative;
+  display: inline-block;
+
+  img {
+    filter: drop-shadow(0 4px 12px rgba(124, 58, 237, 0.4));
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(219, 39, 119, 0.1));
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &:hover img {
+    transform: scale(1.15) rotate(-2deg);
+    filter: drop-shadow(0 8px 20px rgba(124, 58, 237, 0.6));
+  }
+}
+
+.footer-logo-glow {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #7c3aed, #db2777, #7c3aed);
+  border-radius: 19px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+  animation: footerLogoGlow 4s ease-in-out infinite alternate;
+}
+
+.footer-logo-container:hover .footer-logo-glow {
+  opacity: 0.4;
+}
+
+@keyframes footerLogoGlow {
+  0% {
+    opacity: 0.1;
+    transform: scale(1) rotate(0deg);
+  }
+  33% {
+    opacity: 0.25;
+    transform: scale(1.02) rotate(120deg);
+  }
+  66% {
+    opacity: 0.3;
+    transform: scale(1.03) rotate(240deg);
+  }
+  100% {
+    opacity: 0.1;
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes footerLogoPulse {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.08);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.footer-logo-container:hover img {
+  animation: footerLogoPulse 0.8s ease-in-out;
+}
+
+// Update footer logo container for image layout
+.footer-logo-container {
+  position: relative;
+  display: inline-block;
+
+  img {
+    filter: drop-shadow(0 3px 6px rgba(124, 58, 237, 0.3));
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &:hover img {
+    transform: scale(1.15) translateY(-2px);
+    filter: drop-shadow(0 6px 12px rgba(124, 58, 237, 0.5));
+  }
+}
+
+// Mobile improvements
+@media (max-width: 768px) {
+  footer {
+    padding: 2rem 0; // Reduce padding
+  }
+
+  .grid {
+    gap: 2rem; // Reduce gap between columns
+  }
+
+  .space-y-6 {
+    gap: 1rem; // Reduce vertical spacing
+  }
+
+  .text-lg {
+    font-size: 1rem; // Smaller headings
+  }
+
+  .text-gray-300 {
+    font-size: 0.9rem; // Smaller text
+  }
+
+  .w-10 {
+    width: 2rem;
+    height: 2rem; // Smaller social icons
+  }
+
+  .w-5 {
+    width: 1rem; // Smaller icons in contact
+  }
+
+  .mt-12 {
+    margin-top: 2rem; // Reduce top margin for copyright
+  }
+
+  .pt-8 {
+    padding-top: 1rem; // Reduce padding for copyright section
+  }
+}
+
+@media (max-width: 480px) {
+  footer {
+    padding: 1.5rem 0;
+  }
+
+  .grid {
+    gap: 1.5rem;
+  }
+
+  .space-y-6 {
+    gap: 0.75rem;
+  }
+
+  .text-lg {
+    font-size: 0.95rem;
+  }
+
+  .text-gray-300 {
+    font-size: 0.85rem;
+  }
+
+  .w-10 {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .w-5 {
+    width: 0.875rem;
+  }
+
+  .mt-12 {
+    margin-top: 1.5rem;
+  }
+
+  .pt-8 {
+    padding-top: 0.75rem;
+  }
+}
