@@ -287,61 +287,79 @@ cargarComprobantesPorFecha() {
   }
 
   guardarComprobante() {
-    if (this.comprobanteForm.invalid) {
-      this.marcarCamposInvalidos(this.comprobanteForm);
-      return;
-    }
-
-    const comprobanteData = this.comprobanteForm.value;
-
-    if (this.editarComprobante) {
-      this.comprobanteService.updateComprobante(comprobanteData.id, comprobanteData).subscribe({
-        next: () => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
-            detail: 'Comprobante actualizado correctamente' 
-          });
-          this.cargarComprobantes();
-          this.mostrarDialogoComprobante = false;
-        },
-        error: (err) => {
-          console.error('Error al actualizar comprobante', err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar el comprobante'
-          });
-        }
-      });
-    } else {
-      this.comprobanteService.createComprobante(comprobanteData).subscribe({
-        next: () => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
-            detail: 'Comprobante creado correctamente' 
-          });
-          this.cargarComprobantes();
-          this.mostrarDialogoComprobante = false;
-        },
-        error: (err) => {
-          console.error('Error al crear comprobante', err);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear el comprobante'
-          });
-        }
-      });
-    }
+  if (this.comprobanteForm.invalid) {
+    this.marcarCamposInvalidos(this.comprobanteForm);
+    return;
   }
 
-  editar(comprobante: Comprobante) {
-    this.comprobanteForm.patchValue(comprobante);
-    this.mostrarDialogoComprobante = true;
-    this.editarComprobante = true;
+  // Incluye también los campos deshabilitados (id, etc.)
+  const comprobanteData = this.comprobanteForm.getRawValue();
+
+  if (this.editarComprobante) {
+    this.comprobanteService.updateComprobante(comprobanteData.id, comprobanteData).subscribe({
+      next: () => {
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Éxito', 
+          detail: 'Comprobante actualizado correctamente' 
+        });
+        this.cargarComprobantes();
+        this.mostrarDialogoComprobante = false;
+      },
+      error: (err) => {
+        console.error('Error al actualizar comprobante', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar el comprobante'
+        });
+      }
+    });
+  } else {
+    this.comprobanteService.createComprobante(comprobanteData).subscribe({
+      next: () => {
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Éxito', 
+          detail: 'Comprobante creado correctamente' 
+        });
+        this.cargarComprobantes();
+        this.mostrarDialogoComprobante = false;
+      },
+      error: (err) => {
+        console.error('Error al crear comprobante', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo crear el comprobante'
+        });
+      }
+    });
   }
+}
+editar(comprobante: Comprobante) {
+  this.comprobanteForm.patchValue(comprobante);
+
+  // Deshabilitar campos al editar
+  this.comprobanteForm.get('id')?.disable();
+  this.comprobanteForm.get('idventa')?.disable();
+  this.comprobanteForm.get('idtipocomprobante')?.disable();
+  this.comprobanteForm.get('numserie')?.disable();
+
+  // Validación dinámica para "total"
+  const totalControl = this.comprobanteForm.get('total');
+  if (totalControl) {
+    totalControl.setValidators([
+      Validators.required,
+      Validators.min(comprobante.total ?? 0) // mínimo el total actual
+    ]);
+    totalControl.updateValueAndValidity();
+  }
+
+  this.mostrarDialogoComprobante = true;
+  this.editarComprobante = true;
+}
+
 
   anularComprobante(comprobante: Comprobante) {
     this.confirmationService.confirm({
@@ -477,8 +495,9 @@ cargarComprobantesPorFecha() {
 
   getEstadoBadgeClass(idestado: number): string {
     switch (idestado) {
-      case 1: return 'bg-success';    // registrado
-      case 2: return 'bg-danger';     // anulado
+      case 17: return 'bg-success';    // registrado
+      case 18: return 'bg-danger';     // anulado
+
       default: return 'bg-secondary';
     }
   }
