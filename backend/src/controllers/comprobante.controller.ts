@@ -690,7 +690,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
       // 🔐 Descontar stock atómicamente
       const [results, metadata] = await sequelize.query(
             `
-            UPDATE Lote_Talla
+            UPDATE lote_talla
             SET stock = stock - :cantidad
             WHERE id = :id AND stock >= :cantidad
             `,

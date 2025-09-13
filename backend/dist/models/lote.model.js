@@ -20,4 +20,5 @@ Lote.init({
 // Relaciones
 Lote.belongsTo(producto_model_1.default, { foreignKey: 'idproducto', as: 'Producto' });
 Lote.belongsTo(estado_model_1.default, { foreignKey: 'idestado', as: 'Estado' });
+// En Lote.ts, debajo de las otras relaciones
 exports.default = Lote;
