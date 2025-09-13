@@ -53,7 +53,8 @@ export const createPedido = async (req: Request, res: Response): Promise<void> =
       fechaoperacion: fechaoperacion || new Date(),
       totalimporte,
       adjunto: adjunto || null,
-      idestado: PedidoEstado.EN_ESPERA
+      idestado: PedidoEstado.EN_ESPERA,
+      esWeb :1
     });
 
     // Obtener el pedido creado con sus relaciones
@@ -176,6 +177,9 @@ export const updatePedido = async (req: Request, res: Response): Promise<void> =
 export const getPedidos = async (req: Request, res: Response): Promise<void> => {
   try {
     const pedidos = await Pedido.findAll({
+      where: {
+        esWeb: 1
+      },
       include: [
         { 
           model: Persona, 
@@ -212,7 +216,9 @@ export const getPedidosByEstado = async (req: Request, res: Response): Promise<v
 
   try {
     const pedidos = await Pedido.findAll({
-      where: { idestado: estado },
+      where: { idestado: estado,
+        esWeb: 1
+       },
       include: [
         { 
           model: Persona, 

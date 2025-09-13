@@ -16,10 +16,10 @@ import Lote from '../models/lote.model';
 import Producto from '../models/producto.model';
 
 // Configuración de GreenAPI
-//const ID_INSTANCE = "7105309578";
-const ID_INSTANCE = "7105309584";
-// const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
-const API_TOKEN_INSTANCE = "bfb0408724134cb59d908715edf9e3967519705a04be4227b5";
+const ID_INSTANCE = "7105309578";
+// const ID_INSTANCE = "7105309584";
+const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
+// const API_TOKEN_INSTANCE = "bfb0408724134cb59d908715edf9e3967519705a04be4227b5";
 
 // Función para generar PDF en formato voucher
 // export const generarPDFComprobante = async (comprobante: any, venta: any, pedido: any, detallesVenta: any[]): Promise<string> => {
