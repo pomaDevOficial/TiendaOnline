@@ -13,6 +13,8 @@ export interface PedidoAttributes {
   idestado?: number | null;
   totalimporte?: number | null;
   adjunto?: string | null;
+  esWeb?: number | null;
+
 }
 
 export type PedidoCreationAttributes = Optional<PedidoAttributes, "id">;
@@ -26,6 +28,7 @@ class Pedido extends Model<PedidoAttributes, PedidoCreationAttributes>
   public idestado!: number | null;
   public totalimporte!: number | null;
   public adjunto!: string | null;
+  public esWeb!: number | null;
 
   public readonly Persona?: Persona;
   public readonly MetodoPago?: MetodoPago;
@@ -41,6 +44,9 @@ Pedido.init(
     idestado: { type: DataTypes.INTEGER, allowNull: true },
     totalimporte: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
     adjunto: { type: DataTypes.STRING(255), allowNull: true },
+    esWeb: { type: DataTypes.INTEGER, allowNull: true },
+    
+    
   },
   { sequelize: db, tableName: "pedido", timestamps: false }
 );
