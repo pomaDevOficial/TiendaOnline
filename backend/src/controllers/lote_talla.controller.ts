@@ -1295,7 +1295,7 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
           descripcion: producto.descripcion || `Descripción del producto ${producto.nombre}`,
           imagenes: imagenes,
           categoria: producto.Categoria?.nombre || 'Sin categoría',
-          genero: item.esGenero === 1 ? 'Hombre' : item.esGenero === 2 ? 'Mujer' : 'Unisex',
+          genero: item.esGenero === 1 ? 'Hombre' : item.esgenero === 2 ? 'Mujer' : 'Unisex',
           tallas: [],
           colores: colores,
           stock: 0
@@ -1307,7 +1307,7 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
       if (item.Talla?.nombre && !productoData.tallas.includes(item.Talla.nombre)) {
         productoData.tallas.push(item.Talla.nombre);
         // Agregar precio por talla usando preciocosto
-        productoData.preciosPorTalla[item.Talla.nombre] = item.precioVenta || 0;
+        productoData.preciosPorTalla[item.Talla.nombre] = item.precioventa || 0;
       }
 
       // Sumar stock

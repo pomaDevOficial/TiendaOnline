@@ -57,7 +57,8 @@ const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             fechaoperacion: fechaoperacion || new Date(),
             totalimporte,
             adjunto: adjunto || null,
-            idestado: estados_constans_1.PedidoEstado.EN_ESPERA
+            idestado: estados_constans_1.PedidoEstado.EN_ESPERA,
+            esWeb: 1
         });
         // Obtener el pedido creado con sus relaciones
         const pedidoCreado = yield pedido_model_1.default.findByPk(nuevoPedido.id, {
@@ -176,6 +177,9 @@ exports.updatePedido = updatePedido;
 const getPedidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pedidos = yield pedido_model_1.default.findAll({
+            where: {
+                esWeb: 1
+            },
             include: [
                 {
                     model: persona_model_1.default,
@@ -211,7 +215,9 @@ const getPedidosByEstado = (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { estado } = req.params;
     try {
         const pedidos = yield pedido_model_1.default.findAll({
-            where: { idestado: estado },
+            where: { idestado: estado,
+                esWeb: 1
+            },
             include: [
                 {
                     model: persona_model_1.default,

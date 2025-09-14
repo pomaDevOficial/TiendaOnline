@@ -65,55 +65,36 @@
           </div>
         </form>
 
-        <!-- Indicador de búsqueda activa -->
-        <div *ngIf="isSearching" class="mt-4 text-center">
-          <div class="inline-flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Buscando productos...</span>
-          </div>
-        </div>
-
-        <!-- Resultados de búsqueda -->
-        <div *ngIf="filterForm.get('search')?.value && !isSearching && filteredProducts.length > 0" class="mt-4 text-center">
-          <div class="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm inline-flex items-center gap-2">
-            <i class="fas fa-check-circle"></i>
-            <span>{{ filteredProducts.length }} resultados para "<strong>{{ filterForm.get('search')?.value }}</strong>"</span>
-          </div>
-        </div>
-
-        <!-- Sin resultados -->
-        <div *ngIf="filterForm.get('search')?.value && !isSearching && filteredProducts.length === 0" class="mt-4 text-center">
-          <div class="bg-red-50 text-red-700 px-6 py-4 rounded-2xl border border-red-200">
-            <div class="text-4xl text-red-300 mb-2">🔍</div>
-            <h3 class="font-semibold mb-2">No se encontraron productos</h3>
-            <p class="text-sm mb-3">
-              No hay productos que coincidan con "<strong>{{ filterForm.get('search')?.value }}</strong>"
-            </p>
-            <div class="flex gap-2 justify-center">
-              <button
-                (click)="clearSearch()"
-                class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-                <i class="fas fa-times mr-1"></i>Limpiar búsqueda
-              </button>
-              <button
-                (click)="clearFilters()"
-                class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
-                <i class="fas fa-filter mr-1"></i>Limpiar todos los filtros
-              </button>
+        <!-- Estado de búsqueda y mensajes -->
+        <div class="mt-6 space-y-4">
+          <!-- Indicador de búsqueda activa -->
+          <div *ngIf="isSearching" class="text-center">
+            <div class="inline-flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Buscando productos...</span>
             </div>
           </div>
-        </div>
 
-        <!-- Sugerencias de búsqueda cuando no hay búsqueda activa -->
-        <div *ngIf="!filterForm.get('search')?.value && !isSearching" class="mt-4 text-center">
-          <p class="text-xs text-gray-500 mb-2">Búsquedas populares:</p>
-          <div class="flex flex-wrap gap-2 justify-center">
-            <button
-              *ngFor="let suggestion of ['Nike', 'Adidas', 'Puma', 'Zapatillas', 'Polos']"
-              (click)="setSearchTerm(suggestion)"
-              class="bg-gray-100 hover:bg-purple-100 text-gray-700 hover:text-purple-700 px-3 py-1 rounded-full text-xs transition-colors">
-              {{ suggestion }}
-            </button>
+          <!-- Resultados de búsqueda exitosa -->
+          <div *ngIf="filterForm.get('search')?.value && !isSearching && filteredProducts.length > 0" class="text-center">
+            <div class="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm inline-flex items-center gap-2">
+              <i class="fas fa-check-circle"></i>
+              <span>{{ filteredProducts.length }} resultados para "<strong>{{ filterForm.get('search')?.value }}</strong>"</span>
+            </div>
+          </div>
+
+
+          <!-- Sugerencias de búsqueda cuando no hay búsqueda activa -->
+          <div *ngIf="!filterForm.get('search')?.value && !isSearching" class="text-center">
+            <p class="text-xs text-gray-500 mb-2">Búsquedas populares:</p>
+            <div class="flex flex-wrap gap-2 justify-center">
+              <button
+                *ngFor="let suggestion of ['Nike', 'Adidas', 'Puma', 'Zapatillas', 'Polos']"
+                (click)="setSearchTerm(suggestion)"
+                class="bg-gray-100 hover:bg-purple-100 text-gray-700 hover:text-purple-700 px-3 py-1 rounded-full text-xs transition-colors">
+                {{ suggestion }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -217,7 +198,8 @@
 
       <!-- Productos -->
       <div class="lg:col-span-3">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <!-- Lista de productos -->
+        <div *ngIf="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <app-product-card
             *ngFor="let product of filteredProducts"
             [product]="product"
@@ -230,12 +212,27 @@
         <div *ngIf="filteredProducts.length === 0" class="text-center py-12">
           <div class="text-6xl text-gray-300 mb-4">🔍</div>
           <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron productos</h3>
-          <p class="text-gray-500">No hay productos que coincidan con los filtros aplicados.</p>
-          <button
-            (click)="clearFilters()"
-            class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300">
-            Limpiar filtros
-          </button>
+          <p class="text-gray-500 mb-4">
+            <span *ngIf="filterForm.get('search')?.value">
+              No hay productos que coincidan con "<strong>{{ filterForm.get('search')?.value }}</strong>"
+            </span>
+            <span *ngIf="!filterForm.get('search')?.value">
+              No hay productos que coincidan con los filtros aplicados.
+            </span>
+          </p>
+          <div class="flex gap-2 justify-center">
+            <button
+              *ngIf="filterForm.get('search')?.value"
+              (click)="clearSearch()"
+              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-300">
+              <i class="fas fa-times mr-1"></i>Limpiar búsqueda
+            </button>
+            <button
+              (click)="clearFilters()"
+              class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300">
+              <i class="fas fa-filter mr-1"></i>Limpiar filtros
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -298,7 +295,7 @@
 
         <!-- Precio -->
         <div class="mb-6">
-          <div class="text-3xl font-bold text-purple-600 mb-2">S/ {{ selectedProduct.precio.toFixed(2) }}</div>
+          <div class="text-3xl font-bold text-purple-600 mb-2">S/ {{ currentPrice.toFixed(2) }}</div>
           <div class="flex items-center gap-2 text-sm text-gray-500">
             <i class="fas fa-star text-yellow-400"></i>
             <span>4.5 • 1,234 reseñas</span>

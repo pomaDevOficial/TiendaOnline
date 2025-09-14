@@ -145,8 +145,8 @@ class Server {
             origin: [
                 'http://localhost:4200', // frontend cliente
                 'http://localhost:4300', // frontend admin
-                'http://localhost:50913', // frontend admin 59609
-                'http://localhost:59609' // frontend admin 59609
+                'http://localhost:54914', // frontend admin 59609
+                'http://localhost:54297' // frontend admin 59609
             ],
             credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
         }));

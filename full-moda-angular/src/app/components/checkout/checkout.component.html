@@ -383,7 +383,10 @@
         <!-- Lista de productos -->
         <div id="order-items" class="mb-6">
           <div class="order-item" *ngFor="let item of cartItems">
-            <div class="order-item-image">{{ item.icon || item.nombre.charAt(0) }}</div>
+            <div class="order-item-image">
+              <img *ngIf="item.imagen" [src]="item.imagen" [alt]="item.nombre" class="order-item-img">
+              <div *ngIf="!item.imagen" class="order-item-fallback">{{ item.icon || item.nombre.charAt(0) }}</div>
+            </div>
             <div class="order-item-info">
               <div class="order-item-name">{{ item.nombre }}</div>
               <div class="order-item-details">

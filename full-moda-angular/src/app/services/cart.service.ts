@@ -11,6 +11,7 @@ export interface CartItem {
   quantity: number;
   talla?: string;
   icon: string;
+  imagen?: string;
 }
 
 @Injectable({
@@ -37,7 +38,7 @@ export class CartService {
   }
 
   // Agregar producto al carrito
-  addToCart(product: Product, quantity: number = 1, talla?: string): void {
+  addToCart(product: Product, quantity: number = 1, talla?: string, precioEspecifico?: number): void {
     const existingItem = this.cartItems.find(item =>
       item.id === product.id && (
         (item.talla === talla) ||
@@ -53,12 +54,13 @@ export class CartService {
       const cartItem: CartItem = {
         id: product.id,
         nombre: product.nombre,
-        precio: product.precio,
+        precio: precioEspecifico !== undefined ? Number(precioEspecifico) : Number(product.precio) || 0,
         categoria: product.categoria,
         marca: product.marca,
         quantity: quantity,
         talla: talla,
-        icon: product.nombre.charAt(0)
+        icon: product.nombre.charAt(0),
+        imagen: product.imagenes && product.imagenes.length > 0 ? product.imagenes[0] : undefined
       };
       this.cartItems.push(cartItem);
     }
@@ -157,9 +159,10 @@ export class CartService {
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        // Convertir null a undefined para propiedades opcionales
+        // Convertir null a undefined para propiedades opcionales y asegurar precios válidos
         this.cartItems = parsedCart.map((item: any) => ({
           ...item,
+          precio: Number(item.precio) || 0, // Asegurar que el precio sea un número válido
           talla: item.talla === null ? undefined : item.talla
         }));
         this.updateCart();
