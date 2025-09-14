@@ -297,8 +297,15 @@ confirmarAgregarStock() {
     // formData.append('idestado', this.loteForm.get('idestado')?.value);
     // formData.append('detalles', JSON.stringify(this.loteForm.get('detalles')?.value));
     const payload = this.loteForm.value;
+    console.log(payload);
     this.lote.createLote(payload).subscribe({
       next: (nuevaMarca: Lote) => {
+        // Mensaje de éxito
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Éxito!',
+          detail: 'Lote y detalles creados correctamente'
+        });
         this.cargarLotes();
         this.cerrarDialogo();
       },

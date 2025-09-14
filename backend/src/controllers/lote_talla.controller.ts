@@ -1330,7 +1330,6 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
 };
 
 
-
 // UPDATE OR CREATE MULTIPLE - Crear o actualizar múltiples lote_talla
 export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Response): Promise<void> => {
   const { lotesTalla } = req.body; // Array de objetos lote_talla a procesar
@@ -1378,7 +1377,7 @@ export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Respons
           continue;
         }
 
-        let loteTalla: any;
+        let loteTalla: LoteTalla | null = null;
         let esNuevo = false;
 
         if (id) {
@@ -1458,15 +1457,15 @@ export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Respons
           });
 
           // Registrar movimiento de ENTRADA por el stock inicial
-              if (stock && stock > 0) {
-                await MovimientoLote.create({
-                  idlote_talla: loteTalla.id,
-                  tipomovimiento: TipoMovimientoLote.ENTRADA,
-                  cantidad: Number(stock),
-                  fechamovimiento: moment().tz("America/Lima").toDate(),
-                  idestado: EstadoGeneral.REGISTRADO
-                });
-              }
+          if (stock && stock > 0) {
+            await MovimientoLote.create({
+              idlote_talla: loteTalla.id,
+              tipomovimiento: TipoMovimientoLote.ENTRADA,
+              cantidad: Number(stock),
+              fechamovimiento: moment().tz("America/Lima").toDate(),
+              idestado: EstadoGeneral.REGISTRADO
+            });
+          }
         }
 
         await loteTalla.save();

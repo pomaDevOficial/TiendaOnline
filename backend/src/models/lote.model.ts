@@ -3,7 +3,6 @@ import { DataTypes, Model, Optional } from "sequelize";
 import db from "../db/connection.db";
 import Producto from "./producto.model";
 import Estado from "./estado.model";
-import LoteTalla from "./lote_talla.model";
 
 export interface LoteAttributes {
   id: number;

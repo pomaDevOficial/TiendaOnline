@@ -573,78 +573,355 @@ export const getComprobantesAnulados = async (req: Request, res: Response): Prom
   }
 };
 
-// UPDATE - Anular comprobante
+// UPDATE - Anular comprobante (solo cambia estado)
 export const anularComprobante = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
+  const transaction = await db.transaction();
+
   try {
-    const comprobante: any = await Comprobante.findByPk(id);
+    const comprobante = await Comprobante.findByPk(id, {
+      include: [
+        {
+          model: Venta,
+          as: 'Venta',
+          include: [
+            {
+              model: Pedido,
+              as: 'Pedido'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+
     if (!comprobante) {
       res.status(404).json({ msg: 'Comprobante no encontrado' });
       return;
     }
 
-    comprobante.idestado = ComprobanteEstado.ANULADO;
-    await comprobante.save();
+    // Verificar si ya está anulado
+    if (comprobante.idestado === ComprobanteEstado.ANULADO) {
+      res.status(400).json({ msg: 'El comprobante ya está anulado' });
+      return;
+    }
+
+    // 1) DEVOLVER STOCK AL INVENTARIO (igual que en eliminación)
+    const pedidoDetalles = await PedidoDetalle.findAll({
+      where: { idpedido: comprobante.Venta?.Pedido?.id },
+      include: [
+        {
+          model: LoteTalla,
+          as: 'LoteTalla'
+        }
+      ],
+      transaction
+    });
+
+    for (const detalle of pedidoDetalles) {
+      if (detalle.LoteTalla && detalle.idlote_talla && detalle.cantidad) {
+        // Incrementar stock atómicamente
+        await sequelize.query(
+          `UPDATE Lote_Talla SET stock = stock + :cantidad WHERE id = :id`,
+          {
+            replacements: { id: detalle.idlote_talla, cantidad: Number(detalle.cantidad) },
+            transaction
+          }
+        );
+
+        // Registrar movimiento de ENTRADA (devolución)
+        await MovimientoLote.create({
+          idlote_talla: detalle.idlote_talla,
+          tipomovimiento: TipoMovimientoLote.ENTRADA,
+          cantidad: Number(detalle.cantidad),
+          fechamovimiento: moment().tz("America/Lima").toDate(),
+          idestado: EstadoGeneral.REGISTRADO
+        }, { transaction });
+      }
+    }
+
+    // 2) ACTUALIZAR ESTADOS (solo cambiar estados, no eliminar)
+    await comprobante.update({ 
+      idestado: ComprobanteEstado.ANULADO 
+    }, { transaction });
+
+    await comprobante.Venta?.update({ 
+      idestado: VentaEstado.ANULADO 
+    }, { transaction });
+
+    await comprobante.Venta?.Pedido?.update({ 
+      idestado: PedidoEstado.CANCELADO 
+    }, { transaction });
+
+    // Confirmar la transacción
+    await transaction.commit();
 
     res.json({ 
-      msg: 'Comprobante anulado con éxito',
+      msg: 'Comprobante anulado con éxito y stock devuelto al inventario',
       data: { id: comprobante.id, estado: ComprobanteEstado.ANULADO }
     });
   } catch (error) {
+    // Revertir la transacción en caso de error
+    await transaction.rollback();
     console.error('Error en anularComprobante:', error);
-    res.status(500).json({ msg: 'Error al anular el comprobante' });
+    res.status(500).json({ 
+      msg: 'Error al anular el comprobante',
+      error: (error as Error).message
+    });
   }
 };
 
-// UPDATE - Restaurar comprobante anulado
+
+// UPDATE - Restaurar comprobante anulado con reversión de stock
 export const restaurarComprobante = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
+  const transaction = await db.transaction();
+
   try {
-    const comprobante: any = await Comprobante.findByPk(id);
+    const comprobante = await Comprobante.findByPk(id, {
+      include: [
+        {
+          model: Venta,
+          as: 'Venta',
+          include: [
+            {
+              model: Pedido,
+              as: 'Pedido'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
 
     if (!comprobante) {
       res.status(404).json({ msg: 'Comprobante no encontrado' });
       return;
     }
 
-    // Cambiar estado a REGISTRADO
-    comprobante.idestado = ComprobanteEstado.REGISTRADO;
-    await comprobante.save();
+    // Verificar si existe una venta asociada
+    if (!comprobante.Venta) {
+      res.status(404).json({ msg: 'Venta asociada al comprobante no encontrada' });
+      return;
+    }
+
+    // Verificar si existe un pedido asociado
+    if (!comprobante.Venta.Pedido) {
+      res.status(404).json({ msg: 'Pedido asociado a la venta no encontrado' });
+      return;
+    }
+
+    // CONSULTA SEPARADA PARA OBTENER LOS DETALLES DEL PEDIDO
+    const pedidoDetalles = await PedidoDetalle.findAll({
+      where: { idpedido: comprobante.Venta.Pedido.id },
+      include: [
+        {
+          model: LoteTalla,
+          as: 'LoteTalla'
+        }
+      ],
+      transaction
+    });
+
+    if (!pedidoDetalles || pedidoDetalles.length === 0) {
+      res.status(404).json({ msg: 'No se encontraron detalles del pedido' });
+      return;
+    }
+
+    // 1) REVERTIR STOCK (QUITAR EL STOCK QUE SE HABÍA DEVUELTO)
+    for (const detalle of pedidoDetalles) {
+      // Validar que los campos necesarios no sean null
+      if (!detalle.LoteTalla || detalle.idlote_talla === null || detalle.cantidad === null) {
+        throw new Error(`Detalle de pedido ${detalle.id} tiene datos incompletos`);
+      }
+
+      const { idlote_talla, cantidad } = detalle;
+      
+      // Verificar que haya stock suficiente antes de restar
+      const loteTalla = await LoteTalla.findByPk(idlote_talla, { transaction });
+      if (!loteTalla) {
+        throw new Error(`LoteTalla ${idlote_talla} no encontrado`);
+      }
+
+      // Validar que stock no sea null y sea suficiente
+      const stockActual = loteTalla.stock ?? 0;
+      const cantidadNum = Number(cantidad);
+      
+      if (stockActual < cantidadNum) {
+        throw new Error(`Stock insuficiente en LoteTalla ${idlote_talla} para restaurar la venta`);
+      }
+
+      // Restar stock atómicamente (revertir la devolución)
+      const [results, metadata] = await sequelize.query(
+        `UPDATE Lote_Talla SET stock = stock - :cantidad WHERE id = :id AND stock >= :cantidad`,
+        {
+          replacements: { id: idlote_talla, cantidad: cantidadNum },
+          transaction
+        }
+      ) as [any[], any];
+
+      // Verificar que se actualizó el stock (dependiendo del dialecto de la base de datos)
+      const affectedRows = metadata.affectedRows || (metadata as any).rowCount;
+      if (affectedRows === 0) {
+        throw new Error(`No se pudo actualizar el stock para LoteTalla ${idlote_talla}`);
+      }
+
+      // Registrar movimiento de SALIDA (reversión de la devolución)
+      await MovimientoLote.create({
+        idlote_talla: idlote_talla,
+        tipomovimiento: TipoMovimientoLote.SALIDA,
+        cantidad: cantidadNum,
+        fechamovimiento: moment().tz("America/Lima").toDate(),
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
+    }
+
+    // 2) ACTUALIZAR ESTADOS DE LAS ENTIDADES RELACIONADAS
+    await comprobante.Venta.update({ 
+      idestado: VentaEstado.REGISTRADO 
+    }, { transaction });
+
+    await comprobante.Venta.Pedido.update({ 
+      idestado: PedidoEstado.PAGADO 
+    }, { transaction });
+
+    // 3) RESTAURAR EL COMPROBANTE
+    await comprobante.update({ 
+      idestado: ComprobanteEstado.REGISTRADO 
+    }, { transaction });
+
+    // Confirmar la transacción
+    await transaction.commit();
 
     res.json({ 
-      msg: 'Comprobante restaurado con éxito',
-      data: { id: comprobante.id, estado: ComprobanteEstado.REGISTRADO }
+      msg: 'Comprobante restaurado con éxito y stock revertido',
+      data: { 
+        id: comprobante.id, 
+        estado: ComprobanteEstado.REGISTRADO,
+        numserie: comprobante.numserie
+      }
     });
   } catch (error) {
+    // Revertir la transacción en caso de error
+    await transaction.rollback();
     console.error('Error en restaurarComprobante:', error);
-    res.status(500).json({ msg: 'Error al restaurar el comprobante' });
+    res.status(500).json({ 
+      msg: 'Error al restaurar el comprobante',
+      error: (error as Error).message
+    });
   }
 };
-
-// DELETE - Eliminar comprobante físicamente
+// DELETE - Eliminar comprobante físicamente con devolución de stock
 export const deleteComprobante = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
+  const transaction = await db.transaction();
+
   try {
-    const comprobante = await Comprobante.findByPk(id);
+    const comprobante = await Comprobante.findByPk(id, {
+      include: [
+        {
+          model: Venta,
+          as: 'Venta',
+          include: [
+            {
+              model: Pedido,
+              as: 'Pedido'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
 
     if (!comprobante) {
       res.status(404).json({ msg: 'Comprobante no encontrado' });
       return;
     }
 
-    // Eliminar físicamente
-    await comprobante.destroy();
+    // Verificar si existe una venta asociada
+    if (!comprobante.Venta) {
+      res.status(404).json({ msg: 'Venta asociada al comprobante no encontrada' });
+      return;
+    }
+
+    // Verificar si existe un pedido asociado
+    if (!comprobante.Venta.Pedido) {
+      res.status(404).json({ msg: 'Pedido asociado a la venta no encontrado' });
+      return;
+    }
+
+    // CONSULTA SEPARADA PARA OBTENER LOS DETALLES DEL PEDIDO
+    const pedidoDetalles = await PedidoDetalle.findAll({
+      where: { idpedido: comprobante.Venta.Pedido.id },
+      include: [
+        {
+          model: LoteTalla,
+          as: 'LoteTalla'
+        }
+      ],
+      transaction
+    });
+
+    if (!pedidoDetalles || pedidoDetalles.length === 0) {
+      res.status(404).json({ msg: 'No se encontraron detalles del pedido' });
+      return;
+    }
+
+    // 1) DEVOLVER STOCK AL INVENTARIO
+    for (const detalle of pedidoDetalles) {
+      if (detalle.LoteTalla) {
+        const { idlote_talla, cantidad } = detalle;
+        
+        // Incrementar stock atómicamente
+        await sequelize.query(
+          `UPDATE Lote_Talla SET stock = stock + :cantidad WHERE id = :id`,
+          {
+            replacements: { id: idlote_talla, cantidad: Number(cantidad) },
+            transaction
+          }
+        );
+
+        // Registrar movimiento de ENTRADA (devolución)
+        await MovimientoLote.create({
+          idlote_talla: idlote_talla,
+          tipomovimiento: TipoMovimientoLote.ENTRADA,
+          cantidad: Number(cantidad),
+          fechamovimiento: moment().tz("America/Lima").toDate(),
+          idestado: EstadoGeneral.REGISTRADO
+        }, { transaction });
+      }
+    }
+
+    // 2) ACTUALIZAR ESTADOS DE LAS ENTIDADES RELACIONADAS
+    await comprobante.Venta.update({ 
+      idestado: VentaEstado.ANULADO 
+    }, { transaction });
+
+    await comprobante.Venta.Pedido.update({ 
+      idestado: PedidoEstado.CANCELADO 
+    }, { transaction });
+
+    // 3) ELIMINAR FÍSICAMENTE EL COMPROBANTE
+    await comprobante.destroy({ transaction });
+
+    // Confirmar la transacción
+    await transaction.commit();
 
     res.json({ 
-      msg: 'Comprobante eliminado con éxito',
+      msg: 'Comprobante eliminado con éxito y stock devuelto al inventario',
       data: { id }
     });
   } catch (error) {
+    // Revertir la transacción en caso de error
+    await transaction.rollback();
     console.error('Error en deleteComprobante:', error);
-    res.status(500).json({ msg: 'Error al eliminar el comprobante' });
+    res.status(500).json({ 
+      msg: 'Error al eliminar el comprobante',
+      error: (error as Error).message
+    });
   }
 };
 /// MÉTODO COMPLETO DE LA VENTA POR LA ADMINISTRACIÓN
@@ -744,7 +1021,7 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
         idventa: nuevaVenta.id,
         precio_venta_real: Number(det.precio),
         subtotal_real: Number(det.subtotal),
-        idestado: EstadoGeneral.REGISTRADO
+        idestado: VentaEstado.REGISTRADO
       }, { transaction });
       detallesVentaCreados.push(dv);
     }

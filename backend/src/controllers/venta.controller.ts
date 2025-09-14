@@ -3,7 +3,7 @@ import Venta from '../models/venta.model';
 import Usuario from '../models/usuario.model';
 import Pedido from '../models/pedido.model';
 import Estado from '../models/estado.model';
-import { VentaEstado } from '../estadosTablas/estados.constans';
+import { PedidoEstado, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
 
 // CREATE - Insertar nueva venta
@@ -537,7 +537,7 @@ export const getVentasPorMes = async (req: Request, res: Response): Promise<void
 
   try {
     let whereCondition: any = {
-      idestado: VentaEstado.REGISTRADO
+      idestado: VentaEstado.REGISTRADO // Solo ventas registradas (no anuladas)
     };
 
     // Si se proporciona año, filtrar por año
@@ -566,7 +566,11 @@ export const getVentasPorMes = async (req: Request, res: Response): Promise<void
         { 
           model: Pedido, 
           as: 'Pedido',
-          attributes: ['id', 'totalimporte']
+          where: {
+            idestado: PedidoEstado.PAGADO // Solo pedidos pagados (no cancelados)
+          },
+          attributes: ['id', 'totalimporte'],
+          required: true // INNER JOIN para asegurar que solo traiga ventas con pedidos pagados
         }
       ],
       attributes: ['id', 'fechaventa'],

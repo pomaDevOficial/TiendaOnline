@@ -141,27 +141,28 @@
                         class="p-button-sm p-button-warning" 
                         (click)="editar(comprobante)"
                         pTooltip="Editar" tooltipPosition="top"
-                        [disabled]="comprobante?.idestado === 2">
+                        [disabled]="comprobante?.idestado === 18">
                 </button>
 
                 <button pButton type="button" icon="pi pi-times" 
                         class="p-button-sm p-button-danger" 
                         (click)="anularComprobante(comprobante)"
                         pTooltip="Anular" tooltipPosition="top"
-                        [disabled]="comprobante?.idestado === 2">
+                        [disabled]="comprobante?.idestado === 18">
                 </button>
 
                 <button pButton type="button" icon="pi pi-refresh" 
                         class="p-button-sm p-button-secondary" 
                         (click)="restaurarComprobante(comprobante)"
                         pTooltip="Restaurar" tooltipPosition="top"
-                        [disabled]="comprobante?.idestado !== 2">
+                        [disabled]="comprobante?.idestado === 17">
                 </button>
 
                 <button pButton type="button" icon="pi pi-whatsapp" 
                         class="p-button-sm p-button-success" 
                         (click)="reenviarComprobante(comprobante)"
-                        pTooltip="Reenviar por WhatsApp" tooltipPosition="top">
+                        pTooltip="Reenviar por WhatsApp" tooltipPosition="top"
+                        [disabled]="comprobante?.idestado === 18">
                 </button>
                <button 
                 pButton 

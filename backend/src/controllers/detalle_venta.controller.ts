@@ -3,9 +3,13 @@ import DetalleVenta from '../models/detalle_venta.model';
 import PedidoDetalle from '../models/pedido_detalle.model';
 import Venta from '../models/venta.model';
 import Estado from '../models/estado.model';
-import { VentaEstado } from '../estadosTablas/estados.constans';
+import { EstadoGeneral, LoteEstado, PedidoEstado, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
 import moment from 'moment-timezone';
+import Pedido from '../models/pedido.model';
+import Producto from '../models/producto.model';
+import Lote from '../models/lote.model';
+import LoteTalla from '../models/lote_talla.model';
 
 // CREATE - Insertar nuevo detalle de venta
 export const createDetalleVenta = async (req: Request, res: Response): Promise<void> => {
@@ -814,12 +818,10 @@ export const getProductosMasVendidos = async (req: Request, res: Response): Prom
   const tz = 'America/Lima';
 
   try {
-    let whereCondition: any = {
-      idestado: VentaEstado.REGISTRADO
+    // Condición de fechas para venta
+    let ventaWhereCondition: any = {
+      idestado: VentaEstado.REGISTRADO // Solo ventas registradas (no anuladas)
     };
-
-    // Condición de fechas
-    let ventaWhereCondition: any = {};
 
     if (año && mes) {
       const monthStart = moment.tz(`${año}-${mes}`, 'YYYY-MM', tz).startOf('month').toDate();
@@ -840,27 +842,33 @@ export const getProductosMasVendidos = async (req: Request, res: Response): Prom
     console.log('Filtro fechas:', ventaWhereCondition.fechaventa);
 
     const detallesVenta = await DetalleVenta.findAll({
-      where: whereCondition,
+      where: {
+        idestado: VentaEstado.REGISTRADO // Solo detalles de venta registrados
+      },
       include: [
         { 
           model: PedidoDetalle, 
           as: 'PedidoDetalle',
           attributes: ['id', 'cantidad'],
+          required: true, // INNER JOIN
           include: [
             {
-              model: PedidoDetalle.associations.LoteTalla.target,
+              model: LoteTalla,
               as: 'LoteTalla',
               attributes: ['id'],
+              required: true, // INNER JOIN
               include: [
                 {
-                  model: PedidoDetalle.associations.LoteTalla.target.associations.Lote.target,
+                  model: Lote,
                   as: 'Lote',
                   attributes: ['id'],
+                  required: true, // INNER JOIN
                   include: [
                     {
-                      model: PedidoDetalle.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
+                      model: Producto,
                       as: 'Producto',
-                      attributes: ['id', 'nombre', 'imagen']
+                      attributes: ['id', 'nombre', 'imagen'],
+                      required: true // INNER JOIN
                     }
                   ]
                 }
@@ -872,11 +880,25 @@ export const getProductosMasVendidos = async (req: Request, res: Response): Prom
           model: Venta, 
           as: 'Venta',
           attributes: ['id', 'fechaventa'],
-          where: ventaWhereCondition
+          where: ventaWhereCondition,
+          required: true, // INNER JOIN
+          include: [
+            {
+              model: Pedido,
+              as: 'Pedido',
+              where: {
+                idestado: PedidoEstado.PAGADO // Solo pedidos pagados
+              },
+              attributes: ['id'],
+              required: true // INNER JOIN
+            }
+          ]
         }
       ],
       attributes: ['id', 'subtotal_real']
     });
+
+    console.log(`Encontrados ${detallesVenta.length} detalles de venta`);
 
     // Agrupar productos y calcular totales
     const productosVendidos: { 
@@ -914,6 +936,8 @@ export const getProductosMasVendidos = async (req: Request, res: Response): Prom
         productosVendidos[productoId].totalIngresos += subtotal;
       }
     });
+
+    console.log(`Productos únicos encontrados: ${Object.keys(productosVendidos).length}`);
 
     // Convertir a array y ordenar
     let ranking = Object.values(productosVendidos)
