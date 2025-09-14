@@ -19,6 +19,7 @@ const venta_model_1 = __importDefault(require("../models/venta.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 // CREATE - Insertar nuevo detalle de venta
 const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idpedidodetalle, idventa, precio_venta_real, subtotal_real } = req.body;
@@ -103,7 +104,7 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -340,7 +341,7 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -411,7 +412,7 @@ const getDetallesVenta = (req, res) => __awaiter(void 0, void 0, void 0, functio
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -486,7 +487,7 @@ const getDetallesVentaRegistrados = (req, res) => __awaiter(void 0, void 0, void
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -559,7 +560,7 @@ const getDetalleVentaById = (req, res) => __awaiter(void 0, void 0, void 0, func
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -636,7 +637,7 @@ const getDetallesVentaByVenta = (req, res) => __awaiter(void 0, void 0, void 0, 
                         {
                             model: venta_model_1.default.associations.Usuario.target,
                             as: 'Usuario',
-                            attributes: ['id', 'nombre', 'email']
+                            attributes: ['id', 'usuario']
                         },
                         {
                             model: venta_model_1.default.associations.Pedido.target,
@@ -793,26 +794,28 @@ exports.deleteDetalleVenta = deleteDetalleVenta;
 // READ - Obtener productos más vendidos con filtro por mes
 const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { año, mes, limite } = req.query;
+    const tz = 'America/Lima';
     try {
         let whereCondition = {
             idestado: estados_constans_1.VentaEstado.REGISTRADO
         };
-        // Construir condición de fecha para la venta
+        // Condición de fechas
         let ventaWhereCondition = {};
-        if (año) {
-            const yearStart = new Date(`${año}-01-01`);
-            const yearEnd = new Date(`${año}-12-31 23:59:59`);
-            ventaWhereCondition.fechaventa = {
-                [sequelize_1.Op.between]: [yearStart, yearEnd]
-            };
-        }
-        if (mes && año) {
-            const monthStart = new Date(`${año}-${mes.toString().padStart(2, '0')}-01`);
-            const monthEnd = new Date(parseInt(año), parseInt(mes), 0, 23, 59, 59);
+        if (año && mes) {
+            const monthStart = moment_timezone_1.default.tz(`${año}-${mes}`, 'YYYY-MM', tz).startOf('month').toDate();
+            const monthEnd = moment_timezone_1.default.tz(`${año}-${mes}`, 'YYYY-MM', tz).endOf('month').toDate();
             ventaWhereCondition.fechaventa = {
                 [sequelize_1.Op.between]: [monthStart, monthEnd]
             };
         }
+        else if (año) {
+            const yearStart = moment_timezone_1.default.tz(`${año}`, 'YYYY', tz).startOf('year').toDate();
+            const yearEnd = moment_timezone_1.default.tz(`${año}`, 'YYYY', tz).endOf('year').toDate();
+            ventaWhereCondition.fechaventa = {
+                [sequelize_1.Op.between]: [yearStart, yearEnd]
+            };
+        }
+        console.log('Filtro fechas:', ventaWhereCondition.fechaventa);
         const detallesVenta = yield detalle_venta_model_1.default.findAll({
             where: whereCondition,
             include: [
@@ -877,10 +880,10 @@ const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, 
                 productosVendidos[productoId].totalIngresos += subtotal;
             }
         });
-        // Convertir a array y ordenar por cantidad vendida
+        // Convertir a array y ordenar
         let ranking = Object.values(productosVendidos)
             .sort((a, b) => b.cantidadVendida - a.cantidadVendida);
-        // Aplicar límite si se proporciona
+        // Aplicar límite si existe
         if (limite) {
             const limiteNumero = parseInt(limite);
             ranking = ranking.slice(0, limiteNumero);

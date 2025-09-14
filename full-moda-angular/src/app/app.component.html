@@ -1,0 +1,11 @@
+<app-header (cartToggle)="toggleCart()"></app-header>
+<main>
+  <router-outlet></router-outlet>
+</main>
+<app-footer></app-footer>
+
+<!-- Carrito Global -->
+<app-cart
+  [isOpen]="isCartOpen"
+  (closeCart)="closeCart()">
+</app-cart>

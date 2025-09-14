@@ -1283,9 +1283,7 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
 
         // Generar imágenes placeholder
         const imagenes = [
-          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+1`,
-          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+2`,
-          `https://via.placeholder.com/400x300?text=${encodeURIComponent(producto.nombre || 'Producto')}+3`
+         producto.imagen || 'Producto'
         ];
 
         productosMap.set(productoId, {
@@ -1309,7 +1307,7 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
       if (item.Talla?.nombre && !productoData.tallas.includes(item.Talla.nombre)) {
         productoData.tallas.push(item.Talla.nombre);
         // Agregar precio por talla usando preciocosto
-        productoData.preciosPorTalla[item.Talla.nombre] = item.preciocosto || 0;
+        productoData.preciosPorTalla[item.Talla.nombre] = item.precioVenta || 0;
       }
 
       // Sumar stock
