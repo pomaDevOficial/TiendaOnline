@@ -28,8 +28,7 @@ export const EstadoGeneral = {
   }
   export const TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',
-    SALIDA: 'SALIDA',
-    AJUSTE: 'AJUSTE'
+    SALIDA: 'SALIDA'
   } as const;
   
   export const GeneroLote = {

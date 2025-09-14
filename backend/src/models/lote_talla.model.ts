@@ -54,5 +54,4 @@ LoteTalla.belongsTo(Lote, { foreignKey: 'idlote', as: 'Lote' });
 LoteTalla.belongsTo(Talla, { foreignKey: 'idtalla', as: 'Talla' });
 LoteTalla.belongsTo(Estado, { foreignKey: 'idestado', as: 'Estado' });
 
-
 export default LoteTalla;

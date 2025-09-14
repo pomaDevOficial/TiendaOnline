@@ -4,11 +4,14 @@ import Producto from '../models/producto.model';
 import Estado from '../models/estado.model';
 import Categoria from '../models/categoria.model';
 import Marca from '../models/marca.model';
-import { EstadoGeneral, LoteEstado } from '../estadosTablas/estados.constans';
+import { EstadoGeneral, LoteEstado, TipoMovimientoLote } from '../estadosTablas/estados.constans';
 import LoteTalla from '../models/lote_talla.model';
 import Talla from '../models/talla.model';
 import MovimientoLote from '../models/movimiento_lote.model';
 import { Op } from 'sequelize';
+import moment from "moment-timezone";
+import sequelize from '../db/connection.db';
+import db from '../db/connection.db';
 
 // CREATE - Insertar nuevo lote
 export const createLote = async (req: Request, res: Response): Promise<void> => {
@@ -513,9 +516,12 @@ export const restaurarLote = async (req: Request, res: Response): Promise<void> 
 export const createLoteCompleto = async (req: Request, res: Response): Promise<void> => {
   const { idproducto, proveedor, fechaingreso, detalles } = req.body;
 
+  const transaction = await sequelize.transaction();
+
   try {
     // Validaciones
     if (!idproducto || !proveedor) {
+      await transaction.rollback();
       res.status(400).json({ 
         msg: 'Los campos idproducto y proveedor son obligatorios' 
       });
@@ -523,6 +529,7 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
     }
 
     if (!detalles || !Array.isArray(detalles) || detalles.length === 0) {
+      await transaction.rollback();
       res.status(400).json({ 
         msg: 'El campo detalles es obligatorio y debe ser un array no vacío' 
       });
@@ -530,8 +537,9 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
     }
 
     // Verificar si existe el producto
-    const producto = await Producto.findByPk(idproducto);
+    const producto = await Producto.findByPk(idproducto, { transaction });
     if (!producto) {
+      await transaction.rollback();
       res.status(400).json({ msg: 'El producto no existe' });
       return;
     }
@@ -541,10 +549,12 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
       where: {
         idproducto,
         idestado: { [Op.ne]: LoteEstado.ELIMINADO }
-      }
+      },
+      transaction
     });
 
     if (loteExistente) {
+      await transaction.rollback();
       res.status(400).json({ 
         msg: 'Ya existe un lote activo para este producto' 
       });
@@ -557,7 +567,7 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
       proveedor,
       fechaingreso: fechaingreso || new Date(),
       idestado: LoteEstado.DISPONIBLE
-    });
+    }, { transaction });
 
     const detallesCreados = [];
     const movimientosCreados = [];
@@ -568,6 +578,7 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
 
       // Validaciones para cada detalle
       if (!idtalla || stock === undefined || esGenero === undefined) {
+        await transaction.rollback();
         res.status(400).json({ 
           msg: 'Cada detalle debe tener idtalla, stock y esGenero' 
         });
@@ -575,8 +586,9 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
       }
 
       // Verificar si existe la talla
-      const talla = await Talla.findByPk(idtalla);
+      const talla = await Talla.findByPk(idtalla, { transaction });
       if (!talla) {
+        await transaction.rollback();
         res.status(400).json({ msg: `La talla con id ${idtalla} no existe` });
         return;
       }
@@ -588,10 +600,12 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
           idtalla,
           esGenero,
           idestado: { [Op.ne]: LoteEstado.ELIMINADO }
-        }
+        },
+        transaction
       });
 
       if (loteTallaExistente) {
+        await transaction.rollback();
         res.status(400).json({ 
           msg: `Ya existe un registro con la talla ${idtalla} y género ${esGenero} para este lote` 
         });
@@ -607,7 +621,7 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
         preciocosto: preciocosto || 0,
         precioventa: precioventa || 0,
         idestado: LoteEstado.DISPONIBLE
-      });
+      }, { transaction });
 
       // Obtener el lote_talla creado con sus relaciones
       const loteTallaCreado = await LoteTalla.findByPk(nuevoLoteTalla.id, {
@@ -622,7 +636,8 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
             as: 'Estado',
             attributes: ['id', 'nombre'] 
           }
-        ]
+        ],
+        transaction
       });
 
       detallesCreados.push(loteTallaCreado);
@@ -630,11 +645,11 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
       // Crear movimiento de ingreso para este detalle
       const nuevoMovimiento: any = await MovimientoLote.create({
         idlote_talla: nuevoLoteTalla.id,
-        tipomovimiento: 'INGRESO',
+        tipomovimiento: TipoMovimientoLote.ENTRADA,
         cantidad: stock,
-        fechamovimiento: new Date(),
+        fechamovimiento: moment().tz("America/Lima").toDate(),
         idestado: EstadoGeneral.REGISTRADO
-      });
+      }, { transaction });
 
       // Obtener el movimiento creado con sus relaciones
       const movimientoCreado = await MovimientoLote.findByPk(nuevoMovimiento.id, {
@@ -656,14 +671,16 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
             as: 'Estado',
             attributes: ['id', 'nombre'] 
           }
-        ]
+        ],
+        transaction
       });
 
       movimientosCreados.push(movimientoCreado);
     }
 
-    // Obtener el lote creado con todas sus relaciones
-    const loteCompleto = await Lote.findByPk(nuevoLote.id, {
+    // 🔹 CONSULTA SEPARADA para obtener los detalles del lote
+    // Primero obtener el lote básico
+    const loteBasico = await Lote.findByPk(nuevoLote.id, {
       include: [
         { 
           model: Producto, 
@@ -686,33 +703,51 @@ export const createLoteCompleto = async (req: Request, res: Response): Promise<v
           model: Estado, 
           as: 'Estado',
           attributes: ['id', 'nombre'] 
+        }
+      ],
+      transaction
+    });
+
+    // 🔹 Luego obtener los LoteTalla relacionados por separado
+    const lotesTallaRelacionados = await LoteTalla.findAll({
+      where: {
+        idlote: nuevoLote.id
+      },
+      include: [
+        {
+          model: Talla,
+          as: 'Talla',
+          attributes: ['id', 'nombre']
         },
         {
-          model: LoteTalla,
-          as: 'LoteTallas',
-          include: [
-            {
-              model: Talla,
-              as: 'Talla',
-              attributes: ['id', 'nombre']
-            },
-            {
-              model: Estado,
-              as: 'Estado',
-              attributes: ['id', 'nombre']
-            }
-          ]
+          model: Estado,
+          as: 'Estado',
+          attributes: ['id', 'nombre']
         }
-      ]
+      ],
+      transaction
     });
+
+    // 🔹 Confirmar la transacción
+    await transaction.commit();
+
+    // 🔹 Construir la respuesta manualmente combinando los datos
+    const loteCompleto = {
+      ...loteBasico?.toJSON(),
+      LoteTallas: lotesTallaRelacionados
+    };
 
     res.status(201).json({
       msg: 'Lote completo creado exitosamente',
       data: {
-        lote: loteCompleto        
+        lote: loteCompleto,
+        detalles: detallesCreados,
+        movimientos: movimientosCreados
       }
     });
   } catch (error) {
+    // 🔹 Revertir la transacción en caso de error
+    await transaction.rollback();
     console.error('Error en createLoteCompleto:', error);
     res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
   }
