@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- FULL MODA - Primera fila centrada -->
+  <text x="200" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#000000" text-anchor="middle" filter="url(#textShadow)">FULL MODA</text>
+
+  <!-- ELURBISA E.I.R.L. - Segunda fila centrada -->
+  <text x="200" y="85" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#000000" text-anchor="middle" filter="url(#textShadow)">ELURBISA E.I.R.L.</text>
+</svg>

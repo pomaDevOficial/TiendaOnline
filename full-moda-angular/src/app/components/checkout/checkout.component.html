@@ -1,0 +1,471 @@
+<!-- Main Content -->
+<main class="container px-4 py-8" style="margin-top: 100px;">
+  <!-- Step Indicator -->
+  <div class="step-indicator mb-8">
+    <div class="step active">
+      <i class="fas fa-shopping-cart"></i>
+      <span>Carrito</span>
+    </div>
+    <div class="step active">
+      <i class="fas fa-user"></i>
+      <span>Datos</span>
+    </div>
+    <div class="step active">
+      <i class="fas fa-credit-card"></i>
+      <span>Pago</span>
+    </div>
+    <div class="step pending">
+      <i class="fas fa-check"></i>
+      <span>Confirmación</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Formulario de Checkout -->
+    <div class="lg:col-span-2">
+      <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()" class="bg-white rounded-2xl shadow-lg p-8">
+        <!-- Información Personal -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-user mr-3 text-purple-600"></i>
+            Información Personal
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo *</label>
+              <input type="text" formControlName="nombre" class="form-input" placeholder="Ingresa tu nombre completo" required>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Correo Electrónico *</label>
+              <input type="email" formControlName="email" class="form-input" placeholder="tu@email.com" required>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono *</label>
+              <input type="tel" formControlName="telefono" class="form-input" placeholder="+51 999 999 999" required>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">DNI</label>
+              <input type="text" formControlName="dni" class="form-input" placeholder="12345678" maxlength="8">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dirección de Envío -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-map-marker-alt mr-3 text-purple-600"></i>
+            Dirección de Envío
+          </h3>
+
+          <div class="grid grid-cols-1 gap-6">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección *</label>
+              <input type="text" formControlName="direccion" class="form-input" placeholder="Av. Principal 123, Distrito, Provincia" required>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Distrito</label>
+                <input type="text" formControlName="distrito" class="form-input" placeholder="San Isidro">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Provincia</label>
+                <input type="text" formControlName="provincia" class="form-input" placeholder="Lima">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Código Postal</label>
+                <input type="text" formControlName="codigoPostal" class="form-input" placeholder="15001">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Referencias</label>
+              <textarea formControlName="referencias" class="form-input" rows="3" placeholder="Punto de referencia, portería, etc."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Método de Pago -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-credit-card mr-3 text-purple-600"></i>
+            Método de Pago
+          </h3>
+
+          <div class="space-y-4">
+            <div class="radio-option" [class.selected]="checkoutForm.get('metodoPago')?.value === 'yape'" (click)="selectPaymentMethod('yape')">
+              <input type="radio" formControlName="metodoPago" value="yape">
+              <div class="radio-circle"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <span class="text-white font-bold text-sm">Y</span>
+                </div>
+                <div>
+                  <div class="font-semibold">Yape</div>
+                  <div class="text-sm text-gray-600">Pago instantáneo con Yape</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="radio-option" [class.selected]="checkoutForm.get('metodoPago')?.value === 'plin'" (click)="selectPaymentMethod('plin')">
+              <input type="radio" formControlName="metodoPago" value="plin">
+              <div class="radio-circle"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span class="text-white font-bold text-sm">P</span>
+                </div>
+                <div>
+                  <div class="font-semibold">Plin</div>
+                  <div class="text-sm text-gray-600">Pago instantáneo con Plin</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="radio-option selected" [class.selected]="checkoutForm.get('metodoPago')?.value === 'transferencia'" (click)="selectPaymentMethod('transferencia')">
+              <input type="radio" formControlName="metodoPago" value="transferencia" checked>
+              <div class="radio-circle"></div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-university text-2xl text-indigo-600"></i>
+                <div>
+                  <div class="font-semibold">Transferencia Bancaria</div>
+                  <div class="text-sm text-gray-600">Pago por depósito o transferencia</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="radio-option" [class.selected]="checkoutForm.get('metodoPago')?.value === 'efectivo'" (click)="selectPaymentMethod('efectivo')">
+              <input type="radio" formControlName="metodoPago" value="efectivo">
+              <div class="radio-circle"></div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-money-bill-wave text-2xl text-green-600"></i>
+                <div>
+                  <div class="font-semibold">Efectivo</div>
+                  <div class="text-sm text-gray-600">Pago contra entrega</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de Yape -->
+          <div id="info-yape" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'yape'">
+            <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200">
+              <h4 class="text-lg font-bold text-purple-800 mb-4 flex items-center">
+                <i class="fas fa-mobile-alt mr-2"></i>
+                Información para Pago con Yape
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center">
+                  <h5 class="font-semibold text-purple-800 mb-3">Escanea el Código QR</h5>
+                  <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
+                    <img [src]="yapeQrUrl" alt="Código QR Yape" class="max-w-full h-auto qr-code">
+                  </div>
+                  <p class="text-sm text-gray-600 mt-2">O usa el número: +51 957 086 227</p>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-white p-4 rounded-lg shadow-sm payment-info-card">
+                    <h6 class="font-semibold text-purple-800 mb-2">Datos del Destinatario</h6>
+                    <div class="space-y-1 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Nombre:</span>
+                        <span class="font-semibold">FULL MODA</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Número:</span>
+                        <span class="font-semibold">+51 957 086 227</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Monto a enviar:</span>
+                        <span class="font-bold text-purple-600">S/ {{ totalAmount.toFixed(2) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                      <div class="text-sm">
+                        <p class="text-yellow-800 font-medium">Importante:</p>
+                        <p class="text-yellow-700">Después de enviar el pago, adjunta la captura de pantalla para verificar la transacción.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección para adjuntar comprobante -->
+          <div id="seccion-comprobante" class="mt-8">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                <i class="fas fa-paperclip mr-2 text-blue-600"></i>
+                Adjuntar Comprobante de Pago
+              </h4>
+
+              <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                <div class="flex items-start gap-3">
+                  <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+                  <div>
+                    <p class="text-sm text-blue-700">
+                      <strong>Recomendado:</strong> Adjunta el comprobante de tu pago para agilizar el procesamiento de tu pedido.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-300"
+                     [class]="isDragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400'"
+                     id="drop-zone">
+                  <div class="space-y-4">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                    <div>
+                      <p class="text-lg font-semibold text-gray-700">Arrastra tu comprobante aquí</p>
+                      <p class="text-sm text-gray-500">o <span class="text-blue-600 font-semibold cursor-pointer" id="file-select">haz clic para seleccionar</span></p>
+                    </div>
+                    <p class="text-xs text-gray-400">Formatos aceptados: JPG, PNG, PDF (máx. 5MB)</p>
+                  </div>
+                  <input type="file" #fileInput id="comprobante-file" accept=".jpg,.jpeg,.png,.pdf" class="hidden" (change)="onFileSelected($event)">
+                </div>
+
+                <div id="file-preview" class="hidden" *ngIf="selectedFile">
+                  <div class="flex items-center justify-between bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="flex items-center gap-3">
+                      <i class="fas fa-file-alt text-green-600 text-xl"></i>
+                      <div>
+                        <p class="font-semibold text-green-800">{{ fileName }}</p>
+                        <p class="text-sm text-green-600">{{ fileSize }}</p>
+                      </div>
+                    </div>
+                    <div class="flex gap-2">
+                      <button type="button" (click)="removeFile()" class="text-red-500 hover:text-red-700 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de Plin -->
+          <div id="info-plin" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'plin'">
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
+              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                <i class="fas fa-mobile-alt mr-2"></i>
+                Información para Pago con Plin
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center">
+                  <h5 class="font-semibold text-blue-800 mb-3">Escanea el Código QR</h5>
+                  <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
+                    <img [src]="plinQrUrl" alt="Código QR Plin" class="max-w-full h-auto qr-code">
+                  </div>
+                  <p class="text-sm text-gray-600 mt-2">O usa el número: +51 974 684 266</p>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-white p-4 rounded-lg shadow-sm payment-info-card">
+                    <h6 class="font-semibold text-blue-800 mb-2">Datos del Destinatario</h6>
+                    <div class="space-y-1 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Nombre:</span>
+                        <span class="font-semibold">FULL MODA</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Número:</span>
+                        <span class="font-semibold">+51 974 684 266</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Monto a enviar:</span>
+                        <span class="font-bold text-blue-600">S/ {{ totalAmount.toFixed(2) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                      <div class="text-sm">
+                        <p class="text-yellow-800 font-medium">Importante:</p>
+                        <p class="text-yellow-700">Después de enviar el pago, adjunta la captura de pantalla para verificar la transacción.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de Transferencia Bancaria -->
+          <div id="info-transferencia" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'transferencia'">
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
+              <h4 class="text-lg font-bold text-indigo-800 mb-4 flex items-center">
+                <i class="fas fa-university mr-2"></i>
+                Información para Transferencia Bancaria
+              </h4>
+
+              <div class="bg-white p-4 rounded-lg shadow-sm border">
+                <div class="flex items-center gap-3 mb-3">
+                  <i class="fas fa-university text-2xl text-indigo-600"></i>
+                  <span class="font-semibold text-gray-800">Datos Bancarios</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div class="space-y-2">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Banco:</span>
+                      <span class="font-semibold">BCP</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Cuenta Corriente:</span>
+                      <span class="font-semibold">123-456789-012</span>
+                    </div>
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">CCI:</span>
+                      <span class="font-semibold">00212300456789012345</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Titular:</span>
+                      <span class="font-semibold">FULL MODA S.A.C.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-4">
+                <div class="flex items-start gap-2">
+                  <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                  <div class="text-sm">
+                    <p class="text-yellow-800 font-medium">Importante:</p>
+                    <p class="text-yellow-700">Después de realizar la transferencia, envíanos el comprobante por WhatsApp para procesar tu pedido.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notas del Pedido -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-sticky-note mr-3 text-purple-600"></i>
+            Notas del Pedido
+          </h3>
+          <textarea formControlName="notas" class="form-input" rows="4" placeholder="Instrucciones especiales para la entrega, preferencias, etc."></textarea>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button type="button" (click)="goBackToCatalog()" class="flex-1 bg-gray-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-gray-600 transition duration-300">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Volver al Catálogo
+          </button>
+          <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition duration-300">
+            <i class="fas fa-check mr-2"></i>
+            Confirmar Pedido
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Resumen del Pedido -->
+    <div class="lg:col-span-1">
+      <div class="order-summary">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-shopping-bag mr-2 text-purple-600"></i>
+          Resumen del Pedido
+        </h3>
+
+        <!-- Lista de productos -->
+        <div id="order-items" class="mb-6">
+          <div class="order-item" *ngFor="let item of cartItems">
+            <div class="order-item-image">{{ item.icon || item.nombre.charAt(0) }}</div>
+            <div class="order-item-info">
+              <div class="order-item-name">{{ item.nombre }}</div>
+              <div class="order-item-details">
+                Cantidad: {{ item.quantity }}{{ item.talla ? ' | Talla: ' + item.talla : '' }}
+              </div>
+            </div>
+            <div class="order-item-price">S/ {{ (item.precio * item.quantity).toFixed(2) }}</div>
+          </div>
+        </div>
+
+        <!-- Totales -->
+        <div class="total-section">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span id="order-subtotal">S/ {{ subtotal.toFixed(2) }}</span>
+          </div>
+          <div class="total-row">
+            <span>Envío:</span>
+            <span id="order-shipping">{{ shipping === 0 ? 'Gratis' : 'S/ ' + shipping.toFixed(2) }}</span>
+          </div>
+          <div class="total-row final">
+            <span>Total:</span>
+            <span id="order-total">S/ {{ totalAmount.toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- Información de envío -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-blue-800 mb-1">Información de Envío</h4>
+              <p class="text-sm text-blue-700">Envío gratuito en compras mayores a S/ 150. Entrega en 2-3 días hábiles.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Carrito Lateral -->
+<app-cart
+  [isOpen]="isCartOpen"
+  (closeCart)="closeCart()">
+</app-cart>
+
+<!-- Footer -->
+<app-footer></app-footer>
+
+<!-- Modal de Animación de Carga -->
+<div *ngIf="showLoadingAnimation" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center">
+    <!-- Animación del camión corriendo -->
+    <div *ngIf="animationStep === 'cart'" class="truck-container">
+      <div class="truck-animation-wrapper">
+        <!-- Camión animado -->
+        <div class="truck-animation">
+          <div class="truck-icon">
+            <i class="fas fa-truck text-4xl text-purple-600"></i>
+          </div>
+          <div class="truck-smoke">
+            <div class="smoke-particle smoke-1"></div>
+            <div class="smoke-particle smoke-2"></div>
+            <div class="smoke-particle smoke-3"></div>
+          </div>
+        </div>
+
+        <!-- Camino de puntos -->
+        <div class="road">
+          <div class="road-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check de éxito -->
+    <div *ngIf="animationStep === 'success'" class="success-container">
+      <div class="success-animation">
+        <div class="success-circle">
+          <i class="fas fa-check text-4xl text-white"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="110" viewBox="0 0 300 110" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="compactPrimaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#db2777;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#db2777;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="compactSecondaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6b7280;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#9ca3af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6b7280;stop-opacity:1" />
+    </linearGradient>
+    <filter id="compactPrimaryShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#7c3aed" flood-opacity="0.3"/>
+    </filter>
+    <filter id="compactIconGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="300" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" opacity="0.95"/>
+
+  <!-- Fashion Icon - Compact -->
+  <g transform="translate(15, 25)">
+    <!-- Dress silhouette -->
+    <path d="M18 3 L23 8 L25 5 L27 10 L29 7 L31 12 L29 17 L26 14 L25 19 L22 16 L20 22 L17 19 L13 24 L10 21 L6 26 L3 23 L8 18 L11 15 L14 12 L17 9 L19 6 Z"
+          fill="url(#compactPrimaryGradient)" filter="url(#compactIconGlow)" opacity="0.9"/>
+    <!-- Sparkle effects -->
+    <circle cx="10" cy="10" r="2.2" fill="#db2777" opacity="1"/>
+    <circle cx="25" cy="11" r="1.8" fill="#7c3aed" opacity="0.8"/>
+    <circle cx="11" cy="20" r="2" fill="#db2777" opacity="0.9"/>
+    <circle cx="24" cy="18" r="1.4" fill="#7c3aed" opacity="1"/>
+  </g>
+
+  <!-- FULL MODA - Texto Principal Grande -->
+  <text x="70" y="40" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="url(#compactPrimaryGradient)" filter="url(#compactPrimaryShadow)">FULL MODA</text>
+
+  <!-- ELURBISA E.I.R.L. - Texto Secundario Pequeño -->
+  <text x="70" y="68" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="url(#compactSecondaryGradient)">ELURBISA E.I.R.L.</text>
+
+  <!-- Decorative elements -->
+  <circle cx="60" cy="20" r="2.5" fill="#db2777" opacity="0.6"/>
+  <circle cx="60" cy="80" r="2.5" fill="#7c3aed" opacity="0.6"/>
+  <line x1="60" y1="22.5" x2="60" y2="77.5" stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+  <circle cx="220" cy="55" r="2.5" fill="url(#compactPrimaryGradient)" opacity="0.3"/>
+  <circle cx="240" cy="35" r="1.5" fill="#db2777" opacity="0.4"/>
+  <circle cx="260" cy="75" r="2" fill="#7c3aed" opacity="0.4"/>
+</svg>

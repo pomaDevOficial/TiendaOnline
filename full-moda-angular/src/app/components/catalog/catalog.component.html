@@ -1,0 +1,408 @@
+<!-- Main Content -->
+<main class="container mx-auto px-4 py-8">
+
+  <!-- Product Added Notification -->
+  <div *ngIf="showNotification && notificationProduct" class="fixed top-24 right-4 z-50 animate-slide-in">
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl border border-green-400 max-w-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+          <i class="fas fa-check text-xl"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-bold text-lg">¡Producto Agregado!</h4>
+          <p class="text-green-100 text-sm">{{ notificationProduct.nombre }}</p>
+          <p class="text-green-100 text-xs mt-1">
+            <span class="font-semibold">{{ notificationQuantity }}</span>
+            {{ notificationQuantity === 1 ? 'unidad agregada' : 'unidades agregadas' }}
+          </p>
+        </div>
+        <button (click)="hideNotification()" class="text-green-200 hover:text-white transition-colors">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="mt-3 flex justify-end">
+        <button (click)="openCart()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+          Ver Carrito
+        </button>
+      </div>
+    </div>
+  </div>
+  <section class="mb-16">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-800 mb-4">Nuestros Productos</h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+        Descubre nuestra colección completa de productos de alta calidad
+      </p>
+
+      <!-- Buscador Principal -->
+      <div class="max-w-2xl mx-auto mb-8">
+        <form [formGroup]="filterForm" class="relative">
+          <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+            <i class="fas fa-search text-purple-400 text-xl" [class.animate-pulse]="isSearching"></i>
+          </div>
+          <input
+            #searchInput
+            type="text"
+            formControlName="search"
+            placeholder="Buscar productos, marcas, categorías..."
+            (input)="onSearchInput($event)"
+            class="w-full pl-16 pr-20 py-4 text-lg border-2 border-purple-200 rounded-2xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+          <div class="absolute inset-y-0 right-0 pr-6 flex items-center gap-2">
+            <!-- Botón limpiar búsqueda -->
+            <button
+              *ngIf="filterForm.get('search')?.value"
+              (click)="clearSearch(); applyFiltersFromForm()"
+              class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Limpiar búsqueda">
+              <i class="fas fa-times text-sm"></i>
+            </button>
+            <!-- Contador de productos -->
+            <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full flex items-center gap-1">
+              <i class="fas fa-box text-xs"></i>
+              {{ getProductCount() }} productos
+            </span>
+          </div>
+        </form>
+
+        <!-- Indicador de búsqueda activa -->
+        <div *ngIf="isSearching" class="mt-4 text-center">
+          <div class="inline-flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Buscando productos...</span>
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda -->
+        <div *ngIf="filterForm.get('search')?.value && !isSearching && filteredProducts.length > 0" class="mt-4 text-center">
+          <div class="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm inline-flex items-center gap-2">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ filteredProducts.length }} resultados para "<strong>{{ filterForm.get('search')?.value }}</strong>"</span>
+          </div>
+        </div>
+
+        <!-- Sin resultados -->
+        <div *ngIf="filterForm.get('search')?.value && !isSearching && filteredProducts.length === 0" class="mt-4 text-center">
+          <div class="bg-red-50 text-red-700 px-6 py-4 rounded-2xl border border-red-200">
+            <div class="text-4xl text-red-300 mb-2">🔍</div>
+            <h3 class="font-semibold mb-2">No se encontraron productos</h3>
+            <p class="text-sm mb-3">
+              No hay productos que coincidan con "<strong>{{ filterForm.get('search')?.value }}</strong>"
+            </p>
+            <div class="flex gap-2 justify-center">
+              <button
+                (click)="clearSearch()"
+                class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                <i class="fas fa-times mr-1"></i>Limpiar búsqueda
+              </button>
+              <button
+                (click)="clearFilters()"
+                class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
+                <i class="fas fa-filter mr-1"></i>Limpiar todos los filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sugerencias de búsqueda cuando no hay búsqueda activa -->
+        <div *ngIf="!filterForm.get('search')?.value && !isSearching" class="mt-4 text-center">
+          <p class="text-xs text-gray-500 mb-2">Búsquedas populares:</p>
+          <div class="flex flex-wrap gap-2 justify-center">
+            <button
+              *ngFor="let suggestion of ['Nike', 'Adidas', 'Puma', 'Zapatillas', 'Polos']"
+              (click)="setSearchTerm(suggestion)"
+              class="bg-gray-100 hover:bg-purple-100 text-gray-700 hover:text-purple-700 px-3 py-1 rounded-full text-xs transition-colors">
+              {{ suggestion }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layout de dos columnas: Filtros | Productos -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <!-- Sidebar de Filtros -->
+      <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24">
+          <h3 class="text-lg font-bold text-gray-800 mb-6">
+            <i class="fas fa-filter mr-2"></i>Filtros
+          </h3>
+
+          <form [formGroup]="filterForm">
+            <!-- Búsqueda por nombre -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-search mr-2"></i>Buscar producto
+              </label>
+              <input
+                type="text"
+                formControlName="search"
+                placeholder="Nombre, marca..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            </div>
+
+            <!-- Filtro por género -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-venus-mars mr-2"></i>Género
+              </label>
+              <select
+                formControlName="gender"
+                (change)="onGenderChange()"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="todos">Todos los géneros</option>
+                <option value="Hombre">Hombre</option>
+                <option value="Mujer">Mujer</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
+
+            <!-- Filtro por marca -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-tag mr-2"></i>Marca
+              </label>
+              <select
+                formControlName="brand"
+                (change)="onBrandChange()"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="todas">Todas las marcas</option>
+                <option *ngFor="let brand of brands" [value]="brand">{{ brand }}</option>
+              </select>
+            </div>
+
+            <!-- Ordenar -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                <i class="fas fa-sort mr-2"></i>Ordenar por
+              </label>
+              <select
+                formControlName="sort"
+                (change)="onSortChange()"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option value="default">Orden predeterminado</option>
+                <option value="precio-asc">Precio: Menor a Mayor</option>
+                <option value="precio-desc">Precio: Mayor a Menor</option>
+                <option value="nombre-asc">Nombre: A-Z</option>
+                <option value="nombre-desc">Nombre: Z-A</option>
+                <option value="marca-asc">Marca: A-Z</option>
+              </select>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="space-y-3">
+              <button
+                type="button"
+                (click)="applyFiltersFromForm()"
+                class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-300">
+                <i class="fas fa-search mr-2"></i>Aplicar Filtros
+              </button>
+              <button
+                type="button"
+                (click)="clearFilters()"
+                class="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition duration-300">
+                <i class="fas fa-times mr-2"></i>Limpiar
+              </button>
+            </div>
+          </form>
+
+          <!-- Contador de productos -->
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <div class="text-sm text-gray-600 text-center">
+              <span class="font-semibold">{{ getProductCount() }}</span> productos encontrados
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Productos -->
+      <div class="lg:col-span-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <app-product-card
+            *ngFor="let product of filteredProducts"
+            [product]="product"
+            (productAdded)="onProductAdded($event)"
+            (productPreview)="openProductPreview($event)">
+          </app-product-card>
+        </div>
+
+        <!-- Mensaje cuando no hay productos -->
+        <div *ngIf="filteredProducts.length === 0" class="text-center py-12">
+          <div class="text-6xl text-gray-300 mb-4">🔍</div>
+          <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron productos</h3>
+          <p class="text-gray-500">No hay productos que coincidan con los filtros aplicados.</p>
+          <button
+            (click)="clearFilters()"
+            class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300">
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<!-- Modal de Vista Previa de Producto -->
+<div *ngIf="isPreviewOpen && selectedProduct" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" (click)="closeProductPreview()">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" (click)="$event.stopPropagation()">
+    <div class="flex flex-col md:flex-row">
+      <!-- Galería de imágenes del producto -->
+      <div class="md:w-1/2 p-6 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div class="w-full max-w-sm h-80 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden relative">
+          <!-- Imagen principal -->
+          <img
+            *ngIf="selectedProduct?.imagenes && selectedProduct.imagenes.length > 0"
+            [src]="selectedProduct.imagenes[currentImageIndex]"
+            [alt]="selectedProduct.nombre"
+            (click)="toggleImageZoom()"
+            class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+            title="Haz clic para hacer zoom"
+          >
+          <!-- Fallback si no hay imágenes -->
+          <div *ngIf="!selectedProduct?.imagenes || selectedProduct.imagenes.length === 0" class="text-8xl text-white font-bold">
+            {{ selectedProduct.nombre.charAt(0) }}
+          </div>
+
+          <!-- Navegación removida para usar solo una imagen por producto -->
+
+          <!-- Botón de descarga -->
+          <button
+            *ngIf="selectedProduct?.imagenes && selectedProduct.imagenes.length > 0"
+            (click)="downloadImage()"
+            class="absolute top-3 left-3 w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+            title="Descargar imagen">
+            <i class="fas fa-download text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Detalles del producto -->
+      <div class="md:w-1/2 p-6 flex flex-col">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <div class="inline-block bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold mb-2">
+              {{ selectedProduct.categoria }}
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ selectedProduct.nombre }}</h2>
+            <div class="flex items-center gap-2 mb-4">
+              <i class="fas fa-tag text-purple-500"></i>
+              <span class="text-gray-600 font-medium">{{ selectedProduct.marca }}</span>
+            </div>
+          </div>
+          <button (click)="closeProductPreview()" class="text-gray-400 hover:text-gray-600 p-2">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <!-- Precio -->
+        <div class="mb-6">
+          <div class="text-3xl font-bold text-purple-600 mb-2">S/ {{ selectedProduct.precio.toFixed(2) }}</div>
+          <div class="flex items-center gap-2 text-sm text-gray-500">
+            <i class="fas fa-star text-yellow-400"></i>
+            <span>4.5 • 1,234 reseñas</span>
+          </div>
+        </div>
+
+        <!-- Descripción removida -->
+
+
+        <!-- Selección de talla y cantidad -->
+        <div class="mb-6 space-y-4">
+          <!-- Selector de talla -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-800 mb-3">
+              <i class="fas fa-tag mr-2"></i>Talla
+            </label>
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                *ngFor="let size of selectedProduct.tallas"
+                (click)="selectSize(size)"
+                [class]="selectedSize === size
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'"
+                class="px-4 py-2 border-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                {{ size }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Contador de cantidad -->
+          <div class="text-center">
+            <div class="flex items-center justify-center gap-4 mb-2">
+              <button
+                (click)="decreaseQuantity()"
+                class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-gray-700 transition duration-200"
+                [disabled]="previewQuantity <= 1">
+                <i class="fas fa-minus text-sm"></i>
+              </button>
+              <span class="text-xl font-bold text-gray-800 min-w-[3rem] text-center">{{ previewQuantity }}</span>
+              <button
+                (click)="increaseQuantity()"
+                class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-gray-700 transition duration-200"
+                [disabled]="previewQuantity >= selectedProduct.stock">
+                <i class="fas fa-plus text-sm"></i>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500">
+              <i class="fas fa-box mr-1"></i>
+              Stock disponible: {{ currentStock }}
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex gap-3">
+          <button
+            (click)="addToCart(selectedProduct); closeProductPreview()"
+            [disabled]="!selectedSize"
+            class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2">
+            <i class="fas fa-shopping-cart"></i>
+            Agregar al Carrito
+          </button>
+          <button
+            (click)="closeProductPreview()"
+            class="bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition duration-300 flex items-center justify-center gap-2">
+            <i class="fas fa-heart"></i>
+            Favorito
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de zoom de imagen en catálogo -->
+<div *ngIf="isImageZoomed && selectedProduct" class="fixed inset-0 bg-black bg-opacity-75 z-[1100] flex items-center justify-center p-4" (click)="closeImageZoom()">
+  <div class="relative max-w-4xl max-h-full" (click)="$event.stopPropagation()">
+    <!-- Imagen ampliada -->
+    <img
+      *ngIf="selectedProduct.imagenes && selectedProduct.imagenes.length > 0"
+      [src]="selectedProduct.imagenes[currentImageIndex]"
+      [alt]="selectedProduct.nombre"
+      class="max-w-full max-h-full object-contain"
+    >
+
+    <!-- Botón cerrar -->
+    <button
+      (click)="closeImageZoom()"
+      class="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200"
+      title="Cerrar zoom">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Navegación removida para usar solo una imagen por producto -->
+
+    <!-- Botón de descarga en zoom -->
+    <button
+      *ngIf="selectedProduct.imagenes && selectedProduct.imagenes.length > 0"
+      (click)="downloadImage()"
+      class="absolute top-4 left-4 w-10 h-10 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+      title="Descargar imagen">
+      <i class="fas fa-download"></i>
+    </button>
+  </div>
+</div>
+

@@ -670,7 +670,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
             const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
             // 🔐 Descontar stock atómicamente
             const [results, metadata] = yield connection_db_2.default.query(`
-            UPDATE Lote_Talla
+            UPDATE lote_talla
             SET stock = stock - :cantidad
             WHERE id = :id AND stock >= :cantidad
             `, {
@@ -904,7 +904,7 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
                     idventa: nuevaVenta.id,
                     precio_venta_real: detalle.precio_venta_real,
                     subtotal_real: subtotal,
-                    idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                    idestado: estados_constans_1.VentaEstado.REGISTRADO
                 }, { transaction });
                 detallesVentaCreados.push(nuevoDetalleVenta);
                 // Actualizar stock si corresponde

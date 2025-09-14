@@ -180,23 +180,11 @@ const getLoteObtenerInformacion = (req, res) => __awaiter(void 0, void 0, void 0
                     as: 'Producto',
                     attributes: ['id', 'nombre'],
                     include: [
-                        {
-                            model: categoria_model_1.default,
-                            as: 'Categoria',
-                            attributes: ['id', 'nombre']
-                        },
-                        {
-                            model: marca_model_1.default,
-                            as: 'Marca',
-                            attributes: ['id', 'nombre']
-                        }
+                        { model: categoria_model_1.default, as: 'Categoria', attributes: ['id', 'nombre'] },
+                        { model: marca_model_1.default, as: 'Marca', attributes: ['id', 'nombre'] }
                     ]
                 },
-                {
-                    model: estado_model_1.default,
-                    as: 'Estado',
-                    attributes: ['id', 'nombre']
-                },
+                { model: estado_model_1.default, as: 'Estado', attributes: ['id', 'nombre'] }
             ]
         });
         if (!lote) {
@@ -204,7 +192,10 @@ const getLoteObtenerInformacion = (req, res) => __awaiter(void 0, void 0, void 0
             return;
         }
         const detalles = yield lote_talla_model_1.default.findAll({
-            where: { idlote: id },
+            where: {
+                idlote: id,
+                idestado: { [sequelize_1.Op.ne]: estados_constans_1.LoteEstado.ELIMINADO } // 🚀 excluye los eliminados
+            },
         });
         res.json({
             msg: 'Lote obtenido exitosamente',
@@ -213,7 +204,7 @@ const getLoteObtenerInformacion = (req, res) => __awaiter(void 0, void 0, void 0
         });
     }
     catch (error) {
-        console.error('Error en getLoteById:', error);
+        console.error('Error en getLoteObtenerInformacion:', error);
         res.status(500).json({ msg: 'Error al obtener el lote' });
     }
 });
