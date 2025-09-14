@@ -10,6 +10,13 @@
               icon="pi pi-plus" 
               class="p-button-success">
       </button> -->
+      <!-- Botón de Generar Reporte PDF -->
+    <button #pdfButton pButton type="button" 
+            (click)="generarReportePDF()" 
+            label="Generar Reporte" 
+            icon="pi pi-file-pdf" 
+            class="p-button-danger">
+    </button>
       <button pButton type="button" 
               (click)="cargarComprobantes()" 
               label="Actualizar" 

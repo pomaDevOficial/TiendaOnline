@@ -20,6 +20,8 @@ import { TipoComprobanteServicio } from '../../../services/TipoComprobante.servi
 import { WspServicio } from '../../../services/Wsp.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PedidoServicio } from '../../../services/Pedido.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-comprobante',
@@ -502,13 +504,7 @@ editar(comprobante: Comprobante) {
     }
   }
 
-  getEstadoTexto(idestado: number): string {
-    switch (idestado) {
-      case 1: return 'Registrado';
-      case 2: return 'Anulado';
-      default: return 'Desconocido';
-    }
-  }
+
 
   limpiarFiltros() {
     this.fechaInicio = null;
@@ -531,5 +527,61 @@ editar(comprobante: Comprobante) {
     }
   });
 }
+
+ // Método para generar el reporte PDF
+  generarReportePDF() {
+    const doc = new jsPDF();
+    
+    // Título del reporte
+    doc.setFontSize(18);
+    doc.text('Reporte de Comprobantes', 14, 22);
+    
+    // Fechas de filtro (si existen)
+    if (this.fechaInicio && this.fechaFin) {
+      doc.setFontSize(10);
+      const fechaInicioStr = this.fechaInicio.toLocaleDateString();
+      const fechaFinStr = this.fechaFin.toLocaleDateString();
+      doc.text(`Período: ${fechaInicioStr} - ${fechaFinStr}`, 14, 30);
+    }
+    
+    // Configurar los datos para la tabla
+    const tableData = this.comprobantes.map(comprobante => [
+      comprobante.numserie || 'N/A',
+      comprobante.TipoComprobante?.nombre || 'N/A',
+      comprobante.Venta?.Pedido?.Persona 
+        ? `${comprobante.Venta.Pedido.Persona.nombres || ''} ${comprobante.Venta.Pedido.Persona.apellidos || ''}`.trim()
+        : 'N/A',
+      comprobante.Venta?.fechaventa 
+        ? new Date(comprobante.Venta.fechaventa).toLocaleDateString() 
+        : 'N/A',
+      `S/ ${comprobante.igv || '0.00'}`,
+      `S/ ${comprobante.total || '0.00'}`,
+      comprobante.Estado?.nombre || 'N/A'
+    ]);
+    
+    // Crear la tabla
+    autoTable(doc, {
+      head: [['N° Serie', 'Tipo', 'Cliente', 'Fecha Emisión', 'IGV', 'Total', 'Estado']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] } // Color azul para el encabezado
+    });
+    
+    // Pie de página con fecha de generación
+    const fechaGeneracion = new Date().toLocaleString();
+    doc.setFontSize(8);
+    doc.text(`Reporte generado el: ${fechaGeneracion}`, 14, doc.internal.pageSize.height - 10);
+    
+    // Guardar el PDF
+    const fileName = `reporte-comprobantes-${new Date().getTime()}.pdf`;
+    doc.save(fileName);
+    
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Éxito',
+      detail: 'Reporte PDF generado correctamente'
+    });
+  }
 
 }
