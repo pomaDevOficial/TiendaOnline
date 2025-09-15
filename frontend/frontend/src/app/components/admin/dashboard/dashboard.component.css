@@ -17,6 +17,11 @@
 .bg-warning { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; }
 .bg-info { background: linear-gradient(135deg, #0891b2, #06b6d4) !important; }
 
+.bg-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
 /* Progress bars */
 .progress {
   background-color: #e9ecef;

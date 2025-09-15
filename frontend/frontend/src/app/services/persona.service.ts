@@ -69,5 +69,11 @@ export class PersonaServicio {
       `${this.apiUrl}/buscarclientes?q=${encodeURIComponent(query)}&limit=${limit}`
     );
   }
+  // Buscar trabajadores (para autocomplete o select dinámico)
+  buscarTrabajadores(query: string, limit: number = 10): Observable<Persona[]> {
+    return this.http.get<Persona[]>(
+      `${this.apiUrl}/buscartrabajadores?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
+  }
 
 }

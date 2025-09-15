@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VentaServicio } from '../../../services/Venta.service';
 import { DetalleVentaServicio } from '../../../services/DetalleVenta.Service';
+import { LoteTallaServicio } from '../../../services/LoteTalla.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -79,9 +80,16 @@ export class DashboardComponent implements OnInit {
   mesMejorVenta: string = '';
   productoMasVendido: string = '';
 
+
+  resumenStock: any = null;
+  detalleStock: any[] = [];
+  loadingStock = true;
+
   constructor(
     private ventaService: VentaServicio,
-    private detalleVentaService: DetalleVentaServicio
+    private detalleVentaService: DetalleVentaServicio,
+    private loteTallaService: LoteTallaServicio
+
   ) {}
 
   ngOnInit() {
@@ -99,6 +107,7 @@ export class DashboardComponent implements OnInit {
   cargarDashboard() {
     this.cargarVentasPorMes();
     this.cargarProductosMasVendidos();
+    this.cargarResumenStockCritico();
   }
 
   cargarVentasPorMes() {
@@ -406,4 +415,27 @@ export class DashboardComponent implements OnInit {
     const maxValue = this.productosMasVendidos[0]?.cantidadVendida || 1;
     return (producto.cantidadVendida / maxValue) * 100;
   }
+
+  cargarResumenStockCritico(): void {
+    this.loadingStock = true;
+    this.loteTallaService.getResumenStockCritico().subscribe({
+      next: (res) => {
+        this.resumenStock = res.data;
+        this.detalleStock = res.data.detalle;
+        this.loadingStock = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar stock crítico', err);
+        this.loadingStock = false;
+      }
+    });
+  }
+
+  // para darle estilo por stock
+  getRowClass(stock: number): string {
+    if (stock === 0) return 'bg-danger text-white';      // agotado
+    if (stock <= (this.resumenStock?.limite_stock || 15)) return 'bg-warning'; // por agotarse
+    return 'bg-success text-white';                      // normal
+  }
+
 }

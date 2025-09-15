@@ -415,3 +415,54 @@ export const buscarClientes = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ msg: "Error al buscar clientes" });
   }
 };
+
+
+// READ - Buscar trabajadores para select/autocomplete
+export const buscarTrabajadores = async (req: Request, res: Response): Promise<void> => {
+  const qraw = req.query.q;
+  const q = typeof qraw === "string" ? qraw.trim() : "";
+
+  // Parámetros opcionales: limit (máx resultados)
+  const limit = req.query.limit ? Number(req.query.limit) : 20;
+
+  try {
+    if (!q) {
+      res.status(400).json({ msg: "El parámetro q (búsqueda) es obligatorio" });
+      return;
+    }
+
+    const like = `%${q}%`;
+
+    const trabajadores = await Persona.findAll({
+      where: {
+        idtipopersona: 2, // 🔹 solo trabajadores
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO],
+        [Op.or]: [
+          { nombres: { [Op.like]: like } },
+          { apellidos: { [Op.like]: like } },
+          { nroidentidad: { [Op.like]: like } },
+          { correo: { [Op.like]: like } },
+          { telefono: { [Op.like]: like } }
+        ],
+      },
+      include: [
+        {
+          model: Estado,
+          as: "Estado",
+          attributes: ["id", "nombre"],
+          required: false,
+        },
+      ],
+      order: [["apellidos", "ASC"], ["nombres", "ASC"]],
+      limit,
+    });
+
+    res.json({
+      msg: "Resultados de búsqueda de trabajadores obtenidos exitosamente",
+      data: trabajadores,
+    });
+  } catch (error) {
+    console.error("Error en buscarTrabajadores:", error);
+    res.status(500).json({ msg: "Error al buscar trabajadores" });
+  }
+};

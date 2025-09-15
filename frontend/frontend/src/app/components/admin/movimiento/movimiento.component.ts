@@ -16,6 +16,8 @@ import { CalendarModule } from 'primeng/calendar';
 import { MovimientoLote, LoteTalla } from '../../../interfaces/interfaces.interface';
 import { MovimientoLoteService } from '../../../services/MovimientoLote.service';
 import { LoteTallaServicio } from '../../../services/LoteTalla.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-movimiento',
@@ -31,6 +33,8 @@ import { LoteTallaServicio } from '../../../services/LoteTalla.service';
 })
 export class MovimientoComponent implements OnInit {
   movimientos: MovimientoLote[] = [];
+  movimientosFiltrados: MovimientoLote[] = [];
+
   movimientoForm!: FormGroup;
   mostrarDialogoMovimiento: boolean = false;
   loading: boolean = true;
@@ -106,91 +110,7 @@ export class MovimientoComponent implements OnInit {
     });
   }
 
-  cargarMovimientos() {
-    this.loading = true;
-    this.movimientoService.getMovimientos().subscribe({
-      next: (response: any) => {
-        let movimientos: MovimientoLote[] = [];
-        if (Array.isArray(response)) {
-          movimientos = response;
-        } else if (response && Array.isArray(response.data)) {
-          movimientos = response.data;
-        } else if (response && response.movimientos && Array.isArray(response.movimientos)) {
-          movimientos = response.movimientos;
-        } else {
-          console.warn('Unexpected movimientos response format:', response);
-          movimientos = [];
-        }
-
-        this.movimientos = movimientos;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar movimientos', err);
-        this.movimientos = [];
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los movimientos'
-        });
-      }
-    });
-  }
-
-  cargarMovimientosPorFecha() {
-    if (!this.fechaInicio || !this.fechaFin) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Seleccione ambas fechas para filtrar'
-      });
-      return;
-    }
-
-    this.loading = true;
-    const inicio = this.fechaInicio.toISOString().split('T')[0];
-    const fin = this.fechaFin.toISOString().split('T')[0];
-
-    this.movimientoService.getMovimientosByFecha(inicio, fin).subscribe({
-      next: (response: any) => {
-        let movimientos: MovimientoLote[] = [];
-        if (Array.isArray(response)) {
-          movimientos = response;
-        } else if (response && Array.isArray(response.data)) {
-          movimientos = response.data;
-        } else if (response && response.movimientos && Array.isArray(response.movimientos)) {
-          movimientos = response.movimientos;
-        } else {
-          console.warn('Unexpected movimientos por fecha response format:', response);
-          movimientos = [];
-        }
-
-        this.movimientos = movimientos;
-        this.loading = false;
-
-        if (movimientos.length === 0) {
-          this.messageService.add({
-            severity: 'info',
-            summary: 'Información',
-            detail: 'No se encontraron movimientos en el rango de fechas seleccionado',
-            life: 3000
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Error al cargar movimientos por fecha', err);
-        this.movimientos = [];
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los movimientos por fecha'
-        });
-      }
-    });
-  }
-
+  
   cargarMovimientosPorLoteTalla() {
     if (!this.idLoteTallaFiltro) {
       this.messageService.add({
@@ -456,4 +376,208 @@ export class MovimientoComponent implements OnInit {
       life: 3000
     });
   }
+
+
+  cargarMovimientos() {
+  this.loading = true;
+  this.movimientoService.getMovimientos().subscribe({
+    next: (response: any) => {
+      let movimientos: MovimientoLote[] = [];
+      if (Array.isArray(response)) {
+        movimientos = response;
+      } else if (response && Array.isArray(response.data)) {
+        movimientos = response.data;
+      } else if (response && response.movimientos && Array.isArray(response.movimientos)) {
+        movimientos = response.movimientos;
+      } else {
+        console.warn('Unexpected movimientos response format:', response);
+        movimientos = [];
+      }
+
+      this.movimientos = movimientos;
+      this.movimientosFiltrados = [...movimientos]; // ✅ inicializar filtrados
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Error al cargar movimientos', err);
+      this.movimientos = [];
+      this.movimientosFiltrados = []; // ✅ limpiar filtrados también
+      this.loading = false;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudieron cargar los movimientos'
+      });
+    }
+  });
+}
+
+cargarMovimientosPorFecha() {
+  if (!this.fechaInicio || !this.fechaFin) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Advertencia',
+      detail: 'Seleccione ambas fechas para filtrar'
+    });
+    return;
+  }
+
+  this.loading = true;
+  const inicio = this.fechaInicio.toISOString().split('T')[0];
+  const fin = this.fechaFin.toISOString().split('T')[0];
+
+  this.movimientoService.getMovimientosByFecha(inicio, fin).subscribe({
+    next: (response: any) => {
+      let movimientos: MovimientoLote[] = [];
+      if (Array.isArray(response)) {
+        movimientos = response;
+      } else if (response && Array.isArray(response.data)) {
+        movimientos = response.data;
+      } else if (response && response.movimientos && Array.isArray(response.movimientos)) {
+        movimientos = response.movimientos;
+      } else {
+        console.warn('Unexpected movimientos por fecha response format:', response);
+        movimientos = [];
+      }
+
+      this.movimientos = movimientos;
+      this.movimientosFiltrados = [...movimientos]; // ✅ inicializar filtrados
+      this.loading = false;
+
+      if (movimientos.length === 0) {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Información',
+          detail: 'No se encontraron movimientos en el rango de fechas seleccionado',
+          life: 3000
+        });
+      } else {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Se encontraron ${movimientos.length} movimiento(s) en el rango de fechas`,
+          life: 3000
+        });
+      }
+    },
+    error: (err) => {
+      console.error('Error al cargar movimientos por fecha', err);
+      this.movimientos = [];
+      this.movimientosFiltrados = []; // ✅ limpiar filtrados también
+      this.loading = false;
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudieron cargar los movimientos por fecha'
+      });
+    }
+  });
+}
+// Método para actualizar los movimientos filtrados cuando se aplica un filtro
+actualizarMovimientosFiltrados(event: any) {
+  if (event.filteredValue) {
+    // Si hay datos filtrados, usarlos
+    this.movimientosFiltrados = event.filteredValue;
+  } else {
+    // Si no hay filtro, usar todos los movimientos
+    this.movimientosFiltrados = [...this.movimientos];
+  }
+}
+
+
+// Método para generar el reporte PDF de movimientos
+generarReportePDFMovimientos() {
+  if (!this.movimientosFiltrados || this.movimientosFiltrados.length === 0) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Advertencia',
+      detail: 'No hay movimientos para exportar'
+    });
+    return;
+  }
+
+  const doc = new jsPDF();
+
+  // Título
+  doc.setFontSize(18);
+  doc.text('Reporte de Movimientos', 14, 22);
+
+  doc.setFontSize(10);
+  let currentY = 30;
+
+  // Filtro por fechas
+  if (this.fechaInicio && this.fechaFin) {
+    const fechaInicioStr = this.fechaInicio.toLocaleDateString();
+    const fechaFinStr = this.fechaFin.toLocaleDateString();
+    doc.text(`Período: ${fechaInicioStr} - ${fechaFinStr}`, 14, currentY);
+    currentY += 7;
+  }
+
+  // Filtro global si existe
+  const searchInput = document.querySelector('input[pInputText]') as HTMLInputElement;
+  const filterValue = searchInput?.value || '';
+  if (filterValue) {
+    doc.text(`Término de búsqueda: "${filterValue}"`, 14, currentY);
+    currentY += 7;
+  }
+
+  // Info dataset
+  doc.text(`Movimientos mostrados: ${this.movimientosFiltrados.length}`, 14, currentY);
+  currentY += 10;
+
+  // Armar datos de la tabla
+  const tableData = this.movimientosFiltrados.map(mov => [
+    mov.id || 'N/A',
+    mov.LoteTalla?.Lote?.Producto?.nombre || 'N/A',
+    this.getTipoMovimientoTexto(mov.tipomovimiento || ''), // Usamos tu helper
+    mov.cantidad?.toString() || '0',
+    mov.fechamovimiento ? new Date(mov.fechamovimiento).toLocaleString() : 'N/A',
+    mov.Estado?.nombre || 'N/A',
+  ]);
+
+  // Crear tabla con autoTable
+  autoTable(doc, {
+    head: [['ID', 'Producto', 'Tipo', 'Cantidad', 'Fecha', 'Estado']],
+    body: tableData,
+    startY: currentY,
+    styles: { fontSize: 8, cellPadding: 1 },
+    headStyles: { 
+      fillColor: [66, 139, 202],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    foot: [
+      ['', '', 'Total:', this.calcularTotalMovimientos(this.movimientosFiltrados).toString(), '', '', '']
+    ],
+    footStyles: { 
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    }
+  });
+
+  // Pie con fecha de generación
+  const fechaGeneracion = new Date().toLocaleString();
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Reporte generado el: ${fechaGeneracion}`, 14, doc.internal.pageSize.height - 10);
+
+  // Descargar
+  const fileName = `reporte-movimientos-${new Date().getTime()}.pdf`;
+  doc.save(fileName);
+
+  this.messageService.add({
+    severity: 'success',
+    summary: 'Éxito',
+    detail: `Reporte PDF generado con ${this.movimientosFiltrados.length} movimiento(s)`
+  });
+}
+
+// Sumar todas las cantidades
+private calcularTotalMovimientos(movimientos: MovimientoLote[]): number {
+  return movimientos.reduce((acc, mov) => acc + Number(mov.cantidad || 0), 0);
+}
+
+
 }

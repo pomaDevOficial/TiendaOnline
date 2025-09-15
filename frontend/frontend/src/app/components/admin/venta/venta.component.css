@@ -394,6 +394,11 @@
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
+/* Scroll solo para los paneles de sugerencias de p-autoComplete */
+.p-autocomplete-panel {
+  max-height: 200px; /* o lo que prefieras */
+  overflow-y: auto;  /* activa el scroll vertical */
+}
 
 @keyframes loading {
   0% {

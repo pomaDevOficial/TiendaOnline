@@ -8,6 +8,12 @@
         icon="pi pi-plus" 
         styleClass="p-button-success">
       </p-button> -->
+      <button #pdfButton pButton type="button" 
+            (click)="generarReportePDFMovimientos()" 
+            label="Generar Reporte" 
+            icon="pi pi-file-pdf" 
+            class="p-button-danger">
+    </button>
       <p-button 
         (click)="cargarMovimientos()" 
         label="Actualizar" 
@@ -98,13 +104,14 @@
 </div>
   <!-- Tabla Movimientos -->
   <div class="card">
-    <p-table #dt1 [value]="movimientos" dataKey="id" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
+    <p-table #dt1 [value]="movimientosFiltrados" dataKey="id" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" 
              [loading]="loading" [paginator]="true" 
-             [globalFilterFields]="['id', 'LoteTalla.Lote.Producto.nombre', 'tipomovimiento', 'cantidad']">
+             [globalFilterFields]="['id', 'LoteTalla.Lote.Producto.nombre', 'tipomovimiento', 'cantidad']"
+             (onFilter)="actualizarMovimientosFiltrados($event)">
 
     <ng-template #caption>
   <div class="d-flex justify-content-between align-items-center">
-    <span class="text-muted">Total de movimientos: {{movimientos.length || 0}}</span>
+<span class="text-muted">Total de movimientos: {{ movimientosFiltrados.length || 0 }}</span>
     <div class="position-relative">
       <i class="pi pi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
       <input pInputText #globalFilterInput type="text" 

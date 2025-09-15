@@ -167,38 +167,47 @@
         </small>
       </div>
 
-      <!-- Persona -->
-      <div class="form-field">
-        <div class="form-label-container">
-          <label for="idpersona" class="form-label">Persona *</label>
-          <p-button 
-            icon="pi pi-plus" 
-            styleClass="p-button-sm p-button-text p-button-info add-person-btn"
-            (click)="abrirRegistroPersona()" 
-            tooltip="Registrar nueva persona"
-            tooltipPosition="top">
-          </p-button>
-        </div>
-        <p-dropdown 
-          [options]="personas" 
-          formControlName="idpersona" 
-          optionLabel="nombres" 
-          optionValue="id" 
-          placeholder="Seleccione una persona" 
-          styleClass="form-dropdown"
-          [showClear]="true"
-          [class.input-error]="usuarioForm.get('idpersona')?.invalid && usuarioForm.get('idpersona')?.touched">
-          <ng-template let-persona pTemplate="item">
-            <div class="persona-item">
-              <div class="persona-name">{{ persona.nombres }} {{ persona.apellidos }}</div>
-              <div class="persona-id">{{ persona.nroidentidad }}</div>
-            </div>
-          </ng-template>
-        </p-dropdown>
-        <small class="error-message" *ngIf="usuarioForm.get('idpersona')?.invalid && usuarioForm.get('idpersona')?.touched">
-          Persona es requerida
-        </small>
+     <!-- Persona -->
+<div class="form-field">
+  <div class="form-label-container">
+    <label for="idpersona" class="form-label">Trabajador *</label>
+    <p-button 
+      icon="pi pi-plus" 
+      styleClass="p-button-sm p-button-text p-button-info add-person-btn"
+      (click)="abrirRegistroPersona()" 
+      tooltip="Registrar nueva persona"
+      tooltipPosition="top">
+    </p-button>
+  </div>
+  <p-dropdown 
+    [options]="personas" 
+    formControlName="idpersona" 
+    optionLabel="nombres" 
+    optionValue="id" 
+    placeholder="Seleccione una persona" 
+    styleClass="form-dropdown"
+    [showClear]="true"
+    [filter]="true"
+    (onFilter)="buscarPersonas($event)"
+    [filterBy]="'nombres'"
+    [loading]="searching"
+    [class.input-error]="usuarioForm.get('idpersona')?.invalid && usuarioForm.get('idpersona')?.touched">
+    <ng-template let-persona pTemplate="item">
+      <div class="persona-item">
+        <div class="persona-name">{{ persona.nombres }} {{ persona.apellidos }}</div>
+        <div class="persona-id">{{ persona.nroidentidad }}</div>
       </div>
+    </ng-template>
+    <ng-template pTemplate="footer" *ngIf="personas.length === 0 && !searching">
+      <div class="p-2 text-center text-muted">
+        <small>No se encontraron personas. Intente con otros términos de búsqueda.</small>
+      </div>
+    </ng-template>
+  </p-dropdown>
+  <small class="error-message" *ngIf="usuarioForm.get('idpersona')?.invalid && usuarioForm.get('idpersona')?.touched">
+    Persona es requerida
+  </small>
+</div>
 
       <!-- Botones -->
       <div class="dialog-buttons">
