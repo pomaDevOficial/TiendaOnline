@@ -112,7 +112,12 @@ export class MarcaComponent implements OnInit {
     const marcaData: Marca = this.marcaForm.value;
 
     this.marca.createMarca(marcaData).subscribe({
-      next: (nuevaMarca: Marca) => {
+      next: (res: any) => {
+         this.messageService.add({
+        severity: 'success',
+        summary: 'Marca Registrada',
+        detail: res.msg
+      });
         this.cargarMarcas();
         this.cerrarDialogo();
       },
@@ -129,11 +134,16 @@ export class MarcaComponent implements OnInit {
 
     this.marca.updateMarca(marcaData.id!, marcaData)
       .subscribe({
-        next: (res) => {
-            this.cargarMarcas();
-          
-            this.cerrarDialogo();
-            this.editar = false; 
+        next: (res: any) => {
+            this.messageService.add({
+            severity: 'success',
+            summary: 'Marca Registrada',
+            detail: res.msg
+          });
+          this.cargarMarcas();
+        
+          this.cerrarDialogo();
+          this.editar = false; 
         },
         error: (err) => {
           console.error("Error al actualizar la marca", err);
