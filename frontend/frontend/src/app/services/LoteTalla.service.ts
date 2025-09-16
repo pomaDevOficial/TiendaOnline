@@ -92,4 +92,12 @@ export class LoteTallaServicio {
   agregarStockPorLoteTalla(stockData: any): Observable<LoteTalla> {
     return this.http.patch<LoteTalla>(`${this.apiUrl}/agregar-stock`, stockData);
   }
+
+    // Obtener resumen de stock crítico
+  getResumenStockCritico(limiteStock: number = 15): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/resumen/stock-critico`, {
+      params: { limiteStock }
+    });
+  }
+
 }

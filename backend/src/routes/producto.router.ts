@@ -10,7 +10,8 @@ import {
     restaurarProducto,
     verificarProductoCompleto,
     crearProductoConImagen,
-    actualizarProductoConImagen
+    actualizarProductoConImagen,
+    buscarProductos
 } from '../controllers/producto.controller';
 import { uploadProducto } from "../middlewares/uploadProducto";
 
@@ -25,6 +26,7 @@ ProductoRouter.put("/:id/con-imagen",uploadProducto.single("imagen"),actualizarP
 ProductoRouter.get('/', getProductos); // Obtener la lista de todos los productos
 ProductoRouter.get('/registrados', getProductosRegistrados); // Obtener solo productos registrados/actualizados
 ProductoRouter.get('/eliminados', getProductosEliminados); // Obtener solo productos eliminados
+ProductoRouter.get("/buscarproductos", buscarProductos);
 ProductoRouter.get('/verificar-combinacion/:nombre/:idcategoria/:idmarca/:idtalla', verificarProductoCompleto); // Verificar combinación completa
 ProductoRouter.get('/:id', getProductoById); // Obtener un producto por ID
 ProductoRouter.put('/:id', updateProducto); // Actualizar un producto por ID

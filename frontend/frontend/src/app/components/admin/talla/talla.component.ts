@@ -80,46 +80,74 @@ export class TallaComponent implements OnInit {
   }
 
   guardarTalla() {
-    if (this.tallaForm.invalid){
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Formulario incompleto',
-        detail: 'Por favor, complete el nombre de la Talla'
-      });
-      return;
-    } 
-
-    const tallaData: Talla = this.tallaForm.value;
-
-    this.talla.createTalla(tallaData).subscribe({
-      next: (nuevaMarca: Talla) => {
-        this.cargarTallas();
-        this.cerrarDialogo();
-      },
-      error: (err) => {
-        console.error('Error al registrar la talla', err);
-      }
+  if (this.tallaForm.invalid) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario incompleto',
+      detail: 'Por favor, complete el nombre de la Talla'
     });
+    return;
   }
-  
-  guardarEdicion() {
-    if (this.tallaForm.invalid) return;
 
-    const marcaData: Talla = this.tallaForm.value;
+  const tallaData: Talla = this.tallaForm.value;
 
-    this.talla.updateTalla(marcaData.id!, marcaData)
-      .subscribe({
-        next: (res) => {
-            this.cargarTallas();
-          
-            this.cerrarDialogo();
-            this.editar = false; 
-        },
-        error: (err) => {
-          console.error("Error al actualizar la talla", err);
-        }
+  this.talla.createTalla(tallaData).subscribe({
+    next: (res) => {
+      this.cargarTallas();
+      this.cerrarDialogo();
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Talla registrada correctamente'
       });
+    },
+    error: (err) => {
+      console.error('Error al registrar la talla', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: err?.error?.msg || 'Ocurrió un error al registrar la talla'
+      });
+    }
+  });
+}
+
+guardarEdicion() {
+  if (this.tallaForm.invalid) {
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario incompleto',
+      detail: 'Por favor, complete el nombre de la Talla'
+    });
+    return;
   }
+
+  const tallaData: Talla = this.tallaForm.value;
+
+  this.talla.updateTalla(tallaData.id!, tallaData).subscribe({
+    next: (res) => {
+      this.cargarTallas();
+      this.cerrarDialogo();
+      this.editar = false;
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Talla actualizada correctamente'
+      });
+    },
+    error: (err) => {
+      console.error('Error al actualizar la talla', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: err?.error?.msg || 'Ocurrió un error al actualizar la talla'
+      });
+    }
+  });
+}
+
 
   eliminarTalla(talla: Talla) {
       this.confirmationService.confirm({

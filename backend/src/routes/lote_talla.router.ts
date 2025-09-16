@@ -16,7 +16,8 @@ import {
     verificarStock,
     agregarStockPorLoteTalla,
     getProductosFormatoService,
-    updateOrCreateMultipleLoteTalla
+    updateOrCreateMultipleLoteTalla,
+    getResumenStockCritico
     
 } from '../controllers/lote_talla.controller';
 
@@ -35,6 +36,10 @@ LoteTallaRouter.get('/tallas', getTallasDisponibles); // Tallas por producto
 LoteTallaRouter.get('/stock', verificarStock); // Verificación de stock
 LoteTallaRouter.put('/multiple', updateOrCreateMultipleLoteTalla);
 LoteTallaRouter.patch('/agregar-stock', agregarStockPorLoteTalla); // Agregar stock a un lote_talla específico
+
+// ✅ NUEVA RUTA PARA RESUMEN DE STOCK CRÍTICO
+LoteTallaRouter.get('/resumen/stock-critico', getResumenStockCritico);
+
 LoteTallaRouter.get('/:id', getLoteTallaById); // Obtener un lote_talla por ID
 LoteTallaRouter.put('/:id', updateLoteTalla); // Actualizar un lote_talla por ID
 LoteTallaRouter.patch('/:id/estado', cambiarEstadoLoteTalla); // Cambiar estado del lote_talla (disponible/agotado)

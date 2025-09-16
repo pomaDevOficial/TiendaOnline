@@ -896,7 +896,7 @@ export const getProductosDisponibles = async (req: Request, res: Response): Prom
 };
 
 
-// GET - Obtener tallas disponibles para un producto específico (Versión simplificada)
+// GET - Obtener tallas disponibles para un producto específico (Versión ajustada)
 export const getTallasDisponibles = async (req: Request, res: Response): Promise<void> => {
   const { productoId, genero } = req.query;
 
@@ -913,10 +913,10 @@ export const getTallasDisponibles = async (req: Request, res: Response): Promise
       return;
     }
 
-    // Construir objeto where de forma explícita
+    // Filtro base: solo tallas con stock > 0 y lote en estado disponible
     const whereOptions: any = {
       idestado: LoteEstado.DISPONIBLE,
-      stock: { [Op.gt]: 0 }
+      stock: { [Op.gt]: 0 } //  garantiza que no traiga tallas agotadas
     };
 
     // Agregar filtro de género si está presente
@@ -938,17 +938,17 @@ export const getTallasDisponibles = async (req: Request, res: Response): Promise
             {
               model: Producto,
               as: 'Producto',
-              attributes: ['id', 'nombre','imagen'] // Solo los atributos necesarios
+              attributes: ['id', 'nombre','imagen']
             }
           ]
         },
         {
           model: Talla,
           as: 'Talla',
-          attributes: ['id', 'nombre'] // Solo los atributos necesarios
+          attributes: ['id', 'nombre']
         }
       ],
-      attributes: ['id', 'stock', 'precioventa' ,'preciocosto'],
+      attributes: ['id', 'stock', 'precioventa', 'preciocosto'],
       order: [[{ model: Talla, as: 'Talla' }, 'nombre', 'ASC']]
     });
 
@@ -961,6 +961,7 @@ export const getTallasDisponibles = async (req: Request, res: Response): Promise
     res.status(500).json({ msg: 'Error al obtener tallas disponibles' });
   }
 };
+
 
 // GET - Verificar stock en tiempo real
 export const verificarStock = async (req: Request, res: Response): Promise<void> => {
@@ -1545,5 +1546,110 @@ export const updateOrCreateMultipleLoteTalla = async (req: Request, res: Respons
   } catch (error) {
     console.error("Error en updateOrCreateMultipleLoteTalla:", error);
     res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
+  }
+};
+
+// READ - Obtener resumen de stock crítico con detalle
+export const getResumenStockCritico = async (req: Request, res: Response): Promise<void> => {
+  const { limiteStock = 15 } = req.query;
+
+  try {
+    const limite = parseInt(limiteStock as string) || 15;
+
+    const lotesTalla = await LoteTalla.findAll({
+      where: {
+        idestado: {
+          [Op.in]: [LoteEstado.DISPONIBLE, LoteEstado.AGOTADO]
+        }
+      },
+      attributes: [
+        'id',
+        'stock',
+        'esGenero',
+        'preciocosto',
+        'precioventa'
+      ],
+      include: [
+        {
+          model: Lote,
+          as: 'Lote',
+          where: { idestado: LoteEstado.DISPONIBLE },
+          attributes: ['id', 'proveedor', 'fechaingreso'],
+          include: [
+            {
+              model: Producto,
+              as: 'Producto',
+              attributes: ['id', 'nombre'],
+              include: [
+                {
+                  model: Categoria,
+                  as: 'Categoria',
+                  attributes: ['id', 'nombre']
+                }
+              ]
+            }
+          ]
+        },
+        {
+          model: Talla,
+          as: 'Talla',
+          attributes: ['id', 'nombre']
+        }
+      ]
+    });
+
+    // Calcular estadísticas y armar detalle
+    let agotados = 0;
+    let porAgotarse = 0;
+    let normales = 0;
+
+    const detalleCritico: any[] = [];
+
+    lotesTalla.forEach((item: any) => {
+      const estado =
+        item.stock === 0
+          ? 'AGOTADO'
+          : item.stock <= limite
+          ? 'POR AGOTARSE'
+          : 'NORMAL';
+
+      if (estado === 'AGOTADO') agotados++;
+      if (estado === 'POR AGOTARSE') porAgotarse++;
+      if (estado === 'NORMAL') normales++;
+
+      // Solo guardamos en detalle los críticos
+      if (estado !== 'NORMAL') {
+        detalleCritico.push({
+          idLoteTalla: item.id,
+          stock: item.stock,
+          estado: estado,
+          preciocosto: item.preciocosto,
+          precioventa: item.precioventa,
+          talla: item.Talla?.nombre || null,
+          producto: item.Lote?.Producto?.nombre || null,
+          categoria: item.Lote?.Producto?.Categoria?.nombre || null,
+          proveedor: item.Lote?.proveedor || null,
+          fechaingreso: item.Lote?.fechaingreso || null
+        });
+      }
+    });
+
+    const total = agotados + porAgotarse + normales;
+
+    res.json({
+      msg: 'Resumen de stock crítico obtenido exitosamente',
+      data: {
+        total_lotes_talla: total,
+        agotados,
+        por_agotarse: porAgotarse,
+        normales,
+        limite_stock: limite,
+        porcentaje_critico: total > 0 ? Math.round(((agotados + porAgotarse) / total) * 100) : 0,
+        detalle: detalleCritico
+      }
+    });
+  } catch (error) {
+    console.error('Error en getResumenStockCritico:', error);
+    res.status(500).json({ msg: 'Error al obtener resumen de stock crítico' });
   }
 };

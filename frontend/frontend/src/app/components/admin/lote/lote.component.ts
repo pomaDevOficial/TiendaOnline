@@ -22,12 +22,13 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { CalendarModule } from 'primeng/calendar';
 import { TallaServicio } from '../../../services/Talla.service';
 import { LoteTallaServicio } from '../../../services/LoteTalla.service';
+import { AutoComplete, AutoCompleteModule } from 'primeng/autocomplete';
 
 @Component({
   selector: 'app-lote',
   templateUrl: './lote.component.html',
   imports:[CommonModule , TableModule, ButtonModule,FormsModule, ReactiveFormsModule, FormsModule,ToastModule,ConfirmDialogModule,DialogModule, InputTextModule, TagModule,
-    SelectModule, MultiSelectModule,CalendarModule, ButtonModule,DropdownModule,DatePickerModule,FloatLabelModule, IconFieldModule, InputIconModule],
+    SelectModule, MultiSelectModule,CalendarModule, ButtonModule,DropdownModule,DatePickerModule,FloatLabelModule, IconFieldModule, InputIconModule,AutoCompleteModule],
   providers: [ConfirmationService, MessageService],
   styleUrls: ['./lote.component.css']
 })
@@ -221,6 +222,18 @@ confirmarAgregarStock() {
       }
     });
   }
+  buscarProducto(event: any) {
+  const query = event.query;
+  this.producto.buscarProductos(query, 10).subscribe({
+    next: (res: any) => {
+      this.productos = res.data; // el backend devuelve { msg, data }
+    },
+    error: (err) => {
+      console.error('Error al buscar productos', err);
+    }
+  });
+}
+
 
   abrirRegistro() {
     this.editar = false;
@@ -279,41 +292,47 @@ confirmarAgregarStock() {
       this.cargarLotes();
   }
 
-  guardarLote() {
-    if (this.loteForm.invalid){
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Formulario incompleto',
-        detail: 'Por favor, complete el nombre de la Talla'
-      });
-      return;
-    } 
+ guardarLote() {
+  if (this.loteForm.invalid) {
+    // Marcar todos los controles como "touched"
+    this.loteForm.markAllAsTouched();
 
-    // const formData = new FormData();
-    // formData.append('id', this.loteForm.get('id')?.value);
-    // formData.append('idproducto', this.loteForm.get('idproducto')?.value);
-    // formData.append('proveedor', this.loteForm.get('proveedor')?.value);
-    // formData.append('fechaingreso', this.loteForm.get('fechaingreso')?.value);
-    // formData.append('idestado', this.loteForm.get('idestado')?.value);
-    // formData.append('detalles', JSON.stringify(this.loteForm.get('detalles')?.value));
-    const payload = this.loteForm.value;
-    console.log(payload);
-    this.lote.createLote(payload).subscribe({
-      next: (nuevaMarca: Lote) => {
-        // Mensaje de éxito
-        this.messageService.add({
-          severity: 'success',
-          summary: '¡Éxito!',
-          detail: 'Lote y detalles creados correctamente'
-        });
-        this.cargarLotes();
-        this.cerrarDialogo();
-      },
-      error: (err) => {
-        console.error('Error al registrar la talla', err);
-      }
+    // También recorrer el FormArray "detalles"
+    this.detalles.controls.forEach(detalle => {
+      (detalle as FormGroup).markAllAsTouched();
     });
+
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Formulario incompleto',
+      detail: 'Por favor, complete todos los campos obligatorios (incluyendo tallas)'
+    });
+    return;
   }
+
+  const payload = this.loteForm.value;
+  console.log(payload);
+  this.lote.createLote(payload).subscribe({
+    next: () => {
+      this.messageService.add({
+        severity: 'success',
+        summary: '¡Éxito!',
+        detail: 'Lote y detalles creados correctamente'
+      });
+      this.cargarLotes();
+      this.cerrarDialogo();
+    },
+    error: (err) => {
+      console.error('Error al registrar la talla', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo registrar el lote. Intente nuevamente'
+      });
+    }
+  });
+}
+
   
 // Método actualizado para guardarEdicion con mensajes
 async guardarEdicion() {

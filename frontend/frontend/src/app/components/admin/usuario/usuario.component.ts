@@ -17,6 +17,7 @@ import { PersonaServicio } from '../../../services/persona.service';
 import { RolServicio } from '../../../services/Rol.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
+import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-usuario',
@@ -43,6 +44,10 @@ export class UsuarioComponent implements OnInit {
   editarUsuario: boolean = false;
   editarPersona: boolean = false;
 
+  // Para búsqueda dinámica
+  private searchTerms = new Subject<string>();
+  searching: boolean = false;
+
   constructor(
     private usuarioService: UsuarioServicio,
     private personaService: PersonaServicio,
@@ -55,8 +60,42 @@ export class UsuarioComponent implements OnInit {
   ngOnInit() {
     this.initForm();
     this.cargarUsuarios();
-    this.cargarPersonas();
     this.cargarRoles();
+    this.setupSearch(); // Configurar búsqueda dinámica
+  }
+
+  // Configurar la búsqueda dinámica
+  setupSearch() {
+    this.searchTerms.pipe(
+      debounceTime(300), // Esperar 300ms después de cada tecla
+      distinctUntilChanged(), // Ignorar si el término no cambió
+      switchMap((term: string) => {
+        this.searching = true;
+        if (term && term.length >= 2) {
+          return this.personaService.buscarTrabajadores(term, 10);
+        } else {
+          // Si el término está vacío o es muy corto, cargar algunas personas por defecto
+          return this.personaService.getPersonasRegistradas();
+        }
+      })
+    ).subscribe({
+      next: (res: any) => {
+        this.searching = false;
+        this.personas = res.data || res;
+      },
+      error: (err) => {
+        this.searching = false;
+        console.error('Error en búsqueda de personas', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al buscar personas'
+        });
+      }
+    });
+
+    // Cargar algunas personas al iniciar
+    this.searchTerms.next('');
   }
 
   initForm() {
@@ -81,20 +120,9 @@ export class UsuarioComponent implements OnInit {
     });
   }
 
-  cargarPersonas() {
-    this.personaService.getPersonasRegistradas().subscribe({
-      next: (res: any) => {
-        this.personas = res.data;
-      },
-      error: (err) => {
-        console.error('Error al cargar personas', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las personas'
-        });
-      }
-    });
+  // Método para buscar personas dinámicamente
+  buscarPersonas(event: any): void {
+    this.searchTerms.next(event.filter || '');
   }
 
   cargarRoles() {
@@ -146,12 +174,18 @@ export class UsuarioComponent implements OnInit {
     this.editarUsuario = false;
     this.mostrarDialogoUsuario = true;
     this.usuarioForm.reset({ idestado: 6 });
+    
+    // Cargar personas al abrir el diálogo
+    this.searchTerms.next('');
   }
 
   editarUsuarioData(usuario: Usuario) {
     this.editarUsuario = true;
     this.mostrarDialogoUsuario = true;
     this.usuarioForm.patchValue(usuario);
+    
+    // Cargar personas al editar
+    this.searchTerms.next('');
   }
 
   editarPersonaData(persona: Persona) {
@@ -250,7 +284,8 @@ export class UsuarioComponent implements OnInit {
             summary: 'Actualización exitosa',
             detail: 'La persona fue actualizada correctamente'
           });
-          this.cargarPersonas();
+          // Recargar la lista de personas después de actualizar
+          this.searchTerms.next('');
           this.cerrarDialogoPersona();
         },
         error: (err) => {
@@ -271,10 +306,9 @@ export class UsuarioComponent implements OnInit {
             summary: 'Registro exitoso',
             detail: 'La persona fue registrada correctamente'
           });
-          // ✅ Recargar lista y seleccionar automáticamente
-        this.cargarPersonas();
-        this.usuarioForm.patchValue({ idpersona: nuevaPersona.id });
-       
+          // Recargar la lista de personas y seleccionar la nueva
+          this.searchTerms.next('');
+          this.usuarioForm.patchValue({ idpersona: nuevaPersona.id });
           this.cerrarDialogoPersona();
         },
         error: (err) => {

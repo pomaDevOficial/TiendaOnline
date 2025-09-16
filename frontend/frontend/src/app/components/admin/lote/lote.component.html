@@ -33,7 +33,7 @@
             </div>
         </ng-template>
         <ng-template #header>
-            <tr>
+            <tr >
                 <th style="min-width:15rem">
                     <div class="flex items-center">
                         ID
@@ -47,6 +47,12 @@
                 <th style="min-width:15rem">
                     <div class="flex items-center">
                         PROVEEDOR
+                       
+                    </div>
+                </th>
+                 <th style="min-width:15rem">
+                    <div class="flex items-center">
+                        fechaingreso
                        
                     </div>
                 </th>
@@ -75,6 +81,10 @@
                 <td>
                     {{ lote.proveedor}}
                 </td>
+                <td>
+                {{ lote.fechaingreso | date:'dd/MM/yyyy' }}
+              </td>
+
                 <td>
                     <span class="badge {{ getEstadoBadgeClass(lote.idestado || 0) }}">
                       {{ lote.Estado?.nombre}}
@@ -129,22 +139,21 @@
           <label class="form-label">Proveedor</label>
         <input type="text" class="form-control" formControlName="proveedor" />
         </div>
-           <div class="mb-3">
-        <label class="form-label">Producto</label>
-        <p-dropdown 
-          [options]="productos"
-          formControlName="idproducto"
-          optionLabel="nombre"
-          optionValue="id"
-              appendTo="body" 
-          placeholder="Seleccione un producto"
-           [virtualScroll]="false"
-            [panelStyle]="{ width: '100%' }" 
-                 styleClass="form-dropdown"
-          [class.input-error]="loteForm.get('idproducto')?.invalid && loteForm.get('idproducto')?.touched"
-          [style]="{ width: '100%' }">
-        </p-dropdown>
-      </div>
+         <div class="mb-3">
+  <label class="form-label">Producto</label>
+  <p-autoComplete 
+    formControlName="idproducto"
+    [suggestions]="productos" 
+    (completeMethod)="buscarProducto($event)" 
+    field="nombre"
+    [dropdown]="true"
+    [forceSelection]="true"
+    placeholder="Seleccione un producto"
+    [class.input-error]="loteForm.get('idproducto')?.invalid && loteForm.get('idproducto')?.touched"
+    [style]="{ width: '100%' }">
+  </p-autoComplete>
+</div>
+
         
       <div class="row">
            <label for="fecha">Fecha:</label>
@@ -216,7 +225,8 @@
               <p-button 
                 icon="pi pi-plus-circle" 
                 styleClass="p-button-text p-button-success" 
-                (click)="abrirDialogoAgregarStock(d)">
+                (click)="abrirDialogoAgregarStock(d)"
+                [disabled]="!d.get('id')?.value">
               </p-button>
 
               <p-button 

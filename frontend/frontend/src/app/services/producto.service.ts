@@ -28,4 +28,10 @@ export class ProductoServicio {
   eliminarProducto(id: number, producto:any): Observable<Producto> {
     return this.http.patch<Producto>(`${this.apiUrl}/${id}/eliminar`, producto);
   }
+  // Buscar clientes (para autocomplete o select dinámico)
+    buscarProductos(query: string, limit: number = 10): Observable<Producto[]> {
+      return this.http.get<Producto[]>(
+        `${this.apiUrl}/buscarproductos?q=${encodeURIComponent(query)}&limit=${limit}`
+      );
+    }
 }

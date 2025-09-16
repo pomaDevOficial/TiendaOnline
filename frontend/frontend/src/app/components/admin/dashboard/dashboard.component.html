@@ -245,4 +245,92 @@
       </div>
     </div>
   </div>
+
+
+  <!-- 📊 Tabla Resumen de Stock Crítico -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">📊 Resumen de Stock Crítico</h5>
+
+        @if (loadingStock) {
+          <p-skeleton width="100%" height="40px"></p-skeleton>
+        } @else {
+          <table class="table table-bordered text-center">
+            <thead class="table-light">
+              <tr>
+                <th>Total Lotes/Talla</th>
+                <th>Agotados</th>
+                <th>Por Agotarse (≤ {{ resumenStock.limite_stock }})</th>
+                <th>Normales</th>
+                <th>Productos Críticos</th>
+                <th>% Crítico</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ resumenStock.total_lotes_talla }}</td>
+                <td class="text-danger fw-bold">{{ resumenStock.agotados }}</td>
+                <td class="text-warning fw-bold">{{ resumenStock.por_agotarse }}</td>
+                <td class="text-success fw-bold">{{ resumenStock.normales }}</td>
+                <td>{{ resumenStock.productos_criticos }}</td>
+                <td>{{ resumenStock.porcentaje_critico }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📋 Tabla Detalle Stock Crítico -->
+<div class="row mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">📋 Detalle de Lotes en Stock Crítico</h5>
+
+        @if (loadingStock) {
+          <div class="d-flex flex-column gap-2">
+            <p-skeleton width="100%" height="40px" *ngFor="let i of [1,2,3,4,5]"></p-skeleton>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Talla</th>
+                  <th>Proveedor</th>
+                  <th>Stock</th>
+                  <th>Precio Costo</th>
+                  <th>Precio Venta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of detalleStock" [ngClass]="getRowClass(item.stock)">
+                  <td>{{ item.id }}</td>
+                  <td>{{ item.producto }}</td>
+                  <td>{{ item.categoria }}</td>
+                  <td>{{ item.talla }}</td>
+                  <td>{{ item.proveedor }}</td>
+                  <td>{{ item.stock }}</td>
+                  <td>S/ {{ item.preciocosto | number:'1.2-2' }}</td>
+                  <td>S/ {{ item.precioventa | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 </div>

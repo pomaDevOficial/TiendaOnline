@@ -16,12 +16,13 @@ export const createTalla = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Verificar si la talla ya existe
-    const existingTalla = await Talla.findOne({ where: { nombre } });
-    if (existingTalla) {
-      res.status(400).json({ msg: 'La talla ya existe' });
-      return;
-    }
+    // Verificar si la talla ya existe (excluyendo eliminados)
+    const existingTalla = await Talla.findOne({ 
+      where: { 
+        nombre,
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO]
+      } 
+    });
 
     // Crear nueva talla
     const nuevaTalla: any = await Talla.create({
@@ -54,15 +55,17 @@ export const createTalla = async (req: Request, res: Response): Promise<void> =>
 export const getTallas = async (req: Request, res: Response): Promise<void> => {
   try {
     const tallas = await Talla.findAll({
-      include: [
-        { 
-          model: Estado, 
-          as: 'Estado',
-          attributes: ['id', 'nombre'] 
-        }
-      ],
-      order: [['id', 'ASC']]
-    });
+  where: { idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO] },
+  include: [
+    { 
+      model: Estado, 
+      as: 'Estado',
+      attributes: ['id', 'nombre'] 
+    }
+  ],
+  order: [['id', 'ASC']]
+  });
+
 
     res.json({
       msg: 'Lista de tallas obtenida exitosamente',
@@ -148,14 +151,20 @@ export const updateTalla = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Validar nombre único
+    // Validar nombre único (excluyendo eliminados)
     if (nombre && nombre !== talla.nombre) {
-      const existingTalla = await Talla.findOne({ where: { nombre } });
+      const existingTalla = await Talla.findOne({ 
+        where: { 
+          nombre,
+          idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO]
+        } 
+      });
       if (existingTalla && existingTalla.id !== parseInt(id)) {
         res.status(400).json({ msg: 'El nombre de la talla ya está en uso' });
         return;
       }
     }
+
 
     // Actualizar campo nombre
     if (nombre) talla.nombre = nombre;

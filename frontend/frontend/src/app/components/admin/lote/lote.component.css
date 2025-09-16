@@ -1,0 +1,4 @@
+.p-autocomplete-panel {
+  max-height: 200px; /* límite de altura */
+  overflow-y: auto;  /* activa scroll vertical */
+}

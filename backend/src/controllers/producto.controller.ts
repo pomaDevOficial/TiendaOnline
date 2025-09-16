@@ -603,3 +603,58 @@ export const restaurarProducto = async (req: Request, res: Response): Promise<vo
 };
 
 
+// READ - Buscar productos para select/autocomplete
+export const buscarProductos = async (req: Request, res: Response): Promise<void> => {
+  const qraw = req.query.q;
+  const q = typeof qraw === "string" ? qraw.trim() : "";
+
+  // Parámetros opcionales: limit (máx resultados)
+  const limit = req.query.limit ? Number(req.query.limit) : 20;
+
+  try {
+    if (!q) {
+      res.status(400).json({ msg: "El parámetro q (búsqueda) es obligatorio" });
+      return;
+    }
+
+    const like = `%${q}%`;
+
+    const productos = await Producto.findAll({
+      where: {
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO],
+        [Op.or]: [
+          { nombre: { [Op.like]: like } }
+        ],
+      },
+      include: [
+        { 
+          model: Categoria, 
+          as: "Categoria",
+          attributes: ["id", "nombre"]
+        },
+        { 
+          model: Marca, 
+          as: "Marca",
+          attributes: ["id", "nombre"]
+        },
+        {
+          model: Estado,
+          as: "Estado",
+          attributes: ["id", "nombre"]
+        }
+      ],
+      order: [["nombre", "ASC"]],
+      limit, // ⬅️ limitar resultados
+    });
+
+    res.json({
+      msg: "Resultados de búsqueda de productos obtenidos exitosamente",
+      data: productos,
+    });
+  } catch (error) {
+    console.error("Error en buscarProductos:", error);
+    res.status(500).json({ msg: "Error al buscar productos" });
+  }
+};
+
+
