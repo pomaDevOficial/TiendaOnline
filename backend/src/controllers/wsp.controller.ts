@@ -14,6 +14,7 @@ import PedidoDetalle from '../models/pedido_detalle.model';
 import LoteTalla from '../models/lote_talla.model';
 import Lote from '../models/lote.model';
 import Producto from '../models/producto.model';
+import { generarPDFComprobanteModelo } from '../helper/generarPdf.helper';
 
 // Configuración de GreenAPI
 const ID_INSTANCE = "7105309578";
@@ -539,7 +540,7 @@ export const enviarComprobanteService = async (idComprobante: number) => {
   });
 
   // 3. Generar PDF
-  const nombreArchivo = await generarPDFComprobante(
+  const nombreArchivo = await generarPDFComprobanteModelo(
     comprobante,
     comprobante.Venta,
     comprobante.Venta?.Pedido,
@@ -761,7 +762,7 @@ export const reenviarComprobante = async (req: Request, res: Response): Promise<
     });
 
     // Generar el PDF del comprobante
-    const nombreArchivo = await generarPDFComprobante(
+    const nombreArchivo = await generarPDFComprobanteModelo(
       comprobante, 
       comprobante.Venta, 
       comprobante.Venta?.Pedido, 
