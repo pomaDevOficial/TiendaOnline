@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,7 +9,7 @@ const tiposerie_model_1 = __importDefault(require("../models/tiposerie.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 // CREATE - Insertar nuevo tipo de comprobante
-const createTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createTipoComprobante = async (req, res) => {
     const { idtiposerie, nombre } = req.body;
     try {
         // Validaciones
@@ -29,25 +20,25 @@ const createTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
             return;
         }
         // Verificar si el tipo de comprobante ya existe
-        const existingTipoComprobante = yield tipo_comprobante_model_1.default.findOne({ where: { nombre } });
+        const existingTipoComprobante = await tipo_comprobante_model_1.default.findOne({ where: { nombre } });
         if (existingTipoComprobante) {
             res.status(400).json({ msg: 'El tipo de comprobante ya existe' });
             return;
         }
         // Verificar si el tipo de serie existe
-        const tipoSerie = yield tiposerie_model_1.default.findByPk(idtiposerie);
+        const tipoSerie = await tiposerie_model_1.default.findByPk(idtiposerie);
         if (!tipoSerie) {
             res.status(400).json({ msg: 'El tipo de serie no existe' });
             return;
         }
         // Crear nuevo tipo de comprobante
-        const nuevoTipoComprobante = yield tipo_comprobante_model_1.default.create({
+        const nuevoTipoComprobante = await tipo_comprobante_model_1.default.create({
             idtiposerie,
             nombre,
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener el tipo de comprobante creado con sus relaciones
-        const tipoComprobanteCreado = yield tipo_comprobante_model_1.default.findByPk(nuevoTipoComprobante.id, {
+        const tipoComprobanteCreado = await tipo_comprobante_model_1.default.findByPk(nuevoTipoComprobante.id, {
             include: [
                 {
                     model: tiposerie_model_1.default,
@@ -70,12 +61,12 @@ const createTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error('Error en createTipoComprobante:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createTipoComprobante = createTipoComprobante;
 // READ - Listar todos los tipos de comprobante
-const getTiposComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getTiposComprobante = async (req, res) => {
     try {
-        const tiposComprobante = yield tipo_comprobante_model_1.default.findAll({
+        const tiposComprobante = await tipo_comprobante_model_1.default.findAll({
             include: [
                 {
                     model: tiposerie_model_1.default,
@@ -99,12 +90,12 @@ const getTiposComprobante = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en getTiposComprobante:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de tipos de comprobante' });
     }
-});
+};
 exports.getTiposComprobante = getTiposComprobante;
 // READ - Listar tipos de comprobante registrados (no eliminados)
-const getTiposComprobanteRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getTiposComprobanteRegistrados = async (req, res) => {
     try {
-        const tiposComprobante = yield tipo_comprobante_model_1.default.findAll({
+        const tiposComprobante = await tipo_comprobante_model_1.default.findAll({
             where: {
                 idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO]
             },
@@ -131,13 +122,13 @@ const getTiposComprobanteRegistrados = (req, res) => __awaiter(void 0, void 0, v
         console.error('Error en getTiposComprobanteRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener tipos de comprobante registrados' });
     }
-});
+};
 exports.getTiposComprobanteRegistrados = getTiposComprobanteRegistrados;
 // READ - Obtener tipo de comprobante por ID
-const getTipoComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getTipoComprobanteById = async (req, res) => {
     const { id } = req.params;
     try {
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(id, {
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(id, {
             include: [
                 {
                     model: tiposerie_model_1.default,
@@ -164,10 +155,10 @@ const getTipoComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, f
         console.error('Error en getTipoComprobanteById:', error);
         res.status(500).json({ msg: 'Error al obtener el tipo de comprobante' });
     }
-});
+};
 exports.getTipoComprobanteById = getTipoComprobanteById;
 // UPDATE - Actualizar tipo de comprobante
-const updateTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateTipoComprobante = async (req, res) => {
     const { id } = req.params;
     const { idtiposerie, nombre } = req.body;
     try {
@@ -175,14 +166,14 @@ const updateTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
             res.status(400).json({ msg: "El ID del tipo de comprobante es obligatorio" });
             return;
         }
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(id);
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(id);
         if (!tipoComprobante) {
             res.status(404).json({ msg: `No existe un tipo de comprobante con el id ${id}` });
             return;
         }
         // Validar nombre único
         if (nombre && nombre !== tipoComprobante.nombre) {
-            const existingTipoComprobante = yield tipo_comprobante_model_1.default.findOne({ where: { nombre } });
+            const existingTipoComprobante = await tipo_comprobante_model_1.default.findOne({ where: { nombre } });
             if (existingTipoComprobante && existingTipoComprobante.id !== parseInt(id)) {
                 res.status(400).json({ msg: 'El nombre del tipo de comprobante ya está en uso' });
                 return;
@@ -190,7 +181,7 @@ const updateTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
         }
         // Verificar si el tipo de serie existe
         if (idtiposerie) {
-            const tipoSerie = yield tiposerie_model_1.default.findByPk(idtiposerie);
+            const tipoSerie = await tiposerie_model_1.default.findByPk(idtiposerie);
             if (!tipoSerie) {
                 res.status(400).json({ msg: 'El tipo de serie no existe' });
                 return;
@@ -203,9 +194,9 @@ const updateTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
             tipoComprobante.nombre = nombre;
         // Cambiar estado a ACTUALIZADO
         tipoComprobante.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
-        yield tipoComprobante.save();
+        await tipoComprobante.save();
         // Obtener el tipo de comprobante actualizado con relaciones
-        const tipoComprobanteActualizado = yield tipo_comprobante_model_1.default.findByPk(id, {
+        const tipoComprobanteActualizado = await tipo_comprobante_model_1.default.findByPk(id, {
             include: [
                 {
                     model: tiposerie_model_1.default,
@@ -228,20 +219,20 @@ const updateTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error("Error en updateTipoComprobante:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateTipoComprobante = updateTipoComprobante;
 // DELETE - Eliminar tipo de comprobante (cambiar estado a eliminado)
-const deleteTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteTipoComprobante = async (req, res) => {
     const { id } = req.params;
     try {
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(id);
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(id);
         if (!tipoComprobante) {
             res.status(404).json({ msg: 'Tipo de comprobante no encontrado' });
             return;
         }
         // Cambiar estado a ELIMINADO en lugar de eliminar físicamente
         tipoComprobante.idestado = estados_constans_1.EstadoGeneral.ELIMINADO;
-        yield tipoComprobante.save();
+        await tipoComprobante.save();
         res.json({
             msg: 'Tipo de comprobante eliminado con éxito',
             data: { id: tipoComprobante.id, estado: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -251,12 +242,12 @@ const deleteTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error('Error en deleteTipoComprobante:', error);
         res.status(500).json({ msg: 'Error al eliminar el tipo de comprobante' });
     }
-});
+};
 exports.deleteTipoComprobante = deleteTipoComprobante;
 // READ - Listar tipos de comprobante eliminados
-const getTiposComprobanteEliminados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getTiposComprobanteEliminados = async (req, res) => {
     try {
-        const tiposComprobante = yield tipo_comprobante_model_1.default.findAll({
+        const tiposComprobante = await tipo_comprobante_model_1.default.findAll({
             where: { idestado: estados_constans_1.EstadoGeneral.ELIMINADO },
             include: [
                 {
@@ -281,20 +272,20 @@ const getTiposComprobanteEliminados = (req, res) => __awaiter(void 0, void 0, vo
         console.error('Error en getTiposComprobanteEliminados:', error);
         res.status(500).json({ msg: 'Error al obtener tipos de comprobante eliminados' });
     }
-});
+};
 exports.getTiposComprobanteEliminados = getTiposComprobanteEliminados;
 // UPDATE - Restaurar tipo de comprobante eliminado
-const restaurarTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarTipoComprobante = async (req, res) => {
     const { id } = req.params;
     try {
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(id);
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(id);
         if (!tipoComprobante) {
             res.status(404).json({ msg: 'Tipo de comprobante no encontrado' });
             return;
         }
         // Cambiar estado a REGISTRADO
         tipoComprobante.idestado = estados_constans_1.EstadoGeneral.REGISTRADO;
-        yield tipoComprobante.save();
+        await tipoComprobante.save();
         res.json({
             msg: 'Tipo de comprobante restaurado con éxito',
             data: { id: tipoComprobante.id, estado: estados_constans_1.EstadoGeneral.REGISTRADO }
@@ -304,10 +295,10 @@ const restaurarTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en restaurarTipoComprobante:', error);
         res.status(500).json({ msg: 'Error al restaurar el tipo de comprobante' });
     }
-});
+};
 exports.restaurarTipoComprobante = restaurarTipoComprobante;
 // READ - Verificar si existe un tipo de comprobante con el nombre
-const verificarNombreTipoComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verificarNombreTipoComprobante = async (req, res) => {
     const { nombre } = req.params;
     try {
         if (!nombre) {
@@ -316,7 +307,7 @@ const verificarNombreTipoComprobante = (req, res) => __awaiter(void 0, void 0, v
             });
             return;
         }
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findOne({
+        const tipoComprobante = await tipo_comprobante_model_1.default.findOne({
             where: { nombre },
             include: [
                 {
@@ -349,5 +340,5 @@ const verificarNombreTipoComprobante = (req, res) => __awaiter(void 0, void 0, v
         console.error('Error en verificarNombreTipoComprobante:', error);
         res.status(500).json({ msg: 'Error al verificar el nombre del tipo de comprobante' });
     }
-});
+};
 exports.verificarNombreTipoComprobante = verificarNombreTipoComprobante;

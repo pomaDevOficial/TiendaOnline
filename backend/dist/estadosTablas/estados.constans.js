@@ -29,8 +29,7 @@ exports.ComprobanteEstado = {
 };
 exports.TipoMovimientoLote = {
     ENTRADA: 'ENTRADA',
-    SALIDA: 'SALIDA',
-    AJUSTE: 'AJUSTE'
+    SALIDA: 'SALIDA'
 };
 exports.GeneroLote = {
     MASCULINO: 1,

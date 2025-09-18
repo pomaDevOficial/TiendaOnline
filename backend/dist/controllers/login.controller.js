@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,7 +11,7 @@ const persona_model_1 = __importDefault(require("../models/persona.model"));
 const rol_model_1 = __importDefault(require("../models/rol.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
-const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const login = async (req, res) => {
     var _a, _b, _c, _d, _e, _f;
     const { usuario, contrasenia } = req.body;
     try {
@@ -33,7 +24,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         // Buscar el usuario
-        const user = yield usuario_model_1.default.findOne({
+        const user = await usuario_model_1.default.findOne({
             where: {
                 usuario,
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -75,7 +66,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         // Verificar contraseña
-        const match = yield bcrypt_1.default.compare(contrasenia, user.contrasenia);
+        const match = await bcrypt_1.default.compare(contrasenia, user.contrasenia);
         if (!match) {
             res.status(401).json({
                 success: false,
@@ -128,7 +119,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             msg: 'Error en el servidor'
         });
     }
-});
+};
 exports.login = login;
 // Middleware simple para verificar token
 const verifyToken = (req, res) => {

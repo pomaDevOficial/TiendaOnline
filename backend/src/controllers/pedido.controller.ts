@@ -16,8 +16,322 @@ import LoteTalla from '../models/lote_talla.model';
 import PedidoDetalle from '../models/pedido_detalle.model';
 import DetalleVenta from '../models/detalle_venta.model';
 import MovimientoLote from '../models/movimiento_lote.model';
+import { server } from '../server';
 import db from '../db/connection.db';
-import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
+import { generarPDFComprobante, enviarArchivoWSP, enviarComprobanteWSP,enviarMensajePedido, enviarComprobanteService } from './wsp.controller';
+import moment from 'moment';
+import Usuario from '../models/usuario.model';
+
+//CREAR PEDIDO WEB
+// export const crearPedidoConComprobante = async (req: Request, res: Response): Promise<void> => {
+//     const { persona, metodoPago, productos, total, idusuario, fechaventa } = req.body;
+//     console.log(persona)
+
+//     const file = req.file;
+//     const {nroidentidad, correo, nombres, telefono, apellidos}: Persona = persona;
+//     var cli;
+//     var esCliente = false;
+//     if (nroidentidad) {
+//       const existingPersona = await Persona.findOne({ where: { nroidentidad } });
+//       if (existingPersona) {
+//          cli= existingPersona;
+//          esCliente = true;
+//         res.status(400).json({ msg: 'El número de identidad ya existe' });
+//         return;
+//       }
+//     }
+//      // Verificar si el correo ya existe
+//     if (correo) {
+//       const existingPersona = await Persona.findOne({ where: { correo } });
+//       if (existingPersona && esCliente == false) {
+//         res.status(400).json({ msg: 'El correo electrónico ya existe' });
+//         return;
+//       }
+//     }
+// if(esCliente == false){
+//    const cliente: any = await Persona.create({
+//       idtipopersona: 1,
+//       nombres,
+//       apellidos,
+//       idtipoidentidad: 1 ,
+//       nroidentidad: nroidentidad || null,
+//       correo: correo || null,
+//       telefono: telefono || null,
+//       idestado: EstadoGeneral.REGISTRADO
+//     });
+//   cli= cliente
+// }
+    
+//   // 0) VALIDACIONES BÁSICAS
+//   if (!cli?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
+//     res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
+//     return;
+//   }
+//   if (!idusuario && !(req as any).user?.id) {
+//     res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
+//     return;
+//   }
+//    if (!file) {
+//       res.status(400).json({ msg: "La imagen es obligatoria" });
+//       return;
+//     } 
+//   const transaction = await db.transaction();
+//   const imagePath = `${file.filename}`;
+//   try {
+//     // 1) CREAR PEDIDO (cabecera)
+//     const pedido = await Pedido.create({
+//       idpersona: cli.id,
+//       idmetodopago: metodoPago.id,
+//       adjunto: imagePath,
+//       esWeb: 1,
+//       fechaoperacion: new Date(),
+//       totalimporte: Number(total) || 0,
+//       idestado: PedidoEstado.EN_ESPERA
+//     }, { transaction });
+
+//     // 2) DETALLES DE PEDIDO + DESCUENTO DE STOCK (ATÓMICO Y CONCURRENTE)
+//     const pedidoDetalles: PedidoDetalle[] = [];
+
+//     for (const p of productos) {
+//       const { loteTalla, cantidad, precio, subtotal } = p;
+
+//       if (!loteTalla?.id || cantidad == null || precio == null) {
+//         throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
+//       }
+
+//       const cantidadNum = Number(cantidad);
+//       const precioNum = Number(precio);
+//       const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
+
+//       // 🔐 Descontar stock atómicamente
+//       const [results, metadata] = await db.query(
+//             `
+//             UPDATE lote_talla
+//             SET stock = stock - :cantidad
+//             WHERE id = :id AND stock >= :cantidad
+//             `,
+//             {
+//               replacements: { id: loteTalla.id, cantidad: cantidadNum },
+//               transaction
+//             }
+//           ) as [any, { affectedRows: number }];
+
+
+//       // Validar que se haya actualizado (stock suficiente)
+//       if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
+//         throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+//       }
+
+
+//       // Crear detalle de pedido
+//       const det = await PedidoDetalle.create({
+//         idpedido: pedido.id,
+//         idlote_talla: loteTalla.id,
+//         cantidad: cantidadNum,
+//         precio: precioNum,
+//         subtotal: subtotalNum
+//       }, { transaction });
+
+//       pedidoDetalles.push(det);
+
+//       // Registrar movimiento de salida
+//       await MovimientoLote.create({
+//         idlote_talla: loteTalla.id,
+//         tipomovimiento: TipoMovimientoLote.SALIDA,
+//         cantidad: cantidadNum,
+//         fechamovimiento: moment().tz("America/Lima").toDate(),
+//         idestado: EstadoGeneral.REGISTRADO
+//       }, { transaction });
+//     }
+
+   
+//     // 8) GENERAR PDF Y ENVIAR POR WHATSAPP
+//     const telefonoRaw = cli?.telefono;
+//     const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
+//     const phoneRegex = /^\d{9,15}$/;
+
+//     if (telefono && phoneRegex.test(telefono)) {
+//       try {
+    
+//         const resultadoEnvio = await enviarMensajePedido(
+//           telefono, 'Se envia la informacion '
+//         );
+
+//         if (!resultadoEnvio.success) {
+//           throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+//         }
+
+//         res.status(201).json({
+//           msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+         
+//         });
+//         return;
+//       } catch (err) {
+//         console.error('Error al generar/enviar comprobante por WhatsApp:', err);
+//         // seguimos igual, no rompemos la venta
+//       }
+//     }
+
+//     // RESPUESTA FINAL
+//     res.status(201).json({
+//       msg: `Venta, detalles y comprobante creados exitosamente${telefono ? ' (intento de envío por WhatsApp)' : ''}`,
+      
+//     });
+
+//   }catch (error) {
+//     await transaction.rollback();
+//     console.error('Error en crearVentaCompletaConComprobante:', error);
+//     res.status(500).json({
+//       msg: 'Ocurrió un error al crear la venta completa',
+//       error: (error as Error).message
+//     });
+//   }
+// };
+// controllers/PedidoController.ts
+
+
+export const crearPedidoConComprobante = async (req: Request, res: Response): Promise<void> => {
+ console.log("hola")
+  const transaction = await db.transaction();
+
+  try {
+    // 1) Parsear datos (porque vienen en FormData como string JSON)
+    const personaObj: Persona = JSON.parse(req.body.persona);
+    console.log(personaObj)
+    const metodoPagoObj = JSON.parse(req.body.metodoPago);
+    const productosArr = JSON.parse(req.body.productos);
+    const total = Number(req.body.total);
+    const idusuario = req.body.idusuario;
+
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ msg: "La imagen es obligatoria" });
+      return;
+    }
+
+    const { nroidentidad, correo, nombres, telefono, apellidos } = personaObj;
+
+    // 2) Validar duplicados
+    var cli;
+    var esCliente = false;
+    if (nroidentidad) {
+      const existing = await Persona.findOne({ where: { nroidentidad } });
+      if (existing) {
+        cli= existing;
+        esCliente = true;
+        // res.status(400).json({ msg: "El número de identidad ya existe" });
+        // return;
+      }
+    }
+    if (correo) {
+      const existing = await Persona.findOne({ where: { correo } });
+      if (existing && esCliente == false) {
+        res.status(400).json({ msg: "El correo electrónico ya existe" });
+        return;
+      }
+    }
+
+    if(esCliente == false){
+      
+      const cliente: any = await Persona.create({
+        idtipopersona: 1,
+        nombres,
+        apellidos,
+        idtipoidentidad: 1,
+        nroidentidad: nroidentidad || null,
+        correo: correo || null,
+        telefono: telefono || null,
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
+      cli= cliente
+    }
+    // 3) Crear cliente
+
+    // 4) Crear pedido
+    const pedido = await Pedido.create({
+      idpersona: cli.id,
+      idmetodopago: metodoPagoObj.id,
+      adjunto: file.filename,
+      esWeb: 1,
+      fechaoperacion: new Date(),
+      totalimporte: total,
+      idestado: PedidoEstado.EN_ESPERA
+    }, { transaction });
+
+    // 5) Detalles + stock
+    for (const p of productosArr) {
+      const { loteTalla, cantidad, precio, subtotal } = p;
+
+      const cantidadNum = Number(cantidad);
+      const precioNum = Number(precio);
+      const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
+
+      // Descontar stock
+      const [results, metadata] = await db.query(
+        `
+        UPDATE lote_talla
+        SET stock = stock - :cantidad
+        WHERE id = :id AND stock >= :cantidad
+        `,
+        {
+          replacements: { id: loteTalla.id, cantidad: cantidadNum },
+          transaction
+        }
+      ) as [any, { affectedRows: number }];
+
+      if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
+        throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+      }
+
+      // Crear detalle
+      await PedidoDetalle.create({
+        idpedido: pedido.id,
+        idlote_talla: loteTalla.id,
+        cantidad: cantidadNum,
+        precio: precioNum,
+        subtotal: subtotalNum
+      }, { transaction });
+
+      // Registrar movimiento
+      await MovimientoLote.create({
+        idlote_talla: loteTalla.id,
+        tipomovimiento: TipoMovimientoLote.SALIDA,
+        cantidad: cantidadNum,
+        fechamovimiento: moment().tz("America/Lima").toDate(),
+        idestado: EstadoGeneral.REGISTRADO
+      }, { transaction });
+    }
+
+    await transaction.commit();
+
+    // 6) Enviar WhatsApp
+    let telefonoParsed = String(cli?.telefono || "").replace(/\D/g, "");
+    if (telefonoParsed.length === 9) telefonoParsed = "51" + telefonoParsed;
+
+    if (telefonoParsed) {
+      const resultadoEnvio = await enviarMensajePedido(
+        telefonoParsed,
+        `Hola ${cli.nombres}, tu pedido fue registrado con éxito. Total: S/ ${total}`
+      );
+      if (!resultadoEnvio.success) {
+        console.error("Error WhatsApp:", resultadoEnvio.error);
+      }
+    }
+
+    res.status(201).json({
+      msg: "Venta, detalles y comprobante creados correctamente"
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error en crearPedidoConComprobante:", error);
+    res.status(500).json({
+      msg: "Ocurrió un error al crear el pedido",
+      error: (error as Error).message
+    });
+  }
+};
+
 
 // CREATE - Insertar nuevo pedido
 export const createPedido = async (req: Request, res: Response): Promise<void> => {
@@ -441,17 +755,17 @@ export const restaurarPedido = async (req: Request, res: Response): Promise<void
 };
 
 export const aprobarPedido = async (req: Request, res: Response): Promise<void> => {
-  const { idPedido } = req.body;
+  const { id } = req.params;
 
   try {
     // Validaciones
-    if (!idPedido) {
+    if (!id) {
       res.status(400).json({ msg: 'El ID del pedido es obligatorio' });
       return;
     }
 
     // Buscar el pedido por ID con la persona
-    const pedido = await Pedido.findByPk(idPedido, {
+    const pedido = await Pedido.findByPk(id, {
       include: [
         {
           model: Persona,
@@ -475,7 +789,7 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
 
     // Obtener los detalles del pedido
     const detallesPedido = await PedidoDetalle.findAll({
-      where: { idpedido: idPedido },
+      where: { idpedido: id },
       include: [
         {
           model: LoteTalla,
@@ -623,42 +937,44 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
 const telefono = pedido?.Persona?.telefono ?? '';
 const phoneRegex = /^\d{9,15}$/; // valida de 9 a 15 dígitos
 
-if (telefono && phoneRegex.test(telefono)) {
-  // Generar PDF
-  const nombreArchivo = await generarPDFComprobante(
-    comprobanteCompleto, 
-    ventaCompleta, 
-    pedido, 
-    detallesVenta
-  );
+var resultado = await enviarComprobanteService(comprobanteCompleto?.id!)
+res.status(200).json(resultado);
+// if (telefono && phoneRegex.test(telefono)) {
+//   // Generar PDF
+//   const nombreArchivo = await generarPDFComprobante(
+//     comprobanteCompleto, 
+//     ventaCompleta, 
+//     pedido, 
+//     detallesVenta
+//   );
 
-  // Enviar por WhatsApp
-  await enviarArchivoWSP(
-    telefono, 
-    nombreArchivo,
-    `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-  );
+//   // Enviar por WhatsApp
+//   await enviarArchivoWSP(
+//     telefono, 
+//     nombreArchivo,
+//     `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+//   );
 
-  res.status(200).json({
-    msg: 'Pedido aprobado exitosamente y comprobante enviado',
-    data: {
-      pedido,
-      venta: ventaCompleta,
-      comprobante: comprobanteCompleto,
-      detallesVenta
-    }
-  });
-} else {
-  res.status(200).json({
-    msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
-    data: {
-      pedido,
-      venta: ventaCompleta,
-      comprobante: comprobanteCompleto,
-      detallesVenta
-    }
-  });
-}
+//   res.status(200).json({
+//     msg: 'Pedido aprobado exitosamente y comprobante enviado',
+//     data: {
+//       pedido,
+//       venta: ventaCompleta,
+//       comprobante: comprobanteCompleto,
+//       detallesVenta
+//     }
+//   });
+// } else {
+//   res.status(200).json({
+//     msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
+//     data: {
+//       pedido,
+//       venta: ventaCompleta,
+//       comprobante: comprobanteCompleto,
+//       detallesVenta
+//     }
+//   });
+// }
 
     } catch (error) {
       // Revertir transacción en caso de error

@@ -4,9 +4,19 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { ProductService } from '../../services/product.service';
+import { PedidoService } from '../../services/pedido.service';
 import { HeaderComponent } from '../header/header.component';
 import { CartComponent } from '../cart/cart.component';
 import { FooterComponent } from '../footer/footer.component';
+
+// Interfaz para Persona
+interface Persona {
+  nombres: string;
+  apellidos: string;
+  nroidentidad?: string;
+  correo: string;
+  telefono: string;
+}
 
 @Component({
   selector: 'app-checkout',
@@ -46,7 +56,8 @@ export class CheckoutComponent implements OnInit {
     private fb: FormBuilder,
     private cartService: CartService,
     private productService: ProductService,
-    private router: Router
+    private router: Router,
+    private pedidoService: PedidoService
   ) {}
 
   ngOnInit(): void {
@@ -124,17 +135,12 @@ export class CheckoutComponent implements OnInit {
 
   private initializeForm(): void {
     this.checkoutForm = this.fb.group({
-      nombre: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      nombres: ['', [Validators.required]],
+      apellidos: ['', [Validators.required]],
+      nroidentidad: [''],
+      correo: ['', [Validators.required, Validators.email]],
       telefono: ['', [Validators.required]],
-      dni: [''],
-      direccion: ['', [Validators.required]],
-      distrito: [''],
-      provincia: [''],
-      codigoPostal: [''],
-      referencias: [''],
       metodoPago: ['transferencia', [Validators.required]],
-      notas: [''],
       comprobante: [null] // Campo para el archivo adjunto
     });
   }
@@ -149,7 +155,7 @@ export class CheckoutComponent implements OnInit {
 
   private calculateTotals(): void {
     this.subtotal = this.cartItems.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
-    this.shipping = this.subtotal >= 150 ? 0 : 15;
+    this.shipping = 0; // Sin costo de envío
     this.totalAmount = this.subtotal + this.shipping;
   }
 
@@ -329,35 +335,74 @@ export class CheckoutComponent implements OnInit {
    * Procesa el pedido después de la animación
    */
   private processOrder(formData: any): void {
-    // Crear objeto de pedido
-    const pedido = {
-      id: 'PED-' + Date.now(),
-      fecha: new Date().toISOString(),
-      cliente: formData,
-      productos: this.cartItems,
-      total: this.totalAmount,
-      estado: 'confirmado',
-      metodoPago: formData.metodoPago,
-      comprobante: this.selectedFile ? {
-        nombre: this.fileName,
-        tamaño: this.fileSize,
-        tipo: this.selectedFile.type
-      } : null
+    // Crear objeto persona
+    const persona: Persona = {
+      nombres: formData.nombres,
+      apellidos: formData.apellidos,
+      nroidentidad: formData.nroidentidad || null,
+      correo: formData.correo,
+      telefono: formData.telefono
     };
 
-    // Guardar pedido en localStorage (en producción iría a un servidor)
-    localStorage.setItem('ultimoPedido', JSON.stringify(pedido));
+    // Mapear método de pago a ID
+    const metodoPagoMap: { [key: string]: { id: number } } = {
+      'yape': { id: 5 },
+      'plin': { id: 6 },
+      'transferencia': { id: 4 },
+      'efectivo': { id: 1 }
+    };
 
-    // Limpiar carrito
-    this.cartService.clearCart();
+    const metodoPago = metodoPagoMap[formData.metodoPago] || { id: 3 };
 
-    // Cambiar a animación de éxito
-    this.animationStep = 'success';
+    // Preparar productos
+    const productos = this.cartItems.map(item => ({
+      loteTalla: { id: item.loteTallaId || item.id }, // Asumir que el item tiene loteTallaId
+      cantidad: item.quantity,
+      precio: item.precio,
+      subtotal: item.precio * item.quantity
+    }));
 
-    // Redirigir después de mostrar el check de éxito
-    setTimeout(() => {
-      this.router.navigate(['/confirmacion'], { queryParams: { pedido: pedido.id } });
-    }, 1500); // 1.5 segundos para mostrar el check
+    // Crear FormData para enviar archivo
+    const formDataToSend = new FormData();
+    formDataToSend.append('persona', JSON.stringify(persona));
+    formDataToSend.append('metodoPago', JSON.stringify(metodoPago));
+    formDataToSend.append('productos', JSON.stringify(productos));
+    formDataToSend.append('total', this.totalAmount.toString());
+    formDataToSend.append('idusuario', '1'); // Usuario por defecto, ajustar según autenticación
+
+    if (this.selectedFile) {
+      formDataToSend.append('imagen', this.selectedFile);
+    }
+
+    // Enviar al backend usando el servicio
+    this.pedidoService.crearPedidoConComprobante(
+      persona,
+      metodoPago,
+      productos,
+      this.totalAmount,
+      '1', // Usuario por defecto
+      this.selectedFile!
+    ).subscribe({
+      next: (response:any) => {
+        console.log('Pedido creado exitosamente:', response);
+
+        // Limpiar carrito
+        this.cartService.clearCart();
+
+        // Cambiar a animación de éxito
+        this.animationStep = 'success';
+
+        // Redirigir después de mostrar el check de éxito
+        setTimeout(() => {
+          this.router.navigate(['/confirmacion'], { queryParams: { pedido: response.data?.id || 'success' } });
+        }, 1500);
+      },
+      error: (error:any) => {
+        console.error('Error al crear pedido:', error);
+        alert('Error al procesar el pedido: ' + error.message);
+        this.showLoadingAnimation = false;
+      }
+    });
   }
 
   /**

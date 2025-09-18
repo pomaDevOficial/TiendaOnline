@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,7 +8,7 @@ const categoria_model_1 = __importDefault(require("../models/categoria.model"));
 const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 // CREATE - Insertar nueva categoría
-const createCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createCategoria = async (req, res) => {
     const { nombre } = req.body;
     try {
         // Validaciones
@@ -28,18 +19,18 @@ const createCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
             return;
         }
         // Verificar si la categoría ya existe
-        const existingCategoria = yield categoria_model_1.default.findOne({ where: { nombre } });
+        const existingCategoria = await categoria_model_1.default.findOne({ where: { nombre } });
         if (existingCategoria) {
             res.status(400).json({ msg: 'La categoría ya existe' });
             return;
         }
         // Crear nueva categoría
-        const nuevaCategoria = yield categoria_model_1.default.create({
+        const nuevaCategoria = await categoria_model_1.default.create({
             nombre,
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener la categoría creada con su relación de estado
-        const categoriaCreada = yield categoria_model_1.default.findByPk(nuevaCategoria.id, {
+        const categoriaCreada = await categoria_model_1.default.findByPk(nuevaCategoria.id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -57,12 +48,12 @@ const createCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en createCategoria:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createCategoria = createCategoria;
 // READ - Listar todas las categorías
-const getCategorias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getCategorias = async (req, res) => {
     try {
-        const categorias = yield categoria_model_1.default.findAll({
+        const categorias = await categoria_model_1.default.findAll({
             include: [
                 {
                     model: estado_model_1.default,
@@ -81,12 +72,12 @@ const getCategorias = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error('Error en getCategorias:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de categorías' });
     }
-});
+};
 exports.getCategorias = getCategorias;
 // READ - Listar categorías registradas (no eliminadas)
-const getCategoriasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getCategoriasRegistradas = async (req, res) => {
     try {
-        const categorias = yield categoria_model_1.default.findAll({
+        const categorias = await categoria_model_1.default.findAll({
             where: {
                 idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO]
             },
@@ -108,13 +99,13 @@ const getCategoriasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en getCategoriasRegistradas:', error);
         res.status(500).json({ msg: 'Error al obtener categorías registradas' });
     }
-});
+};
 exports.getCategoriasRegistradas = getCategoriasRegistradas;
 // READ - Obtener categoría por ID
-const getCategoriaById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getCategoriaById = async (req, res) => {
     const { id } = req.params;
     try {
-        const categoria = yield categoria_model_1.default.findByPk(id, {
+        const categoria = await categoria_model_1.default.findByPk(id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -136,10 +127,10 @@ const getCategoriaById = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.error('Error en getCategoriaById:', error);
         res.status(500).json({ msg: 'Error al obtener la categoría' });
     }
-});
+};
 exports.getCategoriaById = getCategoriaById;
 // UPDATE - Actualizar categoría
-const updateCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateCategoria = async (req, res) => {
     const { id } = req.params;
     const { nombre } = req.body;
     try {
@@ -147,14 +138,14 @@ const updateCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
             res.status(400).json({ msg: "El ID de la categoría es obligatorio" });
             return;
         }
-        const categoria = yield categoria_model_1.default.findByPk(id);
+        const categoria = await categoria_model_1.default.findByPk(id);
         if (!categoria) {
             res.status(404).json({ msg: `No existe una categoría con el id ${id}` });
             return;
         }
         // Validar nombre único
         if (nombre && nombre !== categoria.nombre) {
-            const existingCategoria = yield categoria_model_1.default.findOne({ where: { nombre } });
+            const existingCategoria = await categoria_model_1.default.findOne({ where: { nombre } });
             if (existingCategoria && existingCategoria.id !== parseInt(id)) {
                 res.status(400).json({ msg: 'El nombre de la categoría ya está en uso' });
                 return;
@@ -165,9 +156,9 @@ const updateCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
             categoria.nombre = nombre;
         // Cambiar estado a ACTUALIZADO
         categoria.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
-        yield categoria.save();
+        await categoria.save();
         // Obtener la categoría actualizada con relación de estado
-        const categoriaActualizada = yield categoria_model_1.default.findByPk(id, {
+        const categoriaActualizada = await categoria_model_1.default.findByPk(id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -185,20 +176,20 @@ const updateCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error("Error en updateCategoria:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateCategoria = updateCategoria;
 // DELETE - Eliminar categoría (cambiar estado a eliminado)
-const deleteCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteCategoria = async (req, res) => {
     const { id } = req.params;
     try {
-        const categoria = yield categoria_model_1.default.findByPk(id);
+        const categoria = await categoria_model_1.default.findByPk(id);
         if (!categoria) {
             res.status(404).json({ msg: 'Categoría no encontrada' });
             return;
         }
         // Cambiar estado a ELIMINADO en lugar de eliminar físicamente
         categoria.idestado = estados_constans_1.EstadoGeneral.ELIMINADO;
-        yield categoria.save();
+        await categoria.save();
         res.json({
             msg: 'Categoría eliminada con éxito',
             data: { id: categoria.id, estado: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -208,12 +199,12 @@ const deleteCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en deleteCategoria:', error);
         res.status(500).json({ msg: 'Error al eliminar la categoría' });
     }
-});
+};
 exports.deleteCategoria = deleteCategoria;
 // READ - Listar categorías eliminadas
-const getCategoriasEliminadas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getCategoriasEliminadas = async (req, res) => {
     try {
-        const categorias = yield categoria_model_1.default.findAll({
+        const categorias = await categoria_model_1.default.findAll({
             where: { idestado: estados_constans_1.EstadoGeneral.ELIMINADO },
             include: [
                 {
@@ -233,20 +224,20 @@ const getCategoriasEliminadas = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en getCategoriasEliminadas:', error);
         res.status(500).json({ msg: 'Error al obtener categorías eliminadas' });
     }
-});
+};
 exports.getCategoriasEliminadas = getCategoriasEliminadas;
 // UPDATE - Restaurar categoría eliminada
-const restaurarCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarCategoria = async (req, res) => {
     const { id } = req.params;
     try {
-        const categoria = yield categoria_model_1.default.findByPk(id);
+        const categoria = await categoria_model_1.default.findByPk(id);
         if (!categoria) {
             res.status(404).json({ msg: 'Categoría no encontrada' });
             return;
         }
         // Cambiar estado a REGISTRADO
         categoria.idestado = estados_constans_1.EstadoGeneral.REGISTRADO;
-        yield categoria.save();
+        await categoria.save();
         res.json({
             msg: 'Categoría restaurada con éxito',
             data: { id: categoria.id, estado: estados_constans_1.EstadoGeneral.REGISTRADO }
@@ -256,10 +247,10 @@ const restaurarCategoria = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en restaurarCategoria:', error);
         res.status(500).json({ msg: 'Error al restaurar la categoría' });
     }
-});
+};
 exports.restaurarCategoria = restaurarCategoria;
 // READ - Verificar si existe una categoría con el nombre
-const verificarNombreCategoria = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verificarNombreCategoria = async (req, res) => {
     const { nombre } = req.params;
     try {
         if (!nombre) {
@@ -268,7 +259,7 @@ const verificarNombreCategoria = (req, res) => __awaiter(void 0, void 0, void 0,
             });
             return;
         }
-        const categoria = yield categoria_model_1.default.findOne({
+        const categoria = await categoria_model_1.default.findOne({
             where: { nombre },
             include: [
                 {
@@ -296,5 +287,5 @@ const verificarNombreCategoria = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en verificarNombreCategoria:', error);
         res.status(500).json({ msg: 'Error al verificar el nombre de la categoría' });
     }
-});
+};
 exports.verificarNombreCategoria = verificarNombreCategoria;

@@ -378,8 +378,6 @@ export const generarPDFComprobante = async (
 // Función para enviar archivo por WhatsApp
 export const enviarArchivoWSP = async (phone: string, filename: string, caption: string = "📄 Comprobante de Venta"): Promise<any> => {
   const localPath = path.join(__dirname, "../../dist/uploads", filename);
-console.log(localPath)
-console.log(phone)
   if (!fs.existsSync(localPath)) {
     throw new Error("Archivo no encontrado en el servidor");
   }
@@ -411,7 +409,38 @@ console.log(phone)
 };
 
 // ============== CONTROLADORES ==============
+export const enviarMensajePedido = async (telefono:string, mensaje:string): Promise<{ success: boolean; data?: any; error?: string }> => {
 
+const url = `https://7105.api.greenapi.com/waInstance${ID_INSTANCE}/sendMessage/${API_TOKEN_INSTANCE}`;
+
+  const payload = {
+    chatId: `${telefono}@c.us`,
+    message: mensaje, // ojo, GreenAPI usa "message" no "mensaje"
+    customPreview: {
+      title: "Mensaje desde tu app",
+      description: "Notificación automática",
+    },
+  };
+
+  try {
+    const response = await axios.post(url, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error: any) {
+    console.error("Error al enviar mensaje:", error);
+
+    return {
+      success: false,
+      error:
+        error.response?.data || error.message || "Error al enviar mensaje",
+    };
+  }
+};
 // Enviar mensaje simple
 export const enviarMensaje = async (req: Request, res: Response): Promise<void> => {
   const { phone, message } = req.body;
@@ -462,6 +491,80 @@ export const enviarMensaje = async (req: Request, res: Response): Promise<void> 
     });
   }
 };
+export const enviarComprobanteService = async (idComprobante: number) => {
+  // 1. Buscar comprobante con sus relaciones
+  const comprobante = await Comprobante.findByPk(idComprobante, {
+    include: [
+      {
+        model: Venta,
+        as: 'Venta',
+        include: [
+          {
+            model: Pedido,
+            as: 'Pedido',
+            include: [{ model: Persona, as: 'Persona' }]
+          }
+        ]
+      },
+      { model: TipoComprobante, as: 'TipoComprobante' }
+    ]
+  });
+
+  if (!comprobante) {
+    throw new Error('Comprobante no encontrado');
+  }
+
+  // 2. Buscar detalles de la venta
+  const detallesVenta = await DetalleVenta.findAll({
+    where: { idventa: comprobante.Venta?.id },
+    include: [
+      {
+        model: PedidoDetalle,
+        as: 'PedidoDetalle',
+        include: [
+          {
+            model: LoteTalla,
+            as: 'LoteTalla',
+            include: [
+              {
+                model: Lote,
+                as: 'Lote',
+                include: [{ model: Producto, as: 'Producto' }]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+
+  // 3. Generar PDF
+  const nombreArchivo = await generarPDFComprobante(
+    comprobante,
+    comprobante.Venta,
+    comprobante.Venta?.Pedido,
+    detallesVenta
+  );
+
+  // 4. Obtener teléfono
+  const telefono = "51" + comprobante?.Venta?.Pedido?.Persona?.telefono;
+  if (!telefono || !comprobante?.Venta?.Pedido?.Persona?.telefono) {
+    throw new Error('El comprobante no tiene un número de teléfono válido asociado');
+  }
+
+  // 5. Enviar WhatsApp
+  const resultadoWSP = await enviarArchivoWSP(
+    telefono,
+    nombreArchivo,
+    `📄 ${comprobante.TipoComprobante?.nombre || 'Comprobante'} ${comprobante.numserie}`
+  );
+
+  return {
+    success: true,
+    message: 'Comprobante enviado exitosamente por WhatsApp',
+    data: resultadoWSP
+  };
+};
 
 // Enviar comprobante por WhatsApp
 export const enviarComprobante = async (req: Request, res: Response): Promise<void> => {
@@ -475,101 +578,102 @@ export const enviarComprobante = async (req: Request, res: Response): Promise<vo
       });
       return;
     }
-
+    const resultado = await enviarComprobanteService(idComprobante);
+    res.status(200).json(resultado);
     // Buscar el comprobante con todos los datos relacionados
-    const comprobante = await Comprobante.findByPk(idComprobante, {
-      include: [
-        {
-          model: Venta,
-          as: 'Venta',
-          include: [
-            {
-              model: Pedido,
-              as: 'Pedido',
-              include: [
-                {
-                  model: Persona,
-                  as: 'Persona'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          model: TipoComprobante,
-          as: 'TipoComprobante'
-        }
-      ]
-    });
+    // const comprobante = await Comprobante.findByPk(idComprobante, {
+    //   include: [
+    //     {
+    //       model: Venta,
+    //       as: 'Venta',
+    //       include: [
+    //         {
+    //           model: Pedido,
+    //           as: 'Pedido',
+    //           include: [
+    //             {
+    //               model: Persona,
+    //               as: 'Persona'
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       model: TipoComprobante,
+    //       as: 'TipoComprobante'
+    //     }
+    //   ]
+    // });
 
-    if (!comprobante) {
-      res.status(404).json({ 
-        success: false,
-        error: 'Comprobante no encontrado' 
-      });
-      return;
-    }
+    // if (!comprobante) {
+    //   res.status(404).json({ 
+    //     success: false,
+    //     error: 'Comprobante no encontrado' 
+    //   });
+    //   return;
+    // }
 
-    // Obtener detalles de la venta
-    const detallesVenta = await DetalleVenta.findAll({
-      where: { idventa: comprobante.Venta?.id },
-      include: [
-        {
-          model: PedidoDetalle,
-          as: 'PedidoDetalle',
-          include: [
-            {
-              model: LoteTalla,
-              as: 'LoteTalla',
-              include: [
-                {
-                  model: Lote,
-                  as: 'Lote',
-                  include: [
-                    {
-                      model: Producto,
-                      as: 'Producto'
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    });
+    // // Obtener detalles de la venta
+    // const detallesVenta = await DetalleVenta.findAll({
+    //   where: { idventa: comprobante.Venta?.id },
+    //   include: [
+    //     {
+    //       model: PedidoDetalle,
+    //       as: 'PedidoDetalle',
+    //       include: [
+    //         {
+    //           model: LoteTalla,
+    //           as: 'LoteTalla',
+    //           include: [
+    //             {
+    //               model: Lote,
+    //               as: 'Lote',
+    //               include: [
+    //                 {
+    //                   model: Producto,
+    //                   as: 'Producto'
+    //                 }
+    //               ]
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+    //   ]
+    // });
 
-    // Generar el PDF del comprobante
-    const nombreArchivo = await generarPDFComprobante(
-      comprobante, 
-      comprobante.Venta, 
-      comprobante.Venta?.Pedido, 
-      detallesVenta
-    );
+    // // Generar el PDF del comprobante
+    // const nombreArchivo = await generarPDFComprobante(
+    //   comprobante, 
+    //   comprobante.Venta, 
+    //   comprobante.Venta?.Pedido, 
+    //   detallesVenta
+    // );
     
-    const telefono = "51" + comprobante?.Venta?.Pedido?.Persona?.telefono;
-    let resultadoWSP = null;
+    // const telefono = "51" + comprobante?.Venta?.Pedido?.Persona?.telefono;
+    // let resultadoWSP = null;
     
-    if (telefono && comprobante?.Venta?.Pedido?.Persona?.telefono) {
-      resultadoWSP = await enviarArchivoWSP(
-        telefono,
-        nombreArchivo,
-        `📄 ${comprobante.TipoComprobante?.nombre || 'Comprobante'} ${comprobante.numserie}`
-      );
-    } else {
-      console.warn("⚠️ El comprobante no tiene número de teléfono, no se envió por WhatsApp.");
-      res.status(400).json({
-        success: false,
-        error: 'El comprobante no tiene un número de teléfono válido asociado'
-      });
-      return;
-    }
+    // if (telefono && comprobante?.Venta?.Pedido?.Persona?.telefono) {
+    //   resultadoWSP = await enviarArchivoWSP(
+    //     telefono,
+    //     nombreArchivo,
+    //     `📄 ${comprobante.TipoComprobante?.nombre || 'Comprobante'} ${comprobante.numserie}`
+    //   );
+    // } else {
+    //   console.warn("⚠️ El comprobante no tiene número de teléfono, no se envió por WhatsApp.");
+    //   res.status(400).json({
+    //     success: false,
+    //     error: 'El comprobante no tiene un número de teléfono válido asociado'
+    //   });
+    //   return;
+    // }
 
-    res.status(200).json({
-      success: true,
-      message: 'Comprobante enviado exitosamente por WhatsApp',
-      data: resultadoWSP
-    });
+    // res.status(200).json({
+    //   success: true,
+    //   message: 'Comprobante enviado exitosamente por WhatsApp',
+    //   data: resultadoWSP
+    // });
 
   } catch (error: any) {
     console.error('Error al enviar comprobante:', error);

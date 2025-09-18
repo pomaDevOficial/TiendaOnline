@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -21,7 +12,7 @@ const sequelize_1 = require("sequelize");
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
 // CREATE - Insertar nuevo movimiento de lote
-const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createMovimientoLote = async (req, res) => {
     const { idlote_talla, tipomovimiento, cantidad, fechamovimiento } = req.body;
     try {
         // Validaciones
@@ -32,7 +23,7 @@ const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         // Verificar si existe el lote_talla
-        const loteTalla = yield lote_talla_model_1.default.findByPk(idlote_talla);
+        const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla);
         if (!loteTalla) {
             res.status(400).json({ msg: 'El lote_talla no existe' });
             return;
@@ -46,7 +37,7 @@ const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         // Crear nuevo movimiento de lote
-        const nuevoMovimiento = yield movimiento_lote_model_1.default.create({
+        const nuevoMovimiento = await movimiento_lote_model_1.default.create({
             idlote_talla,
             tipomovimiento: tipomovimiento.toUpperCase(),
             cantidad,
@@ -54,7 +45,7 @@ const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener el movimiento creado con sus relaciones
-        const movimientoCreado = yield movimiento_lote_model_1.default.findByPk(nuevoMovimiento.id, {
+        const movimientoCreado = await movimiento_lote_model_1.default.findByPk(nuevoMovimiento.id, {
             include: [
                 {
                     model: lote_talla_model_1.default,
@@ -89,10 +80,10 @@ const createMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en createMovimientoLote:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createMovimientoLote = createMovimientoLote;
 // UPDATE - Actualizar movimiento de lote
-const updateMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateMovimientoLote = async (req, res) => {
     const { id } = req.params;
     const { idlote_talla, tipomovimiento, cantidad, fechamovimiento } = req.body;
     try {
@@ -100,14 +91,14 @@ const updateMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
             res.status(400).json({ msg: "El ID del movimiento es obligatorio" });
             return;
         }
-        const movimiento = yield movimiento_lote_model_1.default.findByPk(id);
+        const movimiento = await movimiento_lote_model_1.default.findByPk(id);
         if (!movimiento) {
             res.status(404).json({ msg: `No existe un movimiento con el id ${id}` });
             return;
         }
         // Verificar si existe el lote_talla (si se está actualizando)
         if (idlote_talla) {
-            const loteTalla = yield lote_talla_model_1.default.findByPk(idlote_talla);
+            const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla);
             if (!loteTalla) {
                 res.status(400).json({ msg: 'El lote_talla no existe' });
                 return;
@@ -136,9 +127,9 @@ const updateMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
         if (movimiento.idestado !== estados_constans_1.EstadoGeneral.ELIMINADO) {
             movimiento.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
         }
-        yield movimiento.save();
+        await movimiento.save();
         // Obtener el movimiento actualizado con relaciones
-        const movimientoActualizado = yield movimiento_lote_model_1.default.findByPk(id, {
+        const movimientoActualizado = await movimiento_lote_model_1.default.findByPk(id, {
             include: [
                 {
                     model: lote_talla_model_1.default,
@@ -173,12 +164,12 @@ const updateMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error("Error en updateMovimientoLote:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateMovimientoLote = updateMovimientoLote;
 // READ - Listar todos los movimientos de lote
-const getMovimientosLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientosLote = async (req, res) => {
     try {
-        const movimientos = yield movimiento_lote_model_1.default.findAll({
+        const movimientos = await movimiento_lote_model_1.default.findAll({
             include: [
                 {
                     model: lote_talla_model_1.default,
@@ -215,12 +206,12 @@ const getMovimientosLote = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en getMovimientosLote:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de movimientos' });
     }
-});
+};
 exports.getMovimientosLote = getMovimientosLote;
 // READ - Listar movimientos registrados/actualizados (no eliminados)
-const getMovimientosRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientosRegistrados = async (req, res) => {
     try {
-        const movimientos = yield movimiento_lote_model_1.default.findAll({
+        const movimientos = await movimiento_lote_model_1.default.findAll({
             where: {
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
             },
@@ -259,13 +250,13 @@ const getMovimientosRegistrados = (req, res) => __awaiter(void 0, void 0, void 0
         console.error('Error en getMovimientosRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener movimientos registrados' });
     }
-});
+};
 exports.getMovimientosRegistrados = getMovimientosRegistrados;
 // READ - Obtener movimiento por ID
-const getMovimientoLoteById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientoLoteById = async (req, res) => {
     const { id } = req.params;
     try {
-        const movimiento = yield movimiento_lote_model_1.default.findByPk(id, {
+        const movimiento = await movimiento_lote_model_1.default.findByPk(id, {
             include: [
                 {
                     model: lote_talla_model_1.default,
@@ -305,13 +296,13 @@ const getMovimientoLoteById = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error('Error en getMovimientoLoteById:', error);
         res.status(500).json({ msg: 'Error al obtener el movimiento' });
     }
-});
+};
 exports.getMovimientoLoteById = getMovimientoLoteById;
 // READ - Obtener movimientos por lote_talla
-const getMovimientosByLoteTalla = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientosByLoteTalla = async (req, res) => {
     const { idlote_talla } = req.params;
     try {
-        const movimientos = yield movimiento_lote_model_1.default.findAll({
+        const movimientos = await movimiento_lote_model_1.default.findAll({
             where: {
                 idlote_talla,
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -351,12 +342,12 @@ const getMovimientosByLoteTalla = (req, res) => __awaiter(void 0, void 0, void 0
         console.error('Error en getMovimientosByLoteTalla:', error);
         res.status(500).json({ msg: 'Error al obtener movimientos del lote_talla' });
     }
-});
+};
 exports.getMovimientosByLoteTalla = getMovimientosByLoteTalla;
 // READ - Listar movimientos eliminados
-const getMovimientosEliminados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientosEliminados = async (req, res) => {
     try {
-        const movimientos = yield movimiento_lote_model_1.default.findAll({
+        const movimientos = await movimiento_lote_model_1.default.findAll({
             where: { idestado: estados_constans_1.EstadoGeneral.ELIMINADO },
             include: [
                 {
@@ -388,20 +379,20 @@ const getMovimientosEliminados = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en getMovimientosEliminados:', error);
         res.status(500).json({ msg: 'Error al obtener movimientos eliminados' });
     }
-});
+};
 exports.getMovimientosEliminados = getMovimientosEliminados;
 // DELETE - Eliminar movimiento (cambiar estado a eliminado)
-const deleteMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteMovimientoLote = async (req, res) => {
     const { id } = req.params;
     try {
-        const movimiento = yield movimiento_lote_model_1.default.findByPk(id);
+        const movimiento = await movimiento_lote_model_1.default.findByPk(id);
         if (!movimiento) {
             res.status(404).json({ msg: 'Movimiento no encontrado' });
             return;
         }
         // Cambiar estado a ELIMINADO en lugar de eliminar físicamente
         movimiento.idestado = estados_constans_1.EstadoGeneral.ELIMINADO;
-        yield movimiento.save();
+        await movimiento.save();
         res.json({
             msg: 'Movimiento eliminado con éxito',
             data: { id: movimiento.id, estado: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -411,20 +402,20 @@ const deleteMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en deleteMovimientoLote:', error);
         res.status(500).json({ msg: 'Error al eliminar el movimiento' });
     }
-});
+};
 exports.deleteMovimientoLote = deleteMovimientoLote;
 // UPDATE - Restaurar movimiento eliminado
-const restaurarMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarMovimientoLote = async (req, res) => {
     const { id } = req.params;
     try {
-        const movimiento = yield movimiento_lote_model_1.default.findByPk(id);
+        const movimiento = await movimiento_lote_model_1.default.findByPk(id);
         if (!movimiento) {
             res.status(404).json({ msg: 'Movimiento no encontrado' });
             return;
         }
         // Cambiar estado a REGISTRADO
         movimiento.idestado = estados_constans_1.EstadoGeneral.REGISTRADO;
-        yield movimiento.save();
+        await movimiento.save();
         res.json({
             msg: 'Movimiento restaurado con éxito',
             data: { id: movimiento.id, estado: estados_constans_1.EstadoGeneral.REGISTRADO }
@@ -434,10 +425,10 @@ const restaurarMovimientoLote = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en restaurarMovimientoLote:', error);
         res.status(500).json({ msg: 'Error al restaurar el movimiento' });
     }
-});
+};
 exports.restaurarMovimientoLote = restaurarMovimientoLote;
 // READ - Listar movimientos por rango de fechas
-const getMovimientosByFecha = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMovimientosByFecha = async (req, res) => {
     const { fechaInicio, fechaFin } = req.query;
     try {
         if (!fechaInicio || !fechaFin) {
@@ -449,7 +440,7 @@ const getMovimientosByFecha = (req, res) => __awaiter(void 0, void 0, void 0, fu
         // ✅ Convertir a rango de Lima
         const inicio = moment_timezone_1.default.tz(fechaInicio, "America/Lima").startOf("day").toDate();
         const fin = moment_timezone_1.default.tz(fechaFin, "America/Lima").endOf("day").toDate();
-        const movimientos = yield movimiento_lote_model_1.default.findAll({
+        const movimientos = await movimiento_lote_model_1.default.findAll({
             where: {
                 fechamovimiento: {
                     [sequelize_1.Op.between]: [inicio, fin],
@@ -491,5 +482,5 @@ const getMovimientosByFecha = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error('Error en getMovimientosByFecha:', error);
         res.status(500).json({ msg: 'Error al obtener movimientos por fecha' });
     }
-});
+};
 exports.getMovimientosByFecha = getMovimientosByFecha;

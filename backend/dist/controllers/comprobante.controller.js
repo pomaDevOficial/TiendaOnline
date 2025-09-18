@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -32,13 +23,12 @@ const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const metodo_pago_model_1 = __importDefault(require("../models/metodo_pago.model"));
 const talla_model_1 = __importDefault(require("../models/talla.model"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
-const server_1 = require("../server");
 const fs_1 = __importDefault(require("fs"));
 const generarPdf_helper_1 = require("../helper/generarPdf.helper");
 const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
 const connection_db_2 = __importDefault(require("../db/connection.db"));
 // CREATE - Insertar nuevo comprobante
-const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createComprobante = async (req, res) => {
     const { idventa, igv, descuento, total, idtipocomprobante, numserie } = req.body;
     try {
         // Validaciones
@@ -49,19 +39,19 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return;
         }
         // Verificar si existe la venta
-        const venta = yield venta_model_1.default.findByPk(idventa);
+        const venta = await venta_model_1.default.findByPk(idventa);
         if (!venta) {
             res.status(400).json({ msg: 'La venta no existe' });
             return;
         }
         // Verificar si existe el tipo de comprobante
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idtipocomprobante);
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idtipocomprobante);
         if (!tipoComprobante) {
             res.status(400).json({ msg: 'El tipo de comprobante no existe' });
             return;
         }
         // Verificar si la venta ya tiene un comprobante asociado
-        const comprobanteExistente = yield comprobante_model_1.default.findOne({
+        const comprobanteExistente = await comprobante_model_1.default.findOne({
             where: { idventa }
         });
         if (comprobanteExistente) {
@@ -69,7 +59,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return;
         }
         // Crear nuevo comprobante
-        const nuevoComprobante = yield comprobante_model_1.default.create({
+        const nuevoComprobante = await comprobante_model_1.default.create({
             idventa,
             igv: igv || 0,
             descuento: descuento || 0,
@@ -79,7 +69,7 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
             idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
         });
         // Obtener el comprobante creado con sus relaciones
-        const comprobanteCreado = yield comprobante_model_1.default.findByPk(nuevoComprobante.id, {
+        const comprobanteCreado = await comprobante_model_1.default.findByPk(nuevoComprobante.id, {
             include: [
                 {
                     model: venta_model_1.default,
@@ -126,10 +116,10 @@ const createComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en createComprobante:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createComprobante = createComprobante;
 // UPDATE - Actualizar comprobante
-const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateComprobante = async (req, res) => {
     const { id } = req.params;
     const { idventa, igv, descuento, total, idtipocomprobante, numserie } = req.body;
     try {
@@ -137,20 +127,20 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
             res.status(400).json({ msg: "El ID del comprobante es obligatorio" });
             return;
         }
-        const comprobante = yield comprobante_model_1.default.findByPk(id);
+        const comprobante = await comprobante_model_1.default.findByPk(id);
         if (!comprobante) {
             res.status(404).json({ msg: `No existe un comprobante con el id ${id}` });
             return;
         }
         // Verificar si existe la venta (si se está actualizando)
         if (idventa && idventa !== comprobante.idventa) {
-            const venta = yield venta_model_1.default.findByPk(idventa);
+            const venta = await venta_model_1.default.findByPk(idventa);
             if (!venta) {
                 res.status(400).json({ msg: 'La venta no existe' });
                 return;
             }
             // Verificar si la nueva venta ya tiene un comprobante asociado
-            const comprobanteExistente = yield comprobante_model_1.default.findOne({
+            const comprobanteExistente = await comprobante_model_1.default.findOne({
                 where: { idventa }
             });
             if (comprobanteExistente) {
@@ -160,7 +150,7 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
         }
         // Verificar si existe el tipo de comprobante (si se está actualizando)
         if (idtipocomprobante) {
-            const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idtipocomprobante);
+            const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idtipocomprobante);
             if (!tipoComprobante) {
                 res.status(400).json({ msg: 'El tipo de comprobante no existe' });
                 return;
@@ -179,9 +169,9 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
             comprobante.idtipocomprobante = idtipocomprobante;
         if (numserie !== undefined)
             comprobante.numserie = numserie;
-        yield comprobante.save();
+        await comprobante.save();
         // Obtener el comprobante actualizado con relaciones
-        const comprobanteActualizado = yield comprobante_model_1.default.findByPk(id, {
+        const comprobanteActualizado = await comprobante_model_1.default.findByPk(id, {
             include: [
                 {
                     model: venta_model_1.default,
@@ -228,12 +218,12 @@ const updateComprobante = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error("Error en updateComprobante:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateComprobante = updateComprobante;
 // READ - Listar todos los comprobantes
-const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobantes = async (req, res) => {
     try {
-        const comprobantes = yield comprobante_model_1.default.findAll({
+        const comprobantes = await comprobante_model_1.default.findAll({
             include: [
                 {
                     model: venta_model_1.default,
@@ -281,10 +271,10 @@ const getComprobantes = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en getComprobantes:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de comprobantes' });
     }
-});
+};
 exports.getComprobantes = getComprobantes;
 // READ - Listar comprobantes por rango de fechas
-const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobantesByFecha = async (req, res) => {
     const { fechaInicio, fechaFin } = req.query;
     try {
         if (!fechaInicio || !fechaFin) {
@@ -296,7 +286,7 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
         // ✅ Convertir a rango de Lima
         const inicio = moment_timezone_1.default.tz(fechaInicio, "America/Lima").startOf("day").toDate();
         const fin = moment_timezone_1.default.tz(fechaFin, "America/Lima").endOf("day").toDate();
-        const comprobantes = yield comprobante_model_1.default.findAll({
+        const comprobantes = await comprobante_model_1.default.findAll({
             include: [
                 {
                     model: venta_model_1.default,
@@ -349,12 +339,12 @@ const getComprobantesByFecha = (req, res) => __awaiter(void 0, void 0, void 0, f
         console.error("Error en getComprobantesByFecha:", error);
         res.status(500).json({ msg: "Error al obtener comprobantes por fecha" });
     }
-});
+};
 exports.getComprobantesByFecha = getComprobantesByFecha;
 // READ - Listar comprobantes registrados (no anulados)
-const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobantesRegistrados = async (req, res) => {
     try {
-        const comprobantes = yield comprobante_model_1.default.findAll({
+        const comprobantes = await comprobante_model_1.default.findAll({
             where: {
                 idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
             },
@@ -405,13 +395,13 @@ const getComprobantesRegistrados = (req, res) => __awaiter(void 0, void 0, void 
         console.error('Error en getComprobantesRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener comprobantes registrados' });
     }
-});
+};
 exports.getComprobantesRegistrados = getComprobantesRegistrados;
 // READ - Obtener comprobante por ID
-const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobanteById = async (req, res) => {
     const { id } = req.params;
     try {
-        const comprobante = yield comprobante_model_1.default.findByPk(id, {
+        const comprobante = await comprobante_model_1.default.findByPk(id, {
             include: [
                 {
                     model: venta_model_1.default,
@@ -462,13 +452,13 @@ const getComprobanteById = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en getComprobanteById:', error);
         res.status(500).json({ msg: 'Error al obtener el comprobante' });
     }
-});
+};
 exports.getComprobanteById = getComprobanteById;
 // READ - Obtener comprobantes por venta
-const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobantesByVenta = async (req, res) => {
     const { idventa } = req.params;
     try {
-        const comprobantes = yield comprobante_model_1.default.findAll({
+        const comprobantes = await comprobante_model_1.default.findAll({
             where: { idventa },
             include: [
                 {
@@ -517,12 +507,12 @@ const getComprobantesByVenta = (req, res) => __awaiter(void 0, void 0, void 0, f
         console.error('Error en getComprobantesByVenta:', error);
         res.status(500).json({ msg: 'Error al obtener comprobantes de la venta' });
     }
-});
+};
 exports.getComprobantesByVenta = getComprobantesByVenta;
 // READ - Listar comprobantes anulados
-const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getComprobantesAnulados = async (req, res) => {
     try {
-        const comprobantes = yield comprobante_model_1.default.findAll({
+        const comprobantes = await comprobante_model_1.default.findAll({
             where: { idestado: estados_constans_1.ComprobanteEstado.ANULADO },
             include: [
                 {
@@ -566,78 +556,312 @@ const getComprobantesAnulados = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en getComprobantesAnulados:', error);
         res.status(500).json({ msg: 'Error al obtener comprobantes anulados' });
     }
-});
+};
 exports.getComprobantesAnulados = getComprobantesAnulados;
-// UPDATE - Anular comprobante
-const anularComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// UPDATE - Anular comprobante (solo cambia estado)
+const anularComprobante = async (req, res) => {
+    var _a, _b, _c, _d, _e;
     const { id } = req.params;
+    const transaction = await connection_db_1.default.transaction();
     try {
-        const comprobante = yield comprobante_model_1.default.findByPk(id);
+        const comprobante = await comprobante_model_1.default.findByPk(id, {
+            include: [
+                {
+                    model: venta_model_1.default,
+                    as: 'Venta',
+                    include: [
+                        {
+                            model: pedido_model_1.default,
+                            as: 'Pedido'
+                        }
+                    ]
+                }
+            ],
+            transaction
+        });
         if (!comprobante) {
             res.status(404).json({ msg: 'Comprobante no encontrado' });
             return;
         }
-        comprobante.idestado = estados_constans_1.ComprobanteEstado.ANULADO;
-        yield comprobante.save();
+        // Verificar si ya está anulado
+        if (comprobante.idestado === estados_constans_1.ComprobanteEstado.ANULADO) {
+            res.status(400).json({ msg: 'El comprobante ya está anulado' });
+            return;
+        }
+        // 1) DEVOLVER STOCK AL INVENTARIO (igual que en eliminación)
+        const pedidoDetalles = await pedido_detalle_model_1.default.findAll({
+            where: { idpedido: (_b = (_a = comprobante.Venta) === null || _a === void 0 ? void 0 : _a.Pedido) === null || _b === void 0 ? void 0 : _b.id },
+            include: [
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTalla'
+                }
+            ],
+            transaction
+        });
+        for (const detalle of pedidoDetalles) {
+            if (detalle.LoteTalla && detalle.idlote_talla && detalle.cantidad) {
+                // Incrementar stock atómicamente
+                await connection_db_2.default.query(`UPDATE Lote_Talla SET stock = stock + :cantidad WHERE id = :id`, {
+                    replacements: { id: detalle.idlote_talla, cantidad: Number(detalle.cantidad) },
+                    transaction
+                });
+                // Registrar movimiento de ENTRADA (devolución)
+                await movimiento_lote_model_1.default.create({
+                    idlote_talla: detalle.idlote_talla,
+                    tipomovimiento: estados_constans_1.TipoMovimientoLote.ENTRADA,
+                    cantidad: Number(detalle.cantidad),
+                    fechamovimiento: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
+                    idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                }, { transaction });
+            }
+        }
+        // 2) ACTUALIZAR ESTADOS (solo cambiar estados, no eliminar)
+        await comprobante.update({
+            idestado: estados_constans_1.ComprobanteEstado.ANULADO
+        }, { transaction });
+        await ((_c = comprobante.Venta) === null || _c === void 0 ? void 0 : _c.update({
+            idestado: estados_constans_1.VentaEstado.ANULADO
+        }, { transaction }));
+        await ((_e = (_d = comprobante.Venta) === null || _d === void 0 ? void 0 : _d.Pedido) === null || _e === void 0 ? void 0 : _e.update({
+            idestado: estados_constans_1.PedidoEstado.CANCELADO
+        }, { transaction }));
+        // Confirmar la transacción
+        await transaction.commit();
         res.json({
-            msg: 'Comprobante anulado con éxito',
+            msg: 'Comprobante anulado con éxito y stock devuelto al inventario',
             data: { id: comprobante.id, estado: estados_constans_1.ComprobanteEstado.ANULADO }
         });
     }
     catch (error) {
+        // Revertir la transacción en caso de error
+        await transaction.rollback();
         console.error('Error en anularComprobante:', error);
-        res.status(500).json({ msg: 'Error al anular el comprobante' });
+        res.status(500).json({
+            msg: 'Error al anular el comprobante',
+            error: error.message
+        });
     }
-});
+};
 exports.anularComprobante = anularComprobante;
-// UPDATE - Restaurar comprobante anulado
-const restaurarComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// UPDATE - Restaurar comprobante anulado con reversión de stock
+const restaurarComprobante = async (req, res) => {
+    var _a;
     const { id } = req.params;
+    const transaction = await connection_db_1.default.transaction();
     try {
-        const comprobante = yield comprobante_model_1.default.findByPk(id);
+        const comprobante = await comprobante_model_1.default.findByPk(id, {
+            include: [
+                {
+                    model: venta_model_1.default,
+                    as: 'Venta',
+                    include: [
+                        {
+                            model: pedido_model_1.default,
+                            as: 'Pedido'
+                        }
+                    ]
+                }
+            ],
+            transaction
+        });
         if (!comprobante) {
             res.status(404).json({ msg: 'Comprobante no encontrado' });
             return;
         }
-        // Cambiar estado a REGISTRADO
-        comprobante.idestado = estados_constans_1.ComprobanteEstado.REGISTRADO;
-        yield comprobante.save();
+        // Verificar si existe una venta asociada
+        if (!comprobante.Venta) {
+            res.status(404).json({ msg: 'Venta asociada al comprobante no encontrada' });
+            return;
+        }
+        // Verificar si existe un pedido asociado
+        if (!comprobante.Venta.Pedido) {
+            res.status(404).json({ msg: 'Pedido asociado a la venta no encontrado' });
+            return;
+        }
+        // CONSULTA SEPARADA PARA OBTENER LOS DETALLES DEL PEDIDO
+        const pedidoDetalles = await pedido_detalle_model_1.default.findAll({
+            where: { idpedido: comprobante.Venta.Pedido.id },
+            include: [
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTalla'
+                }
+            ],
+            transaction
+        });
+        if (!pedidoDetalles || pedidoDetalles.length === 0) {
+            res.status(404).json({ msg: 'No se encontraron detalles del pedido' });
+            return;
+        }
+        // 1) REVERTIR STOCK (QUITAR EL STOCK QUE SE HABÍA DEVUELTO)
+        for (const detalle of pedidoDetalles) {
+            // Validar que los campos necesarios no sean null
+            if (!detalle.LoteTalla || detalle.idlote_talla === null || detalle.cantidad === null) {
+                throw new Error(`Detalle de pedido ${detalle.id} tiene datos incompletos`);
+            }
+            const { idlote_talla, cantidad } = detalle;
+            // Verificar que haya stock suficiente antes de restar
+            const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla, { transaction });
+            if (!loteTalla) {
+                throw new Error(`LoteTalla ${idlote_talla} no encontrado`);
+            }
+            // Validar que stock no sea null y sea suficiente
+            const stockActual = (_a = loteTalla.stock) !== null && _a !== void 0 ? _a : 0;
+            const cantidadNum = Number(cantidad);
+            if (stockActual < cantidadNum) {
+                throw new Error(`Stock insuficiente en LoteTalla ${idlote_talla} para restaurar la venta`);
+            }
+            // Restar stock atómicamente (revertir la devolución)
+            const [results, metadata] = await connection_db_2.default.query(`UPDATE Lote_Talla SET stock = stock - :cantidad WHERE id = :id AND stock >= :cantidad`, {
+                replacements: { id: idlote_talla, cantidad: cantidadNum },
+                transaction
+            });
+            // Verificar que se actualizó el stock (dependiendo del dialecto de la base de datos)
+            const affectedRows = metadata.affectedRows || metadata.rowCount;
+            if (affectedRows === 0) {
+                throw new Error(`No se pudo actualizar el stock para LoteTalla ${idlote_talla}`);
+            }
+            // Registrar movimiento de SALIDA (reversión de la devolución)
+            await movimiento_lote_model_1.default.create({
+                idlote_talla: idlote_talla,
+                tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
+                cantidad: cantidadNum,
+                fechamovimiento: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
+                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+            }, { transaction });
+        }
+        // 2) ACTUALIZAR ESTADOS DE LAS ENTIDADES RELACIONADAS
+        await comprobante.Venta.update({
+            idestado: estados_constans_1.VentaEstado.REGISTRADO
+        }, { transaction });
+        await comprobante.Venta.Pedido.update({
+            idestado: estados_constans_1.PedidoEstado.PAGADO
+        }, { transaction });
+        // 3) RESTAURAR EL COMPROBANTE
+        await comprobante.update({
+            idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
+        }, { transaction });
+        // Confirmar la transacción
+        await transaction.commit();
         res.json({
-            msg: 'Comprobante restaurado con éxito',
-            data: { id: comprobante.id, estado: estados_constans_1.ComprobanteEstado.REGISTRADO }
+            msg: 'Comprobante restaurado con éxito y stock revertido',
+            data: {
+                id: comprobante.id,
+                estado: estados_constans_1.ComprobanteEstado.REGISTRADO,
+                numserie: comprobante.numserie
+            }
         });
     }
     catch (error) {
+        // Revertir la transacción en caso de error
+        await transaction.rollback();
         console.error('Error en restaurarComprobante:', error);
-        res.status(500).json({ msg: 'Error al restaurar el comprobante' });
+        res.status(500).json({
+            msg: 'Error al restaurar el comprobante',
+            error: error.message
+        });
     }
-});
+};
 exports.restaurarComprobante = restaurarComprobante;
-// DELETE - Eliminar comprobante físicamente
-const deleteComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// DELETE - Eliminar comprobante físicamente con devolución de stock
+const deleteComprobante = async (req, res) => {
     const { id } = req.params;
+    const transaction = await connection_db_1.default.transaction();
     try {
-        const comprobante = yield comprobante_model_1.default.findByPk(id);
+        const comprobante = await comprobante_model_1.default.findByPk(id, {
+            include: [
+                {
+                    model: venta_model_1.default,
+                    as: 'Venta',
+                    include: [
+                        {
+                            model: pedido_model_1.default,
+                            as: 'Pedido'
+                        }
+                    ]
+                }
+            ],
+            transaction
+        });
         if (!comprobante) {
             res.status(404).json({ msg: 'Comprobante no encontrado' });
             return;
         }
-        // Eliminar físicamente
-        yield comprobante.destroy();
+        // Verificar si existe una venta asociada
+        if (!comprobante.Venta) {
+            res.status(404).json({ msg: 'Venta asociada al comprobante no encontrada' });
+            return;
+        }
+        // Verificar si existe un pedido asociado
+        if (!comprobante.Venta.Pedido) {
+            res.status(404).json({ msg: 'Pedido asociado a la venta no encontrado' });
+            return;
+        }
+        // CONSULTA SEPARADA PARA OBTENER LOS DETALLES DEL PEDIDO
+        const pedidoDetalles = await pedido_detalle_model_1.default.findAll({
+            where: { idpedido: comprobante.Venta.Pedido.id },
+            include: [
+                {
+                    model: lote_talla_model_1.default,
+                    as: 'LoteTalla'
+                }
+            ],
+            transaction
+        });
+        if (!pedidoDetalles || pedidoDetalles.length === 0) {
+            res.status(404).json({ msg: 'No se encontraron detalles del pedido' });
+            return;
+        }
+        // 1) DEVOLVER STOCK AL INVENTARIO
+        for (const detalle of pedidoDetalles) {
+            if (detalle.LoteTalla) {
+                const { idlote_talla, cantidad } = detalle;
+                // Incrementar stock atómicamente
+                await connection_db_2.default.query(`UPDATE Lote_Talla SET stock = stock + :cantidad WHERE id = :id`, {
+                    replacements: { id: idlote_talla, cantidad: Number(cantidad) },
+                    transaction
+                });
+                // Registrar movimiento de ENTRADA (devolución)
+                await movimiento_lote_model_1.default.create({
+                    idlote_talla: idlote_talla,
+                    tipomovimiento: estados_constans_1.TipoMovimientoLote.ENTRADA,
+                    cantidad: Number(cantidad),
+                    fechamovimiento: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
+                    idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                }, { transaction });
+            }
+        }
+        // 2) ACTUALIZAR ESTADOS DE LAS ENTIDADES RELACIONADAS
+        await comprobante.Venta.update({
+            idestado: estados_constans_1.VentaEstado.ANULADO
+        }, { transaction });
+        await comprobante.Venta.Pedido.update({
+            idestado: estados_constans_1.PedidoEstado.CANCELADO
+        }, { transaction });
+        // 3) ELIMINAR FÍSICAMENTE EL COMPROBANTE
+        await comprobante.destroy({ transaction });
+        // Confirmar la transacción
+        await transaction.commit();
         res.json({
-            msg: 'Comprobante eliminado con éxito',
+            msg: 'Comprobante eliminado con éxito y stock devuelto al inventario',
             data: { id }
         });
     }
     catch (error) {
+        // Revertir la transacción en caso de error
+        await transaction.rollback();
         console.error('Error en deleteComprobante:', error);
-        res.status(500).json({ msg: 'Error al eliminar el comprobante' });
+        res.status(500).json({
+            msg: 'Error al eliminar el comprobante',
+            error: error.message
+        });
     }
-});
+};
 exports.deleteComprobante = deleteComprobante;
 /// MÉTODO COMPLETO DE LA VENTA POR LA ADMINISTRACIÓN
-const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g;
+const crearVentaCompletaConComprobanteAdministracion = async (req, res) => {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     const { cliente, metodoPago, productos, total, idusuario, fechaventa } = req.body;
     // 0) VALIDACIONES BÁSICAS
     if (!(cliente === null || cliente === void 0 ? void 0 : cliente.id) || !(metodoPago === null || metodoPago === void 0 ? void 0 : metodoPago.id) || !Array.isArray(productos) || productos.length === 0) {
@@ -648,10 +872,10 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
         res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
         return;
     }
-    const transaction = yield connection_db_1.default.transaction();
+    const transaction = await connection_db_1.default.transaction();
     try {
         // 1) CREAR PEDIDO (cabecera)
-        const pedido = yield pedido_model_1.default.create({
+        const pedido = await pedido_model_1.default.create({
             idpersona: cliente.id,
             idmetodopago: metodoPago.id,
             fechaoperacion: new Date(),
@@ -669,7 +893,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
             const precioNum = Number(precio);
             const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
             // 🔐 Descontar stock atómicamente
-            const [results, metadata] = yield connection_db_2.default.query(`
+            const [results, metadata] = await connection_db_2.default.query(`
             UPDATE lote_talla
             SET stock = stock - :cantidad
             WHERE id = :id AND stock >= :cantidad
@@ -682,7 +906,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
                 throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
             }
             // Crear detalle de pedido
-            const det = yield pedido_detalle_model_1.default.create({
+            const det = await pedido_detalle_model_1.default.create({
                 idpedido: pedido.id,
                 idlote_talla: loteTalla.id,
                 cantidad: cantidadNum,
@@ -691,7 +915,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
             }, { transaction });
             pedidoDetalles.push(det);
             // Registrar movimiento de salida
-            yield movimiento_lote_model_1.default.create({
+            await movimiento_lote_model_1.default.create({
                 idlote_talla: loteTalla.id,
                 tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
                 cantidad: cantidadNum,
@@ -700,7 +924,7 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
             }, { transaction });
         }
         // 3) CREAR VENTA
-        const nuevaVenta = yield venta_model_1.default.create({
+        const nuevaVenta = await venta_model_1.default.create({
             fechaventa: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
             idusuario: idusuario || ((_c = req.user) === null || _c === void 0 ? void 0 : _c.id),
             idpedido: pedido.id,
@@ -709,38 +933,38 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
         // 4) CREAR DETALLES DE VENTA
         const detallesVentaCreados = [];
         for (const det of pedidoDetalles) {
-            const dv = yield detalle_venta_model_1.default.create({
+            const dv = await detalle_venta_model_1.default.create({
                 idpedidodetalle: det.id,
                 idventa: nuevaVenta.id,
                 precio_venta_real: Number(det.precio),
                 subtotal_real: Number(det.subtotal),
-                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+                idestado: estados_constans_1.VentaEstado.REGISTRADO
             }, { transaction });
             detallesVentaCreados.push(dv);
         }
         // 5) DETERMINAR COMPROBANTE
-        const persona = yield persona_model_1.default.findByPk(cliente.id, { transaction });
+        const persona = await persona_model_1.default.findByPk(cliente.id, { transaction });
         const idTipoComprobante = ((persona === null || persona === void 0 ? void 0 : persona.idtipopersona) === 2) ? 2 : 1; // 2=Factura, 1=Boleta
-        const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+        const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
         if (!tipoComprobante)
             throw new Error('Tipo de comprobante no encontrado');
         const totalNum = Number(total) || 0;
         const igv = 0;
-        const comprobante = yield comprobante_model_1.default.create({
+        const comprobante = await comprobante_model_1.default.create({
             idventa: nuevaVenta.id,
             igv,
             descuento: 0,
             total: totalNum,
             idtipocomprobante: tipoComprobante.id,
-            numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+            numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
             idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
         }, { transaction });
         // 6) ACTUALIZAR ESTADOS
-        yield pedido.update({ idestado: estados_constans_1.PedidoEstado.PAGADO }, { transaction });
+        await pedido.update({ idestado: estados_constans_1.PedidoEstado.PAGADO }, { transaction });
         // ✅ CONFIRMAR TRANSACCIÓN
-        yield transaction.commit();
+        await transaction.commit();
         // 7) RECUPERAR DATOS ENRIQUECIDOS (fuera de la tx)
-        const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+        const ventaCompleta = await venta_model_1.default.findByPk(nuevaVenta.id, {
             include: [
                 { model: usuario_model_1.default, as: 'Usuario' },
                 {
@@ -752,13 +976,13 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
                 }
             ]
         });
-        const comprobanteCompleto = yield comprobante_model_1.default.findByPk(comprobante.id, {
+        const comprobanteCompleto = await comprobante_model_1.default.findByPk(comprobante.id, {
             include: [
                 { model: tipo_comprobante_model_1.default, as: 'TipoComprobante' },
                 { model: venta_model_1.default, as: 'Venta' }
             ]
         });
-        const detallesVentaCompletos = yield detalle_venta_model_1.default.findAll({
+        const detallesVentaCompletos = await detalle_venta_model_1.default.findAll({
             where: { idventa: nuevaVenta.id },
             include: [
                 {
@@ -787,22 +1011,20 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
         const phoneRegex = /^\d{9,15}$/;
         if (telefono && phoneRegex.test(telefono)) {
             try {
-                // const nombreArchivo = await generarPDFComprobante(
+                const nombreArchivo = await (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, ventaCompleta === null || ventaCompleta === void 0 ? void 0 : ventaCompleta.Pedido, detallesVentaCompletos);
+                await (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_h = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _h === void 0 ? void 0 : _h.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
+                // Usar la función del servidor para enviar el comprobante
+                //  await enviarComprobante(comprobanteCompleto?.id);
+                // const resultadoEnvio = await server.sendComprobanteWhatsApp(
+                //   telefono,
                 //   comprobanteCompleto,
                 //   ventaCompleta,
                 //   ventaCompleta?.Pedido,
                 //   detallesVentaCompletos
                 // );
-                // await enviarArchivoWSP(
-                //   telefono,
-                //   nombreArchivo,
-                //   `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-                // );
-                // Usar la función del servidor para enviar el comprobante
-                const resultadoEnvio = yield server_1.server.sendComprobanteWhatsApp(telefono, comprobanteCompleto, ventaCompleta, ventaCompleta === null || ventaCompleta === void 0 ? void 0 : ventaCompleta.Pedido, detallesVentaCompletos);
-                if (!resultadoEnvio.success) {
-                    throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
-                }
+                // if (!resultadoEnvio.success) {
+                //   throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+                // }
                 res.status(201).json({
                     msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
                     data: {
@@ -831,16 +1053,16 @@ const crearVentaCompletaConComprobanteAdministracion = (req, res) => __awaiter(v
         });
     }
     catch (error) {
-        yield transaction.rollback();
+        await transaction.rollback();
         console.error('Error en crearVentaCompletaConComprobante:', error);
         res.status(500).json({
             msg: 'Ocurrió un error al crear la venta completa',
             error: error.message
         });
     }
-});
+};
 exports.crearVentaCompletaConComprobanteAdministracion = crearVentaCompletaConComprobanteAdministracion;
-const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const crearVentaCompletaConComprobante = async (req, res) => {
     var _a, _b, _c;
     const { fechaventa, idusuario, idpedido, detallesVenta } = req.body;
     try {
@@ -852,13 +1074,13 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             return;
         }
         // Verificar si existe el usuario
-        const usuario = yield usuario_model_1.default.findByPk(idusuario);
+        const usuario = await usuario_model_1.default.findByPk(idusuario);
         if (!usuario) {
             res.status(400).json({ msg: 'El usuario no existe' });
             return;
         }
         // Verificar si existe el pedido con la persona
-        const pedido = yield pedido_model_1.default.findByPk(idpedido, {
+        const pedido = await pedido_model_1.default.findByPk(idpedido, {
             include: [
                 {
                     model: persona_model_1.default,
@@ -871,16 +1093,16 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             return;
         }
         // Verificar si el pedido ya tiene una venta asociada
-        const ventaExistente = yield venta_model_1.default.findOne({ where: { idpedido } });
+        const ventaExistente = await venta_model_1.default.findOne({ where: { idpedido } });
         if (ventaExistente) {
             res.status(400).json({ msg: 'El pedido ya tiene una venta asociada' });
             return;
         }
         // Iniciar transacción
-        const transaction = yield connection_db_1.default.transaction();
+        const transaction = await connection_db_1.default.transaction();
         try {
             // 1. CREAR LA VENTA
-            const nuevaVenta = yield venta_model_1.default.create({
+            const nuevaVenta = await venta_model_1.default.create({
                 fechaventa: (0, moment_timezone_1.default)().tz("America/Lima").toDate(),
                 idusuario,
                 idpedido,
@@ -890,7 +1112,7 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             const detallesVentaCreados = [];
             for (const detalle of detallesVenta) {
                 // Validar detalle de pedido
-                const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(detalle.idpedidodetalle, { transaction });
+                const pedidoDetalle = await pedido_detalle_model_1.default.findByPk(detalle.idpedidodetalle, { transaction });
                 if (!pedidoDetalle) {
                     throw new Error(`Detalle de pedido con ID ${detalle.idpedidodetalle} no existe`);
                 }
@@ -899,7 +1121,7 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
                     ? detalle.subtotal_real
                     : Number(pedidoDetalle.cantidad) * Number(detalle.precio_venta_real);
                 // Crear detalle de venta
-                const nuevoDetalleVenta = yield detalle_venta_model_1.default.create({
+                const nuevoDetalleVenta = await detalle_venta_model_1.default.create({
                     idpedidodetalle: detalle.idpedidodetalle,
                     idventa: nuevaVenta.id,
                     precio_venta_real: detalle.precio_venta_real,
@@ -909,10 +1131,10 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
                 detallesVentaCreados.push(nuevoDetalleVenta);
                 // Actualizar stock si corresponde
                 if (pedidoDetalle.idlote_talla && pedidoDetalle.cantidad) {
-                    const loteTalla = yield lote_talla_model_1.default.findByPk(pedidoDetalle.idlote_talla, { transaction });
+                    const loteTalla = await lote_talla_model_1.default.findByPk(pedidoDetalle.idlote_talla, { transaction });
                     if (loteTalla && loteTalla.stock !== null) {
                         const nuevoStock = Number(loteTalla.stock) - Number(pedidoDetalle.cantidad);
-                        yield loteTalla.update({ stock: nuevoStock }, { transaction });
+                        await loteTalla.update({ stock: nuevoStock }, { transaction });
                     }
                 }
             }
@@ -925,25 +1147,25 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
                 idTipoComprobante = 1; // BOLETA
             }
             // 4. CREAR COMPROBANTE
-            const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+            const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
             if (!tipoComprobante) {
                 throw new Error('Tipo de comprobante no encontrado');
             }
             const total = Number(pedido.totalimporte) || 0;
             const igv = total * 0.18;
-            const nuevoComprobante = yield comprobante_model_1.default.create({
+            const nuevoComprobante = await comprobante_model_1.default.create({
                 idventa: nuevaVenta.id,
                 igv: igv,
                 descuento: 0,
                 total: total,
                 idtipocomprobante: tipoComprobante.id,
-                numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+                numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
                 idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
             }, { transaction });
             // CONFIRMAR TRANSACCIÓN
-            yield transaction.commit();
+            await transaction.commit();
             // OBTENER DATOS COMPLETOS
-            const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+            const ventaCompleta = await venta_model_1.default.findByPk(nuevaVenta.id, {
                 include: [
                     { model: usuario_model_1.default, as: 'Usuario' },
                     {
@@ -953,13 +1175,13 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
                     }
                 ]
             });
-            const comprobanteCompleto = yield comprobante_model_1.default.findByPk(nuevoComprobante.id, {
+            const comprobanteCompleto = await comprobante_model_1.default.findByPk(nuevoComprobante.id, {
                 include: [
                     { model: tipo_comprobante_model_1.default, as: 'TipoComprobante' },
                     { model: venta_model_1.default, as: 'Venta' }
                 ]
             });
-            const detallesVentaCompletos = yield detalle_venta_model_1.default.findAll({
+            const detallesVentaCompletos = await detalle_venta_model_1.default.findAll({
                 where: { idventa: nuevaVenta.id },
                 include: [
                     {
@@ -986,8 +1208,8 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             const phoneRegex = /^\d{9,15}$/;
             if (telefono && phoneRegex.test(telefono)) {
                 try {
-                    const nombreArchivo = yield (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, pedido, detallesVentaCompletos);
-                    yield (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_c = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _c === void 0 ? void 0 : _c.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
+                    const nombreArchivo = await (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, pedido, detallesVentaCompletos);
+                    await (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_c = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _c === void 0 ? void 0 : _c.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
                     res.status(201).json({
                         msg: 'Venta, detalles, comprobante creados y enviados exitosamente',
                         data: {
@@ -1013,7 +1235,7 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             });
         }
         catch (error) {
-            yield transaction.rollback();
+            await transaction.rollback();
             throw error;
         }
     }
@@ -1024,11 +1246,11 @@ const crearVentaCompletaConComprobante = (req, res) => __awaiter(void 0, void 0,
             error: error.message
         });
     }
-});
+};
 exports.crearVentaCompletaConComprobante = crearVentaCompletaConComprobante;
 // Función para generar número de serie único
-const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(void 0, void 0, void 0, function* () {
-    const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
+const generarNumeroSerieUnico = async (idTipoComprobante, transaction) => {
+    const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
         include: [{ model: connection_db_1.default.models.TipoSerie, as: 'TipoSerie' }],
         transaction
     });
@@ -1036,7 +1258,7 @@ const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(vo
         throw new Error('Tipo de comprobante o serie no encontrado');
     }
     // Obtener el último comprobante de este tipo
-    const ultimoComprobante = yield comprobante_model_1.default.findOne({
+    const ultimoComprobante = await comprobante_model_1.default.findOne({
         where: { idtipocomprobante: idTipoComprobante },
         order: [['id', 'DESC']],
         transaction
@@ -1052,14 +1274,14 @@ const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(vo
     }
     // Formato: [SERIE]-[NÚMERO]
     return `${tipoComprobante.TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
-});
+};
 // DOWNLOAD - Descargar comprobante en PDF
-const descargarComprobante = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const descargarComprobante = async (req, res) => {
     var _a, _b;
     const { id } = req.params;
     try {
         // Buscar comprobante con sus relaciones necesarias
-        const comprobante = yield comprobante_model_1.default.findByPk(id, {
+        const comprobante = await comprobante_model_1.default.findByPk(id, {
             include: [
                 { model: tipo_comprobante_model_1.default, as: 'TipoComprobante' },
                 {
@@ -1084,7 +1306,7 @@ const descargarComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         // Detalles de venta para el comprobante
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
             where: { idventa: comprobante.idventa },
             include: [
                 {
@@ -1108,7 +1330,7 @@ const descargarComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fun
             ]
         });
         // Generar el PDF temporal
-        const nombreArchivo = yield (0, generarPdf_helper_1.generarPDFComprobanteModelo)(comprobante, comprobante.Venta, (_a = comprobante.Venta) === null || _a === void 0 ? void 0 : _a.Pedido, detallesVenta);
+        const nombreArchivo = await (0, generarPdf_helper_1.generarPDFComprobanteModelo)(comprobante, comprobante.Venta, (_a = comprobante.Venta) === null || _a === void 0 ? void 0 : _a.Pedido, detallesVenta);
         // Enviar PDF como descarga
         res.download(nombreArchivo, `${(_b = comprobante.TipoComprobante) === null || _b === void 0 ? void 0 : _b.nombre}-${comprobante.numserie}.pdf`, (err) => {
             if (err) {
@@ -1127,5 +1349,5 @@ const descargarComprobante = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en descargarComprobante:', error);
         res.status(500).json({ msg: 'Error al descargar el comprobante' });
     }
-});
+};
 exports.descargarComprobante = descargarComprobante;

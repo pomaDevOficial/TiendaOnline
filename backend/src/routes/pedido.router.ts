@@ -10,11 +10,13 @@ import {
     cambiarEstadoPedido,
     getPedidosCancelados,
     restaurarPedido,
+    crearPedidoConComprobante,
     aprobarPedido
 } from '../controllers/pedido.controller';
+import { PedidoImage } from "../middlewares/pedidoImage";
 
 const PedidoRouter = Router();
-
+PedidoRouter.post('/create/comprobante-imagen',PedidoImage.single("imagen"),crearPedidoConComprobante);
 PedidoRouter.post('/', createPedido); // Crear un nuevo pedido
 PedidoRouter.post('/aprobar/:id', aprobarPedido); // Aprobar un nuevo pedido
 PedidoRouter.get('/', getPedidos); // Obtener todos los pedidos
