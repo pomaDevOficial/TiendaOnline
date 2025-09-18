@@ -103,17 +103,6 @@
               </div>
             </div>
 
-            <div class="radio-option" [class.selected]="checkoutForm.get('metodoPago')?.value === 'efectivo'" (click)="selectPaymentMethod('efectivo')">
-              <input type="radio" formControlName="metodoPago" value="efectivo">
-              <div class="radio-circle"></div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-money-bill-wave text-2xl text-green-600"></i>
-                <div>
-                  <div class="font-semibold">Efectivo</div>
-                  <div class="text-sm text-gray-600">Pago contra entrega</div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Información de Yape -->

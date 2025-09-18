@@ -16,6 +16,7 @@ import { PersonaServicio } from '../../../services/persona.service';
 import { MetodoPagoServicio } from '../../../services/MetodoPago.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { PedidoServicio } from '../../../services/Pedido.service';
+import { environment } from '../../../enviroments/environment';
 
 @Component({
   selector: 'app-pedido',
@@ -37,6 +38,7 @@ export class PedidoComponent implements OnInit {
   editarPedido: boolean = false;
   mostrarDialogoDetalle: boolean = false;
   pedidoSeleccionado: Pedido | null = null;
+  rutaUrl : string = environment.endpointWs+"/uploads/comprobantes/"
   clientes: Persona[] = [];
   metodoPagoOptions: { label: string, value: number }[] = [];
   pedidoDetalles: PedidoDetalle[] = [];
@@ -232,7 +234,13 @@ export class PedidoComponent implements OnInit {
       } else {
         this.pedidoDetalles = [];
       }
-        this.pedidoSeleccionado = pedidoCompleto;
+      this.pedidoSeleccionado = {
+        ...pedidoCompleto,
+        adjunto: pedidoCompleto.adjunto
+          ? this.rutaUrl + pedidoCompleto.adjunto
+          : null
+      };
+       // this.pedidoSeleccionado = pedidoCompleto;
         this.mostrarDialogoDetalle = true;
       },
       error: (err) => {

@@ -28,11 +28,24 @@ export interface ProductFilters {
   orden: string;
 }
 
+export interface Estado {
+  id: number;
+  nombre: string;
+}
+
+export interface Marca {
+  id: number;
+  nombre: string;
+  idestado: number;
+  Estado: Estado;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
   private apiUrl = 'http://localhost:3000/api/v1/lotetallas/filtro-productos';
+  private marcasApiUrl = 'http://localhost:3000/api/v1/marcas';
   private products: Product[] = []
 
   private productsSubject = new BehaviorSubject<Product[]>(this.products);
@@ -290,5 +303,12 @@ export class ProductService {
   // Limpiar filtros
   clearFilters(): void {
     this.filteredProductsSubject.next(this.products);
+  }
+
+  // Obtener marcas desde la API
+  getMarcas(): Observable<Marca[]> {
+    return this.http.get<{msg: string, data: Marca[]}>(this.marcasApiUrl).pipe(
+      map(response => response.data.slice(0, 6)) // Obtener solo los primeros 5
+    );
   }
 }

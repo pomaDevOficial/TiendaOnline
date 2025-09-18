@@ -348,8 +348,7 @@ export class CheckoutComponent implements OnInit {
     const metodoPagoMap: { [key: string]: { id: number } } = {
       'yape': { id: 5 },
       'plin': { id: 6 },
-      'transferencia': { id: 4 },
-      'efectivo': { id: 1 }
+      'transferencia': { id: 4 }
     };
 
     const metodoPago = metodoPagoMap[formData.metodoPago] || { id: 3 };
@@ -385,6 +384,31 @@ export class CheckoutComponent implements OnInit {
     ).subscribe({
       next: (response:any) => {
         console.log('Pedido creado exitosamente:', response);
+
+        // Guardar datos del pedido en localStorage para la vista de confirmación
+        const pedidoData = {
+          id: response.data?.id || 'success',
+          fecha: new Date().toISOString(),
+          cliente: {
+            nombre: `${formData.nombres} ${formData.apellidos}`,
+            email: formData.correo,
+            telefono: formData.telefono,
+            metodoPago: formData.metodoPago
+          },
+          productos: this.cartItems.map(item => ({
+            nombre: item.nombre,
+            precio: item.precio,
+            quantity: item.quantity,
+            talla: item.talla,
+            imagen: item.imagen,
+            icon: item.icon,
+            subtotal: item.precio * item.quantity
+          })),
+          total: this.totalAmount,
+          estado: 'confirmado'
+        };
+
+        localStorage.setItem('ultimoPedido', JSON.stringify(pedidoData));
 
         // Limpiar carrito
         this.cartService.clearCart();

@@ -150,19 +150,34 @@ class Server {
       //         res.send(buffer);
       //       });
       //   });
+      const clientOrigins = process.env.CORS_ORIGINS_CLIENT?.split(',') || [];
+      const adminOrigins = process.env.CORS_ORIGINS_ADMIN?.split(',') || [];
+      const allowedOrigins = [...clientOrigins, ...adminOrigins];
       this.app.use(cors({
-        // origin: 'http://161.132.49.58:5200',
-        origin: [
-      'http://localhost:4200',   // frontend cliente
-      'http://localhost:58362',    // frontend admin
-      'http://localhost:60877',    // frontend admin 59609
-      'http://localhost:54297'    // frontend admin 59609
-      ],
-        credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`❌ No permitido por CORS: ${origin}`));
+          }
+        },
+        credentials: true
       }));
-    }
+
+
+      // this.app.use(cors({
+      //   // origin: 'http://161.132.49.58:5200',
+      //   origin: [
+      // 'http://localhost:4200',   // frontend cliente
+      // 'http://localhost:58362',    // frontend admin
+      // 'http://localhost:60877',    // frontend admin 59609
+      // 'http://localhost:54297'    // frontend admin 59609
+      // ],
+      //   credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+      // }));  
+    } 
   
-    private routes() {
+    private routes() { 
       this.app.get('/', (req: Request, res: Response) => {
         res.json({
           msg: 'API Working'

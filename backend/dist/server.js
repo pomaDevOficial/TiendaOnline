@@ -115,6 +115,7 @@ class Server {
         });
     }
     middlewares() {
+        var _a, _b;
         this.app.use(express_1.default.json());
         this.app.use((0, morgan_1.default)('dev'));
         //  const imagesFolder = path.join(__dirname, "../../dist/uploads/productos");
@@ -135,16 +136,30 @@ class Server {
         //         res.send(buffer);
         //       });
         //   });
+        const clientOrigins = ((_a = process.env.CORS_ORIGINS_CLIENT) === null || _a === void 0 ? void 0 : _a.split(',')) || [];
+        const adminOrigins = ((_b = process.env.CORS_ORIGINS_ADMIN) === null || _b === void 0 ? void 0 : _b.split(',')) || [];
+        const allowedOrigins = [...clientOrigins, ...adminOrigins];
         this.app.use((0, cors_1.default)({
-            // origin: 'http://161.132.49.58:5200',
-            origin: [
-                'http://localhost:4200', // frontend cliente
-                'http://localhost:58362', // frontend admin
-                'http://localhost:60877', // frontend admin 59609
-                'http://localhost:54297' // frontend admin 59609
-            ],
-            credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+            origin: (origin, callback) => {
+                if (!origin || allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                }
+                else {
+                    callback(new Error(`❌ No permitido por CORS: ${origin}`));
+                }
+            },
+            credentials: true
         }));
+        // this.app.use(cors({
+        //   // origin: 'http://161.132.49.58:5200',
+        //   origin: [
+        // 'http://localhost:4200',   // frontend cliente
+        // 'http://localhost:58362',    // frontend admin
+        // 'http://localhost:60877',    // frontend admin 59609
+        // 'http://localhost:54297'    // frontend admin 59609
+        // ],
+        //   credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+        // }));  
     }
     routes() {
         this.app.get('/', (req, res) => {

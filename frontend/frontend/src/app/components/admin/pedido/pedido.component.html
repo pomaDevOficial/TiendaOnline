@@ -255,7 +255,8 @@
       </div>
       <div class="col-md-6" *ngIf="pedidoSeleccionado?.adjunto">
         <div class="info-item">
-          <strong>Adjunto:</strong> {{ pedidoSeleccionado.adjunto }}
+          <strong>Adjunto:</strong>
+          <img [src]="pedidoSeleccionado.adjunto " height="120" width="120">
         </div>
       </div>
     </div>

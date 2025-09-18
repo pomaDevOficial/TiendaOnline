@@ -40,7 +40,7 @@ export const routes: Routes = [
       { path: 'comprobante', component: ComprobanteComponent },
       { path: 'cliente', component: ClienteComponent },
       { path: 'venta', component: VentaComponent },
-        { path: 'qr', component: QrComponent },
+        // { path: 'qr', component: QrComponent },
 
       // Si la ruta hija no existe → redirigir a master de Admin
       { path: '**', redirectTo: '', pathMatch: 'full' }

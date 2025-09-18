@@ -117,13 +117,12 @@ export class CartService {
 
   // Obtener costo de envío
   getShippingCost(): number {
-    const subtotal = this.getSubtotal();
-    return subtotal >= 150 ? 0 : 15;
+    return 0; // Sin costo de envío
   }
 
   // Obtener total
   getTotal(): number {
-    return this.getSubtotal() + this.getShippingCost();
+    return this.getSubtotal(); // Total igual al subtotal
   }
 
   // Limpiar carrito
@@ -182,8 +181,8 @@ export class CartService {
   getCartSummary(): { subtotal: number; shipping: number; total: number; items: number } {
     return {
       subtotal: this.getSubtotal(),
-      shipping: this.getShippingCost(),
-      total: this.getTotal(),
+      shipping: 0, // Sin costo de envío
+      total: this.getSubtotal(), // Total igual al subtotal
       items: this.getTotalItems()
     };
   }

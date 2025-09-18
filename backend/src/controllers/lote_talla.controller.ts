@@ -1288,7 +1288,7 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
         ];
 
         productosMap.set(productoId, {
-          id: producto.id,
+          id: item.id,
           nombre: producto.nombre || 'Producto sin nombre',
           marca: producto.Marca?.nombre || 'Sin marca',
           precio: item.precioventa || 0,
