@@ -5,12 +5,14 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:ssr": "ng build && ng build --configuration production --project full-moda-angular",
+    "build:ssr": "ng build & ng build --configuration production --project full-moda-angular",
     "serve:ssr": "node dist/full-moda-angular/server/server.mjs",
     "dev:ssr": "ng run full-moda-angular:serve --port 4000",
     "prerender": "ng run full-moda-angular:prerender",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:dev": "ng build",
+    "build:prod": "ng build --configuration production --project full-moda-angular"
   },
   "private": true,
   "dependencies": {

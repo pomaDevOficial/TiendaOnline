@@ -26,7 +26,6 @@ import VentaRouter from './routes/venta.router';
 import DetalleVentaRouter from './routes/detalleventa.router';
 import ComprobanteRouter from './routes/comprobante.router';
 import routerWsp from './routes/wsp.router';
-import sharp from "sharp";
 import morgan from "morgan";
 import TipoComprobante from './models/tipo_comprobante.model';
 import TipoSerie from './models/tiposerie.model';
@@ -185,22 +184,22 @@ class Server {
       });
      
       const imagesFolder = path.resolve(__dirname, "..", "..", "backend/dist/uploads");
+    this.app.use("/uploads", express.static(imagesFolder));
+    // this.app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
+    //   const rutaImagen = path.join(imagesFolder, req.url);
+    //   console.log("📂 Buscando imagen en:", rutaImagen);
 
-    this.app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
-      const rutaImagen = path.join(imagesFolder, req.url);
-      console.log("📂 Buscando imagen en:", rutaImagen);
-
-      sharp(rutaImagen)
-        .resize(800)
-        .toBuffer((err, buffer) => {
-          if (err) {
-            console.error("❌ Error procesando imagen:", err.message);
-            return res.status(404).send("Imagen no encontrada");
-          }
-          res.setHeader("Content-Type", "image/jpeg");
-          res.send(buffer);
-        });
-    });
+    //   sharp(rutaImagen)
+    //     .resize(800)
+    //     .toBuffer((err, buffer) => {
+    //       if (err) {
+    //         console.error("❌ Error procesando imagen:", err.message);
+    //         return res.status(404).send("Imagen no encontrada");
+    //       }
+    //       res.setHeader("Content-Type", "image/jpeg");
+    //       res.send(buffer);
+    //     });
+    // });
        this.app.use('/api/v1/login', authRouter);
        this.app.use('/api/v1/usuarios', Usuariorouter);
        this.app.use('/api/v1/productos', ProductoRouter);
