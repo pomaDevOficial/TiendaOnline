@@ -41,8 +41,8 @@ export class CartComponent implements OnInit, OnDestroy {
 
   private calculateTotals(): void {
     this.subtotal = this.cartItems.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
-    this.shipping = this.subtotal >= 150 ? 0 : 15;
-    this.total = this.subtotal + this.shipping;
+    this.shipping = 0; // Sin costo de envío
+    this.total = this.subtotal; // Total igual al subtotal
   }
 
   updateQuantity(item: CartItem, change: number): void {

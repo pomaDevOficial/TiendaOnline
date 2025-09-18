@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,8 +11,12 @@ const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
+const pedido_model_1 = __importDefault(require("../models/pedido.model"));
+const producto_model_1 = __importDefault(require("../models/producto.model"));
+const lote_model_1 = __importDefault(require("../models/lote.model"));
+const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
 // CREATE - Insertar nuevo detalle de venta
-const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createDetalleVenta = async (req, res) => {
     const { idpedidodetalle, idventa, precio_venta_real, subtotal_real } = req.body;
     try {
         // Validaciones
@@ -32,13 +27,13 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         // Verificar si existe el detalle de pedido
-        const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(idpedidodetalle);
+        const pedidoDetalle = await pedido_detalle_model_1.default.findByPk(idpedidodetalle);
         if (!pedidoDetalle) {
             res.status(400).json({ msg: 'El detalle de pedido no existe' });
             return;
         }
         // Verificar si existe la venta
-        const venta = yield venta_model_1.default.findByPk(idventa);
+        const venta = await venta_model_1.default.findByPk(idventa);
         if (!venta) {
             res.status(400).json({ msg: 'La venta no existe' });
             return;
@@ -55,7 +50,7 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         // Crear nuevo detalle de venta
-        const nuevoDetalleVenta = yield detalle_venta_model_1.default.create({
+        const nuevoDetalleVenta = await detalle_venta_model_1.default.create({
             idpedidodetalle,
             idventa,
             precio_venta_real,
@@ -63,7 +58,7 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
             idestado: estados_constans_1.VentaEstado.REGISTRADO
         });
         // Obtener el detalle de venta creado con sus relaciones
-        const detalleVentaCreado = yield detalle_venta_model_1.default.findByPk(nuevoDetalleVenta.id, {
+        const detalleVentaCreado = await detalle_venta_model_1.default.findByPk(nuevoDetalleVenta.id, {
             include: [
                 {
                     model: pedido_detalle_model_1.default,
@@ -129,10 +124,10 @@ const createDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en createDetalleVenta:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createDetalleVenta = createDetalleVenta;
 // CREATE - Insertar múltiples detalles de venta
-const createMultipleDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createMultipleDetalleVenta = async (req, res) => {
     const { detalles } = req.body;
     try {
         // Validaciones
@@ -153,13 +148,13 @@ const createMultipleDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 
                 return;
             }
             // Verificar si existe el detalle de pedido
-            const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(idpedidodetalle);
+            const pedidoDetalle = await pedido_detalle_model_1.default.findByPk(idpedidodetalle);
             if (!pedidoDetalle) {
                 res.status(400).json({ msg: `El detalle de pedido con id ${idpedidodetalle} no existe` });
                 return;
             }
             // Verificar si existe la venta
-            const venta = yield venta_model_1.default.findByPk(idventa);
+            const venta = await venta_model_1.default.findByPk(idventa);
             if (!venta) {
                 res.status(400).json({ msg: `La venta con id ${idventa} no existe` });
                 return;
@@ -176,7 +171,7 @@ const createMultipleDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 
                 return;
             }
             // Crear nuevo detalle de venta
-            const nuevoDetalleVenta = yield detalle_venta_model_1.default.create({
+            const nuevoDetalleVenta = await detalle_venta_model_1.default.create({
                 idpedidodetalle,
                 idventa,
                 precio_venta_real,
@@ -184,7 +179,7 @@ const createMultipleDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 
                 idestado: estados_constans_1.VentaEstado.REGISTRADO
             });
             // Obtener el detalle de venta creado con sus relaciones
-            const detalleVentaCreado = yield detalle_venta_model_1.default.findByPk(nuevoDetalleVenta.id, {
+            const detalleVentaCreado = await detalle_venta_model_1.default.findByPk(nuevoDetalleVenta.id, {
                 include: [
                     {
                         model: pedido_detalle_model_1.default,
@@ -240,10 +235,10 @@ const createMultipleDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 
         console.error('Error en createMultipleDetalleVenta:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createMultipleDetalleVenta = createMultipleDetalleVenta;
 // UPDATE - Actualizar detalle de venta
-const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateDetalleVenta = async (req, res) => {
     const { id } = req.params;
     const { idpedidodetalle, idventa, precio_venta_real, subtotal_real } = req.body;
     try {
@@ -251,14 +246,14 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
             res.status(400).json({ msg: "El ID del detalle de venta es obligatorio" });
             return;
         }
-        const detalleVenta = yield detalle_venta_model_1.default.findByPk(id);
+        const detalleVenta = await detalle_venta_model_1.default.findByPk(id);
         if (!detalleVenta) {
             res.status(404).json({ msg: `No existe un detalle de venta con el id ${id}` });
             return;
         }
         // Verificar si existe el detalle de pedido (si se está actualizando)
         if (idpedidodetalle) {
-            const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(idpedidodetalle);
+            const pedidoDetalle = await pedido_detalle_model_1.default.findByPk(idpedidodetalle);
             if (!pedidoDetalle) {
                 res.status(400).json({ msg: 'El detalle de pedido no existe' });
                 return;
@@ -266,7 +261,7 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         // Verificar si existe la venta (si se está actualizando)
         if (idventa) {
-            const venta = yield venta_model_1.default.findByPk(idventa);
+            const venta = await venta_model_1.default.findByPk(idventa);
             if (!venta) {
                 res.status(400).json({ msg: 'La venta no existe' });
                 return;
@@ -283,7 +278,7 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (precio_venta_real !== undefined) {
             const pedidoDetalleId = idpedidodetalle || detalleVenta.idpedidodetalle;
             if (pedidoDetalleId) {
-                const pedidoDetalle = yield pedido_detalle_model_1.default.findByPk(pedidoDetalleId);
+                const pedidoDetalle = await pedido_detalle_model_1.default.findByPk(pedidoDetalleId);
                 if (pedidoDetalle && pedidoDetalle.cantidad !== null) {
                     detalleVenta.subtotal_real = Number(pedidoDetalle.cantidad) * Number(precio_venta_real);
                 }
@@ -298,9 +293,9 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         else if (subtotal_real !== undefined) {
             detalleVenta.subtotal_real = subtotal_real;
         }
-        yield detalleVenta.save();
+        await detalleVenta.save();
         // Obtener el detalle de venta actualizado con relaciones
-        const detalleVentaActualizado = yield detalle_venta_model_1.default.findByPk(id, {
+        const detalleVentaActualizado = await detalle_venta_model_1.default.findByPk(id, {
             include: [
                 {
                     model: pedido_detalle_model_1.default,
@@ -366,12 +361,12 @@ const updateDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error("Error in updateDetalleVenta:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateDetalleVenta = updateDetalleVenta;
 // READ - Listar todos los detalles de venta
-const getDetallesVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetallesVenta = async (req, res) => {
     try {
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
             include: [
                 {
                     model: pedido_detalle_model_1.default,
@@ -438,12 +433,12 @@ const getDetallesVenta = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.error('Error en getDetallesVenta:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de detalles de venta' });
     }
-});
+};
 exports.getDetallesVenta = getDetallesVenta;
 // READ - Listar detalles de venta registrados (no anulados)
-const getDetallesVentaRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetallesVentaRegistrados = async (req, res) => {
     try {
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
             where: {
                 idestado: estados_constans_1.VentaEstado.REGISTRADO
             },
@@ -513,13 +508,13 @@ const getDetallesVentaRegistrados = (req, res) => __awaiter(void 0, void 0, void
         console.error('Error en getDetallesVentaRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener detalles de venta registrados' });
     }
-});
+};
 exports.getDetallesVentaRegistrados = getDetallesVentaRegistrados;
 // READ - Obtener detalle de venta por ID
-const getDetalleVentaById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetalleVentaById = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalleVenta = yield detalle_venta_model_1.default.findByPk(id, {
+        const detalleVenta = await detalle_venta_model_1.default.findByPk(id, {
             include: [
                 {
                     model: pedido_detalle_model_1.default,
@@ -589,13 +584,13 @@ const getDetalleVentaById = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en getDetalleVentaById:', error);
         res.status(500).json({ msg: 'Error al obtener el detalle de venta' });
     }
-});
+};
 exports.getDetalleVentaById = getDetalleVentaById;
 // READ - Obtener detalles de venta por venta
-const getDetallesVentaByVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetallesVentaByVenta = async (req, res) => {
     const { idventa } = req.params;
     try {
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
             where: { idventa },
             include: [
                 {
@@ -663,12 +658,12 @@ const getDetallesVentaByVenta = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en getDetallesVentaByVenta:', error);
         res.status(500).json({ msg: 'Error al obtener detalles de la venta' });
     }
-});
+};
 exports.getDetallesVentaByVenta = getDetallesVentaByVenta;
 // READ - Listar detalles de venta anulados
-const getDetallesVentaAnulados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetallesVentaAnulados = async (req, res) => {
     try {
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
             where: { idestado: estados_constans_1.VentaEstado.ANULADO },
             include: [
                 {
@@ -719,19 +714,19 @@ const getDetallesVentaAnulados = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en getDetallesVentaAnulados:', error);
         res.status(500).json({ msg: 'Error al obtener detalles de venta anulados' });
     }
-});
+};
 exports.getDetallesVentaAnulados = getDetallesVentaAnulados;
 // UPDATE - Anular detalle de venta
-const anularDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const anularDetalleVenta = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalleVenta = yield detalle_venta_model_1.default.findByPk(id);
+        const detalleVenta = await detalle_venta_model_1.default.findByPk(id);
         if (!detalleVenta) {
             res.status(404).json({ msg: 'Detalle de venta no encontrado' });
             return;
         }
         detalleVenta.idestado = estados_constans_1.VentaEstado.ANULADO;
-        yield detalleVenta.save();
+        await detalleVenta.save();
         res.json({
             msg: 'Detalle de venta anulado con éxito',
             data: { id: detalleVenta.id, estado: estados_constans_1.VentaEstado.ANULADO }
@@ -741,20 +736,20 @@ const anularDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en anularDetalleVenta:', error);
         res.status(500).json({ msg: 'Error al anular el detalle de venta' });
     }
-});
+};
 exports.anularDetalleVenta = anularDetalleVenta;
 // UPDATE - Restaurar detalle de venta anulado
-const restaurarDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarDetalleVenta = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalleVenta = yield detalle_venta_model_1.default.findByPk(id);
+        const detalleVenta = await detalle_venta_model_1.default.findByPk(id);
         if (!detalleVenta) {
             res.status(404).json({ msg: 'Detalle de venta no encontrado' });
             return;
         }
         // Cambiar estado a REGISTRADO
         detalleVenta.idestado = estados_constans_1.VentaEstado.REGISTRADO;
-        yield detalleVenta.save();
+        await detalleVenta.save();
         res.json({
             msg: 'Detalle de venta restaurado con éxito',
             data: { id: detalleVenta.id, estado: estados_constans_1.VentaEstado.REGISTRADO }
@@ -764,19 +759,19 @@ const restaurarDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, fu
         console.error('Error en restaurarDetalleVenta:', error);
         res.status(500).json({ msg: 'Error al restaurar el detalle de venta' });
     }
-});
+};
 exports.restaurarDetalleVenta = restaurarDetalleVenta;
 // DELETE - Eliminar detalle de venta físicamente
-const deleteDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteDetalleVenta = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalleVenta = yield detalle_venta_model_1.default.findByPk(id);
+        const detalleVenta = await detalle_venta_model_1.default.findByPk(id);
         if (!detalleVenta) {
             res.status(404).json({ msg: 'Detalle de venta no encontrado' });
             return;
         }
         // Eliminar físicamente
-        yield detalleVenta.destroy();
+        await detalleVenta.destroy();
         res.json({
             msg: 'Detalle de venta eliminado con éxito',
             data: { id }
@@ -786,21 +781,20 @@ const deleteDetalleVenta = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en deleteDetalleVenta:', error);
         res.status(500).json({ msg: 'Error al eliminar el detalle de venta' });
     }
-});
+};
 exports.deleteDetalleVenta = deleteDetalleVenta;
 // ========================================
 // MÉTODO PARA DETALLE VENTA CONTROLLER
 // ========================================
 // READ - Obtener productos más vendidos con filtro por mes
-const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getProductosMasVendidos = async (req, res) => {
     const { año, mes, limite } = req.query;
     const tz = 'America/Lima';
     try {
-        let whereCondition = {
-            idestado: estados_constans_1.VentaEstado.REGISTRADO
+        // Condición de fechas para venta
+        let ventaWhereCondition = {
+            idestado: estados_constans_1.VentaEstado.REGISTRADO // Solo ventas registradas (no anuladas)
         };
-        // Condición de fechas
-        let ventaWhereCondition = {};
         if (año && mes) {
             const monthStart = moment_timezone_1.default.tz(`${año}-${mes}`, 'YYYY-MM', tz).startOf('month').toDate();
             const monthEnd = moment_timezone_1.default.tz(`${año}-${mes}`, 'YYYY-MM', tz).endOf('month').toDate();
@@ -816,28 +810,34 @@ const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, 
             };
         }
         console.log('Filtro fechas:', ventaWhereCondition.fechaventa);
-        const detallesVenta = yield detalle_venta_model_1.default.findAll({
-            where: whereCondition,
+        const detallesVenta = await detalle_venta_model_1.default.findAll({
+            where: {
+                idestado: estados_constans_1.VentaEstado.REGISTRADO // Solo detalles de venta registrados
+            },
             include: [
                 {
                     model: pedido_detalle_model_1.default,
                     as: 'PedidoDetalle',
                     attributes: ['id', 'cantidad'],
+                    required: true, // INNER JOIN
                     include: [
                         {
-                            model: pedido_detalle_model_1.default.associations.LoteTalla.target,
+                            model: lote_talla_model_1.default,
                             as: 'LoteTalla',
                             attributes: ['id'],
+                            required: true, // INNER JOIN
                             include: [
                                 {
-                                    model: pedido_detalle_model_1.default.associations.LoteTalla.target.associations.Lote.target,
+                                    model: lote_model_1.default,
                                     as: 'Lote',
                                     attributes: ['id'],
+                                    required: true, // INNER JOIN
                                     include: [
                                         {
-                                            model: pedido_detalle_model_1.default.associations.LoteTalla.target.associations.Lote.target.associations.Producto.target,
+                                            model: producto_model_1.default,
                                             as: 'Producto',
-                                            attributes: ['id', 'nombre', 'imagen']
+                                            attributes: ['id', 'nombre', 'imagen'],
+                                            required: true // INNER JOIN
                                         }
                                     ]
                                 }
@@ -849,11 +849,24 @@ const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, 
                     model: venta_model_1.default,
                     as: 'Venta',
                     attributes: ['id', 'fechaventa'],
-                    where: ventaWhereCondition
+                    where: ventaWhereCondition,
+                    required: true, // INNER JOIN
+                    include: [
+                        {
+                            model: pedido_model_1.default,
+                            as: 'Pedido',
+                            where: {
+                                idestado: estados_constans_1.PedidoEstado.PAGADO // Solo pedidos pagados
+                            },
+                            attributes: ['id'],
+                            required: true // INNER JOIN
+                        }
+                    ]
                 }
             ],
             attributes: ['id', 'subtotal_real']
         });
+        console.log(`Encontrados ${detallesVenta.length} detalles de venta`);
         // Agrupar productos y calcular totales
         const productosVendidos = {};
         detallesVenta.forEach((detalle) => {
@@ -880,6 +893,7 @@ const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, 
                 productosVendidos[productoId].totalIngresos += subtotal;
             }
         });
+        console.log(`Productos únicos encontrados: ${Object.keys(productosVendidos).length}`);
         // Convertir a array y ordenar
         let ranking = Object.values(productosVendidos)
             .sort((a, b) => b.cantidadVendida - a.cantidadVendida);
@@ -899,5 +913,5 @@ const getProductosMasVendidos = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en getProductosMasVendidos:', error);
         res.status(500).json({ msg: 'Error al obtener productos más vendidos' });
     }
-});
+};
 exports.getProductosMasVendidos = getProductosMasVendidos;

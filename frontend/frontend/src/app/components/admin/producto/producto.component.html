@@ -134,52 +134,35 @@
         </small>
       </div>
 
-      <!-- Imagen
-      <div class="form-field">
-        <label for="imagen" class="form-label">Imagen *</label>
-        <input 
-          type="file" 
-          id="imagen" 
-          (change)="onFileChange($event)" 
-          accept="image/*">
-        <small class="error-message" *ngIf="productoForm.get('imagen')?.invalid && productoForm.get('imagen')?.touched">
-          Imagen es requerida
-        </small>
-      </div> -->
-      <!-- Imagen -->
-<!-- Imagen -->
-<p-fileUpload 
- #fileUpload
-  name="imagen"
-  mode="advanced"
-  [auto]="false"
-  [customUpload]="true"
-  [showUploadButton]="false"
-  [showCancelButton]="false"
-  accept="image/*"
-  maxFileSize="2000000"
-  chooseLabel="Seleccionar"
-  (onSelect)="onFileSelect($event)"
-  (onClear)="onFileRemove()"
-  (onRemove)="onFileRemove()">
-   <ng-template #empty>
-       <div class="flex flex-col items-center gap-2">
-      <!-- Si ya hay imagen, mostrarla -->
-      <ng-container *ngIf="imagenUrl; else noImage">
-        <img [src]="imagenUrl" alt="Imagen del producto"
-             width="150" height="150" class="rounded shadow" />
-      </ng-container>
+  <p-fileUpload 
+  #fileUpload
+    name="imagen"
+    mode="advanced"
+    [auto]="false"
+    [customUpload]="true"
+    [showUploadButton]="false"
+    [showCancelButton]="false"
+    accept="image/*"
+    maxFileSize="2000000"
+    chooseLabel="Seleccionar"
+    (onSelect)="onFileSelect($event)"
+    (onClear)="onFileRemove()"
+    (onRemove)="onFileRemove()">
+    <ng-template #empty>
+        <div class="flex flex-col items-center gap-2">
+        <ng-container *ngIf="imagenUrl; else noImage">
+          <img [src]="imagenUrl" alt="Imagen del producto"
+              width="150" height="150" class="rounded shadow" />
+        </ng-container>
 
-      <ng-template #noImage>
-        <div>Agregar imagen para el producto</div>
+        <ng-template #noImage>
+          <div>Agregar imagen para el producto</div>
+        </ng-template>
+      </div>
       </ng-template>
-    </div>
-    </ng-template>
-  
-</p-fileUpload>
+    
+  </p-fileUpload>
 
-
-      <!-- Marca -->
       <div class="form-field">
         <div class="form-label-container">
           <label for="idmarca" class="form-label">Marca *</label>
@@ -318,7 +301,7 @@
 
 <!-- ================== DIALOG MARCA ================== -->
 <p-dialog 
-  header="Registrar Categoria"
+  header="Registrar Marca"
   [(visible)]="abrirModalMarca" 
   [modal]="true" 
   [style]="{width: '500px', maxWidth: '90vw'}"

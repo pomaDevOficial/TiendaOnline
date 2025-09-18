@@ -13,7 +13,7 @@ import { CartService } from '../../services/cart.service';
 })
 export class ProductCardComponent implements OnInit {
   @Input() product!: Product ;
-  @Output() productAdded = new EventEmitter<Product>();
+  @Output() productAdded = new EventEmitter<{product: Product, quantity: number}>();
   @Output() productPreview = new EventEmitter<{product: Product, selectedSize: string}>();
 
   currentImageIndex = 0;
@@ -66,8 +66,8 @@ export class ProductCardComponent implements OnInit {
         this.modalQuantity = 1;
       } else {
         // Add directly
-        this.cartService.addToCart(this.product, 1, this.selectedSize);
-        this.productAdded.emit(this.product);
+        this.cartService.addToCart(this.product, 1, this.selectedSize, this.getCurrentPrice());
+        this.productAdded.emit({ product: this.product, quantity: 1 });
         // Reset selected size
         this.selectedSize = '';
       }
@@ -118,8 +118,8 @@ export class ProductCardComponent implements OnInit {
 
   confirmAddToCart(): void {
     if (this.product && this.selectedSize) {
-      this.cartService.addToCart(this.product, this.modalQuantity, this.selectedSize);
-      this.productAdded.emit(this.product);
+      this.cartService.addToCart(this.product, this.modalQuantity, this.selectedSize, this.getCurrentPrice());
+      this.productAdded.emit({ product: this.product, quantity: this.modalQuantity });
       this.showSizeModal = false;
       // Reset selected size
       this.selectedSize = '';

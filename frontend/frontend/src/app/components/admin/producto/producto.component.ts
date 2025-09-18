@@ -185,7 +185,7 @@ cargarProductos(){
   }
    onFileRemove() {
     this.imagenUrl = null;        // quitar preview
-    this.fileUpload?.clear();          // limpiar uploader
+    this.fileUpload.clear();          // limpiar uploader
   }
   cerrarDialogoProducto() {
     this.abrirModalProducto = false;
@@ -210,11 +210,21 @@ cargarProductos(){
     const categoriaData: Categoria = this.categoriaForm.value;
 
     this.categoria.createCategoria(categoriaData).subscribe({
-      next: (nuevaMarca: Categoria) => {
+      next: (res: any) => {
+         this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: res.msj
+      });
         this.cargarCategioria();
         this.cerrarDialogoCategoria();
       },
-      error: (err) => {
+      error: (err:any) => {
+         this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail:  err.msj
+      });
         console.error('Error al registrar la talla', err);
       }
     });
@@ -310,12 +320,12 @@ if(this.editarProducto){
           detail: 'Producto Actualizado correctamente'
         });
         this.imagenUrl = null;        // quitar preview
-        this.fileUpload?.clear();   
+        this.fileUpload.clear();   
       },
       error: (err) => {
         console.error('Error al registrar el producto', err);
          this.imagenUrl = null;        // quitar preview
-        this.fileUpload?.clear(); 
+        this.fileUpload.clear(); 
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

@@ -44,52 +44,83 @@ class Server {
     private io: SocketIOServer; // Crea una instancia de SocketIOServer
     private isRequesting: boolean = false;
     private isUpdatingPrestamos: boolean = false;
-    private client: Client;
-    private qrCodeData: string | null = null;
-    private isWhatsAppConnected: boolean = false;
-    private ADMIN_NUMBER = '51916901549';
-    private NOTIFICATION_NUMBER = null;
-    private lastConnectionStatus = null;
-       private autoResponses = {
-        greetings: [
-            'hola', 'buenos días', 'buenas tardes', 'buenas noches',
-            'buen día', 'saludos', 'hey', 'hi', 'hello', 'qué tal'
-        ],
-        faq: {
-            'qué eres': 'Soy un bot de WhatsApp desarrollado para enviar notificaciones y gestionar comunicaciones.',
-            'qué puedes hacer': 'Puedo enviar mensajes, archivos, notificaciones automáticas y responder comandos.',
-            'cómo funciona': 'Estoy conectado a WhatsApp Web y respondo automáticamente a tus comandos.',
-            'quién te creó': 'Fui desarrollado con Node.js y WhatsApp Web para facilitar las comunicaciones.',
-            'ayuda': 'Usa !help para ver todos los comandos disponibles.',
-            'comandos': 'Usa !help para ver la lista completa de comandos.'
-        },
-        fun: [
-            '¡Claro! ¿En qué puedo ayudarte?',
-            '¡Hola! ¿Qué necesitas?',
-            '¡Hey! ¿Cómo estás?',
-            '¡Saludos! ¿Qué tal tu día?'
-        ]
-    };
+    // private client: Client;
+    // private qrCodeData: string | null = null;
+    // private isWhatsAppConnected: boolean = false;
+    // private ADMIN_NUMBER = '51916901549';
+    // private NOTIFICATION_NUMBER = '51916901549';
+    // private lastConnectionStatus = null;
+    // private sessionRestored = false;
+    // private welcomeNotificationSent = false;
+    // private autoResponses = {
+    //     greetings: [
+    //         'hola', 'buenos días', 'buenas tardes', 'buenas noches',
+    //         'buen día', 'saludos', 'hey', 'hi', 'hello', 'qué tal'
+    //     ],
+    //     faq: {
+    //         'qué eres': 'Soy un bot de WhatsApp desarrollado para enviar notificaciones y gestionar comunicaciones.',
+    //         'qué puedes hacer': 'Puedo enviar mensajes, archivos, notificaciones automáticas y responder comandos.',
+    //         'cómo funciona': 'Estoy conectado a WhatsApp Web y respondo automáticamente a tus comandos.',
+    //         'quién te creó': 'Fui desarrollado con Node.js y WhatsApp Web para facilitar las comunicaciones.',
+    //         'ayuda': 'Usa !help para ver todos los comandos disponibles.',
+    //         'comandos': 'Usa !help para ver la lista completa de comandos.'
+    //     },
+    //     fun: [
+    //         '¡Claro! ¿En qué puedo ayudarte?',
+    //         '¡Hola! ¿Qué necesitas?',
+    //         '¡Hey! ¿Cómo estás?',
+    //         '¡Saludos! ¿Qué tal tu día?'
+    //     ]
+    // };
 
     
     constructor() {
+  
+
       this.app = express();
       this.port = process.env.PORT || '3001';
       this.httpServer = new http.Server(this.app); // Crea un servidor http usando express
       this.io = new SocketIOServer(this.httpServer); // Crea una instancia de SocketIOServer asociada al servidor http
-        this.client = new Client({
-        puppeteer: {
-          headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
-        }
-      });
+      // this.client = new Client({
+      //   puppeteer: {
+      //     headless: true,
+      //     args: [
+      //       '--no-sandbox',
+      //       '--disable-setuid-sandbox',
+      //       '--disable-dev-shm-usage',
+      //       '--disable-accelerated-2d-canvas',
+      //       '--no-first-run',
+      //       '--no-zygote',
+      //       '--disable-gpu',
+      //       '--disable-web-security',
+      //       '--disable-features=VizDisplayCompositor',
+      //       '--disable-extensions',
+      //       '--disable-plugins',
+      //       '--disable-default-apps',
+      //       '--disable-background-timer-throttling',
+      //       '--disable-backgrounding-occluded-windows',
+      //       '--disable-renderer-backgrounding',
+      //       '--memory-pressure-off',
+      //       '--disable-blink-features=AutomationControlled',
+      //       '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      //     ]
+      //   },
+      //   webVersionCache: {
+      //     type: 'remote',
+      //     remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+      //   },
+      //   // Configuración para mantener sesión persistente
+      //   authStrategy: undefined, // Permitir restauración automática de sesión
+      //   restartOnAuthFail: false, // No reiniciar automáticamente para mantener QR
+      //   takeoverOnConflict: false, // Evitar conflictos que cierren la sesión
+      //   takeoverTimeoutMs: 0 // Deshabilitar takeover
+      // });
 
       this.listen();
       this.middlewares();
       this.routes();
       this.dbConnect();
     //  this.setupWebSockets();
-     setTimeout(() => this.initializeWhatsApp(), 2000);
     }
   
     private listen() {
@@ -119,19 +150,34 @@ class Server {
       //         res.send(buffer);
       //       });
       //   });
+      const clientOrigins = process.env.CORS_ORIGINS_CLIENT?.split(',') || [];
+      const adminOrigins = process.env.CORS_ORIGINS_ADMIN?.split(',') || [];
+      const allowedOrigins = [...clientOrigins, ...adminOrigins];
       this.app.use(cors({
-        // origin: 'http://161.132.49.58:5200',
-        origin: [
-      'http://localhost:4200',   // frontend cliente
-      'http://localhost:4300',    // frontend admin
-      'http://localhost:50913',    // frontend admin 59609
-      'http://localhost:59609'    // frontend admin 59609
-      ],
-        credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`❌ No permitido por CORS: ${origin}`));
+          }
+        },
+        credentials: true
       }));
-    }
+
+
+      // this.app.use(cors({
+      //   // origin: 'http://161.132.49.58:5200',
+      //   origin: [
+      // 'http://localhost:4200',   // frontend cliente
+      // 'http://localhost:58362',    // frontend admin
+      // 'http://localhost:60877',    // frontend admin 59609
+      // 'http://localhost:54297'    // frontend admin 59609
+      // ],
+      //   credentials: true // Habilita el intercambio de cookies o encabezados de autenticación
+      // }));  
+    } 
   
-    private routes() {
+    private routes() { 
       this.app.get('/', (req: Request, res: Response) => {
         res.json({
           msg: 'API Working'
@@ -177,19 +223,7 @@ class Server {
        this.app.use('/api/v1/metodopagos', MetodoPagoRouter); //  Esto está bien
        this.app.use('/api/v1/movimientoslote', MovimientoLoteRouter); //  Esto está bien
 
-        // WhatsApp endpoints
-       this.app.post('/send', (req: Request, res: Response, next?: NextFunction) => this.sendMessage(req, res, next));
-       this.app.post('/sendFile', (req: Request, res: Response, next?: NextFunction) => this.sendFile(req, res, next));
-       this.app.get('/chats', (req: Request, res: Response, next?: NextFunction) => this.getChats(req, res, next));
-       this.app.post('/sendToGroup', (req: Request, res: Response, next?: NextFunction) => this.sendToGroup(req, res, next));
-       this.app.post('/sendFileToGroup', (req: Request, res: Response, next?: NextFunction) => this.sendFileToGroup(req, res, next));
-       this.app.get('/status', (req: Request, res: Response, next?: NextFunction) => this.getStatus(req, res, next));
-       this.app.get('/bot-status', (req: Request, res: Response, next?: NextFunction) => this.getBotStatus(req, res, next));
-       this.app.get('/qr', (req: Request, res: Response, next?: NextFunction) => this.getQR(req, res, next));
-       this.app.get('/whatsapp-frontend-status', (req: Request, res: Response, next?: NextFunction) => this.getWhatsAppFrontendStatus(req, res, next));
-       this.app.post('/notify', (req: Request, res: Response, next?: NextFunction) => this.notify(req, res, next));
-       this.app.get('/bot-config', (req: Request, res: Response, next?: NextFunction) => this.getBotConfig(req, res, next));
-       this.app.post('/bot-config', (req: Request, res: Response, next?: NextFunction) => this.updateBotConfig(req, res, next));
+
     }
   
     private async dbConnect() {
@@ -200,661 +234,7 @@ class Server {
         console.log('Error al conectarse a la base de datos:', error);
       }
     }
-  
- private async initializeWhatsApp() {
-      try {
-        this.setupWhatsAppEvents();
-        // Inicializar WhatsApp de forma completamente asíncrona para no bloquear
-        setTimeout(async () => {
-          try {
-            console.log('Iniciando conexión a WhatsApp en segundo plano...');
-            await this.client.initialize();
-            console.log('WhatsApp inicializado exitosamente');
-          } catch (error) {
-            console.error('Error inicializando WhatsApp:', error);
-          }
-        }, 3000); // Delay mayor para asegurar que el servidor esté completamente listo
-      } catch (error) {
-        console.error('Error en setup de WhatsApp:', error);
-      }
-    }
-
-    private setupWhatsAppEvents() {
-      this.client.on('qr', async (qr) => {
-        // Solo almacenar QR sin logs que interfieran con peticiones HTTP
-        this.qrCodeData = qr;
-      });
-
-      this.client.on('ready', () => {
-        console.log('Cliente de WhatsApp listo y conectado!');
-        this.isWhatsAppConnected = true;
-        this.sendAdminNotification('✅ WhatsApp conectado exitosamente');
-      });
-
-      this.client.on('authenticated', () => {
-        console.log('Autenticación exitosa! Sesión guardada.');
-        this.isWhatsAppConnected = true;
-      });
-
-      this.client.on('auth_failure', (msg) => {
-        console.error('Fallo en la autenticación:', msg);
-        this.sendAdminNotification('❌ Error de autenticación: ' + msg);
-      });
-
-      this.client.on('disconnected', (reason) => {
-        console.log('Cliente desconectado:', reason);
-        // Limpiar el estado del cliente inmediatamente
-        this.isWhatsAppConnected = false;
-        this.qrCodeData = null;
-        this.sendAdminNotification('⚠️ WhatsApp desconectado: ' + reason);
-        // Reiniciar automáticamente
-        setTimeout(() => {
-          this.reinitializeClient();
-        }, 5000);
-      });
-
-      // Message event
-      this.client.on('message', async (message) => {
-        try {
-          const chat = await message.getChat();
-          const contact = await message.getContact();
-          const senderName = contact.pushname || contact.number || 'Usuario';
-
-          if (!chat.isGroup && message.from !== this.ADMIN_NUMBER + '@c.us') {
-            return;
-          }
-
-          const messageBody = message.body.toLowerCase().trim();
-          const originalMessage = message.body.trim();
-
-          if (messageBody.startsWith('!')) {
-            const command = messageBody.substring(1);
-            await this.handleCommand(command, message, chat);
-          } else {
-            const autoResponse = this.getAutoResponse(originalMessage);
-            if (autoResponse) {
-              setTimeout(async () => {
-                try {
-                  await message.reply(autoResponse);
-                } catch (error) {
-                  console.error('Error enviando respuesta automática:', error);
-                }
-              }, 1000 + Math.random() * 2000);
-            }
-          }
-
-          if (message.mentionedIds && message.mentionedIds.includes(this.client.info?.wid?._serialized)) {
-            await message.reply(`👋 ¡Hola ${senderName}! Soy el bot de notificaciones. Usa !help para ver mis comandos.`);
-          }
-
-        } catch (error) {
-          console.error('Error procesando mensaje:', error);
-          try {
-            await message.reply('❌ Ocurrió un error procesando tu mensaje.');
-          } catch (replyError) {
-            console.error('Error enviando respuesta de error:', replyError);
-          }
-        }
-      });
-
-      // Group events
-      this.client.on('group_join', async (notification) => {
-        try {
-          const chat = await notification.getChat();
-          const newMember = await notification.getContact();
-          const welcomeMessage = `👋 ¡Bienvenido/a ${newMember.pushname || 'Nuevo miembro'} al grupo *${chat.name}*!\n\n📋 *Reglas importantes:*\n• Lee las reglas con !reglas\n• Sé respetuoso con todos\n• Disfruta tu estadía en el grupo\n\n🤖 Soy el bot del grupo. Usa !help para ver mis comandos.`;
-          await notification.reply(welcomeMessage);
-          // Notify admins
-          const admins = (chat as any).participants.filter((p: any) => p.isAdmin);
-          for (const admin of admins) {
-            try {
-              await this.client.sendMessage(admin.id._serialized, `👤 *Nuevo miembro en ${chat.name}*\n${newMember.pushname || 'Usuario'} se unió al grupo.`);
-            } catch (error) {
-              console.error('Error notificando a admin:', error);
-            }
-          }
-        } catch (error) {
-          console.error('Error procesando nuevo miembro:', error);
-        }
-      });
-
-      this.client.on('group_leave', async (notification) => {
-        try {
-          const chat = await notification.getChat();
-          const leftMember = await notification.getContact();
-          const admins = (chat as any).participants.filter((p: any) => p.isAdmin);
-          for (const admin of admins) {
-            try {
-              await this.client.sendMessage(admin.id._serialized, `👋 *Miembro salió de ${chat.name}*\n${leftMember.pushname || 'Usuario'} abandonó el grupo.`);
-            } catch (error) {
-              console.error('Error notificando salida:', error);
-            }
-          }
-        } catch (error) {
-          console.error('Error procesando salida de miembro:', error);
-        }
-      });
-
-      // Moderation
-      this.client.on('message', async (message) => {
-        try {
-          const chat = await message.getChat();
-          if (!chat.isGroup) return;
-          const messageBody = message.body.toLowerCase();
-          const linkRegex = /(https?:\/\/[^\s]+)/g;
-          if (linkRegex.test(message.body)) {
-            const links = message.body.match(linkRegex);
-            if (links) {
-              for (const link of links) {
-                const suspiciousLinks = ['bit.ly', 'tinyurl.com', 'goo.gl', 't.co'];
-                if (suspiciousLinks.some(domain => link.includes(domain))) {
-                  await message.reply('⚠️ *Enlace sospechoso detectado*\n\nPor favor, verifica el enlace antes de hacer clic.\nLos administradores han sido notificados.');
-                  const admins = (chat as any).participants.filter((p: any) => p.isAdmin);
-                  for (const admin of admins) {
-                    try {
-                      await this.client.sendMessage(admin.id._serialized, `⚠️ *Enlace sospechoso en ${chat.name}*\nUsuario: ${(await message.getContact()).pushname || 'Desconocido'}\nEnlace: ${link}`);
-                    } catch (error) {
-                      console.error('Error notificando enlace sospechoso:', error);
-                    }
-                  }
-                  break;
-                }
-              }
-            }
-            const forbiddenWords = ['spam', 'scam', 'hack', 'virus', 'malware', 'estafa'];
-            if (forbiddenWords.some(word => messageBody.includes(word))) {
-              const participant = (chat as any).participants.find((p: any) => p.id._serialized === message.author);
-              if (participant && !participant.isAdmin) {
-                await message.reply('⚠️ *Contenido sospechoso detectado*\n\nTu mensaje contiene palabras que podrían indicar contenido no apropiado.\nPor favor, mantén conversaciones positivas.');
-                const admins = (chat as any).participants.filter((p: any) => p.isAdmin);
-                for (const admin of admins) {
-                  try {
-                    await this.client.sendMessage(admin.id._serialized, `🚨 *Mensaje sospechoso en ${chat.name}*\nUsuario: ${(await message.getContact()).pushname || 'Desconocido'}\nMensaje: ${message.body.substring(0, 100)}...`);
-                  } catch (error) {
-                    console.error('Error notificando mensaje sospechoso:', error);
-                  }
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error en moderación automática:', error);
-        }
-      });
-    }
-
-    private async reinitializeClient() {
-      try {
-        console.log('Limpiando sesión anterior...');
-        this.isWhatsAppConnected = false;
-        this.qrCodeData = null;
-        const sessionPath = './whatsapp-session';
-        if (fs.existsSync(sessionPath)) {
-          const files = fs.readdirSync(sessionPath);
-          for (const file of files) {
-            const filePath = path.join(sessionPath, file);
-            try {
-              fs.unlinkSync(filePath);
-              console.log('Archivo de sesión eliminado:', file);
-            } catch (err) {
-              console.error('Error eliminando archivo de sesión:', file, err);
-            }
-          }
-        }
-        const cachePath = './.wwebjs_cache';
-        if (fs.existsSync(cachePath)) {
-          try {
-            fs.rmSync(cachePath, { recursive: true, force: true });
-            console.log('Cache de puppeteer limpiado');
-          } catch (err) {
-            console.error('Error limpiando cache:', err);
-          }
-        }
-        console.log('Sesión limpiada. Reinicializando cliente...');
-        try {
-          await this.client.destroy();
-          console.log('Cliente anterior destruido');
-        } catch (err) {
-          console.error('Error destruyendo cliente anterior:', err);
-        }
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        await this.client.initialize();
-        console.log('Cliente reinicializado exitosamente');
-      } catch (error) {
-        console.error('Error en reinicialización:', error);
-        setTimeout(() => {
-          console.log('Reintentando reinicialización...');
-          this.reinitializeClient();
-        }, 10000);
-      }
-    }
-
-    private getAutoResponse(messageBody: string): string | null {
-      const lowerMessage = messageBody.toLowerCase();
-      for (const greeting of this.autoResponses.greetings) {
-        if (lowerMessage.includes(greeting)) {
-          return this.autoResponses.fun[Math.floor(Math.random() * this.autoResponses.fun.length)];
-        }
-      }
-      for (const [question, answer] of Object.entries(this.autoResponses.faq)) {
-        if (lowerMessage.includes(question)) {
-          return answer;
-        }
-      }
-      if (lowerMessage.includes('?') || lowerMessage.includes('¿')) {
-        if (lowerMessage.includes('horario') || lowerMessage.includes('hora')) {
-          return `🕐 *Hora actual:* ${new Date().toLocaleString('es-ES', { timeZone: 'America/Lima' })}`;
-        }
-        if (lowerMessage.includes('fecha') || lowerMessage.includes('día')) {
-          return `📅 *Fecha actual:* ${new Date().toLocaleDateString('es-ES')}`;
-        }
-        if (lowerMessage.includes('estado') || lowerMessage.includes('funcionando')) {
-          return '✅ *Estado:* El bot está funcionando correctamente y conectado a WhatsApp.';
-        }
-      }
-      return null;
-    }
-
-    private async sendAdminNotification(message: string) {
-      const targetNumber = this.NOTIFICATION_NUMBER || this.ADMIN_NUMBER;
-      if (!targetNumber) {
-        console.log('Número de administrador no configurado');
-        return;
-      }
-      try {
-        await this.client.sendMessage(targetNumber + '@c.us', message);
-        console.log('Notificación enviada al administrador:', message);
-      } catch (error) {
-        console.error('Error enviando notificación al administrador:', error);
-      }
-    }
-
-    private async handleCommand(command: string, message: any, chat: any) {
-      switch (command) {
-        case 'help':
-          const helpMessage = `*🤖 Comandos del Bot de WhatsApp*\n\n*Comandos disponibles:*\n• !help - Mostrar esta ayuda\n• !status - Estado del bot\n• !ping - Verificar conectividad\n• !info - Información del grupo\n• !uptime - Tiempo activo del bot\n• !reglas - Ver reglas del grupo\n• !admin - Mencionar administradores\n• !miembros - Contar miembros del grupo\n• !bienvenida - Configurar mensaje de bienvenida\n• !moderacion - Estado de moderación\n\n*Funcionalidades:*\n• ✅ Envío de mensajes\n• ✅ Envío de archivos\n• ✅ Notificaciones automáticas\n• ✅ Gestión de grupos\n• ✅ Respuestas automáticas\n• ✅ Moderación automática\n• ✅ Bienvenidas automáticas\n\n_Bot desarrollado con Node.js y WhatsApp Web_`;
-          await message.reply(helpMessage);
-          break;
-        case 'status':
-          const statusMessage = `*📊 Estado del Bot*\n\n✅ *Conectado:* ${this.client.info ? 'Sí' : 'No'}\n📱 *Número:* ${this.client.info?.wid?.user || 'N/A'}\n⏰ *Uptime:* ${Math.floor(process.uptime() / 60)} minutos\n👥 *Grupos:* ${chat.isGroup ? 'Mensaje en grupo' : 'Mensaje privado'}`;
-          await message.reply(statusMessage);
-          break;
-        case 'ping':
-          const pingTime = Date.now() - message.timestamp * 1000;
-          await message.reply(`🏓 *Pong!* (${pingTime}ms)`);
-          break;
-        case 'info':
-          if (chat.isGroup) {
-            const groupInfo = `*📋 Información del Grupo*\n\n👥 *Nombre:* ${chat.name}\n👤 *Descripción:* ${chat.description || 'Sin descripción'}\n👥 *Participantes:* ${chat.participants?.length || 'N/A'}\n🔒 *Tipo:* ${chat.isGroup ? 'Grupo' : 'Chat privado'}`;
-            await message.reply(groupInfo);
-          } else {
-            await message.reply('ℹ️ Este comando solo funciona en grupos');
-          }
-          break;
-        case 'uptime':
-          const uptime = process.uptime();
-          const hours = Math.floor(uptime / 3600);
-          const minutes = Math.floor((uptime % 3600) / 60);
-          const seconds = Math.floor(uptime % 60);
-          await message.reply(`⏰ *Tiempo activo:* ${hours}h ${minutes}m ${seconds}s`);
-          break;
-        case 'reglas':
-          const reglasMessage = `*📋 Reglas del Grupo*\n\n1️⃣ *Respeto:* Trata a todos los miembros con respeto\n2️⃣ *Contenido apropiado:* No enviar contenido ofensivo o inapropiado\n3️⃣ *Spam:* Evita enviar mensajes repetidos o innecesarios\n4️⃣ *Enlaces:* Verifica enlaces antes de compartirlos\n5️⃣ *Privacidad:* No compartas información personal de otros\n6️⃣ *Comandos:* Usa los comandos del bot correctamente\n\n⚠️ *Incumplimiento de reglas:*\n• Advertencia verbal\n• Silencio temporal (si es necesario)\n• Expulsión (casos graves)\n\n¡Mantengamos un ambiente positivo! 😊`;
-          await message.reply(reglasMessage);
-          break;
-        case 'admin':
-          if (chat.isGroup) {
-            const admins = chat.participants.filter((p: any) => p.isAdmin);
-            if (admins.length > 0) {
-              let adminList = '*👑 Administradores del Grupo:*\n\n';
-              for (const admin of admins) {
-                const contact = await this.client.getContactById(admin.id._serialized);
-                adminList += `• @${admin.id.user} (${contact.pushname || 'Sin nombre'})\n`;
-              }
-              await message.reply(adminList);
-            } else {
-              await message.reply('👑 No hay administradores configurados en este grupo');
-            }
-          } else {
-            await message.reply('❌ Este comando solo funciona en grupos');
-          }
-          break;
-        case 'miembros':
-          if (chat.isGroup) {
-            const totalMembers = chat.participants.length;
-            const admins = chat.participants.filter((p: any) => p.isAdmin).length;
-            const members = totalMembers - admins;
-            const memberMessage = `*👥 Información de Miembros*\n\n• *Total:* ${totalMembers}\n• *Administradores:* ${admins}\n• *Miembros:* ${members}\n\n📊 *Estadísticas del Grupo*`;
-            await message.reply(memberMessage);
-          } else {
-            await message.reply('❌ Este comando solo funciona en grupos');
-          }
-          break;
-        case 'bienvenida':
-          if (chat.isGroup) {
-            const participant = chat.participants.find((p: any) => p.id._serialized === message.author);
-            if (participant && participant.isAdmin) {
-              await message.reply('✅ *Sistema de Bienvenida Activado*\n\nAhora daré la bienvenida automáticamente a nuevos miembros que se unan al grupo.');
-            } else {
-              await message.reply('❌ Solo administradores pueden usar este comando');
-            }
-          } else {
-            await message.reply('❌ Este comando solo funciona en grupos');
-          }
-          break;
-        case 'moderacion':
-          const moderationMessage = `*🛡️ Sistema de Moderación*\n\n✅ *Funciones activas:*\n• Detección de enlaces sospechosos\n• Filtro de palabras prohibidas\n• Monitoreo de mensajes\n• Alertas automáticas\n• Bienvenidas automáticas\n\n⚙️ *Configuración:*\n• Enlaces acortados: ⚠️ Advertencia\n• Palabras sospechosas: 🚫 Bloqueo\n• Spam: 📊 Monitoreo continuo\n\nEl bot mantiene el orden en el grupo automáticamente.`;
-          await message.reply(moderationMessage);
-          break;
-        case 'test':
-          await message.reply('🧪 *Bot funcionando correctamente!* Comando de prueba exitoso.');
-          break;
-        default:
-          await message.reply('❓ Comando no reconocido. Usa !help para ver los comandos disponibles.');
-          break;
-      }
-    }
-
-    public async sendMessage(req: Request, res: Response, next?: NextFunction) {
-      const { number, message, targetNumber } = req.body;
-      const recipient = targetNumber || this.ADMIN_NUMBER;
-      if (!recipient || !message) {
-        return res.status(400).json({ success: false, error: 'Mensaje es requerido' });
-      }
-      try {
-        const messageToSend = (recipient === this.ADMIN_NUMBER) ? `🤖 Sistema de Notificaciones\n\n${message}` : message;
-        await this.client.sendMessage(recipient + '@c.us', messageToSend);
-        res.json({ success: true, message: 'Mensaje enviado exitosamente al número principal' });
-      } catch (err) {
-        console.error('Error al enviar mensaje:', err);
-        res.status(500).json({ success: false, error: 'Error al enviar mensaje: ' + (err as Error).message });
-      }
-    }
-
-    public async sendFile(req: Request, res: Response, next?: NextFunction) {
-      const { number, fileName, caption, targetNumber } = req.body;
-      const recipient = targetNumber || this.ADMIN_NUMBER;
-      if (!recipient || !fileName) {
-        return res.status(400).json({ success: false, error: 'Nombre del archivo es requerido' });
-      }
-      const filePath = path.join(__dirname, 'files', fileName);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ success: false, error: 'Archivo no encontrado en la carpeta files' });
-      }
-      try {
-        const media = MessageMedia.fromFilePath(filePath);
-        const finalCaption = (recipient === this.ADMIN_NUMBER) ? `🤖 Sistema de Notificaciones\n\n${caption || ''}` : (caption || '');
-        await this.client.sendMessage(recipient + '@c.us', media, { caption: finalCaption });
-        res.json({ success: true, message: 'Archivo enviado exitosamente al número principal' });
-      } catch (err) {
-        console.error('Error al enviar archivo:', err);
-        res.status(500).json({ success: false, error: 'Error al enviar archivo: ' + (err as Error).message });
-      }
-    }
-
-    public async getChats(req: Request, res: Response, next?: NextFunction) {
-      try {
-        const chats = await this.client.getChats();
-        const chatList = chats.map(chat => ({
-          id: chat.id._serialized,
-          name: chat.name || (chat as any).pushname || 'Sin nombre',
-          isGroup: chat.isGroup,
-          unreadCount: chat.unreadCount
-        }));
-        res.json({ success: true, chats: chatList });
-      } catch (err) {
-        console.error('Error al obtener chats:', err);
-        res.status(500).json({ success: false, error: 'Error al obtener chats: ' + (err as Error).message });
-      }
-    }
-
-    public async sendToGroup(req: Request, res: Response, next?: NextFunction) {
-      const { groupId, message } = req.body;
-      if (!groupId || !message) {
-        return res.status(400).json({ success: false, error: 'ID del grupo y mensaje son requeridos' });
-      }
-      try {
-        await this.client.sendMessage(groupId, message);
-        res.json({ success: true, message: 'Mensaje enviado al grupo exitosamente' });
-      } catch (err) {
-        console.error('Error al enviar mensaje al grupo:', err);
-        res.status(500).json({ success: false, error: 'Error al enviar mensaje al grupo: ' + (err as Error).message });
-      }
-    }
-
-    public async sendFileToGroup(req: Request, res: Response, next?: NextFunction) {
-      const { groupId, fileName, caption } = req.body;
-      if (!groupId || !fileName) {
-        return res.status(400).json({ success: false, error: 'ID del grupo y nombre del archivo son requeridos' });
-      }
-      const filePath = path.join(__dirname, 'files', fileName);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ success: false, error: 'Archivo no encontrado en la carpeta files' });
-      }
-      try {
-        const media = MessageMedia.fromFilePath(filePath);
-        await this.client.sendMessage(groupId, media, { caption: caption || '' });
-        res.json({ success: true, message: 'Archivo enviado al grupo exitosamente' });
-      } catch (err) {
-        console.error('Error al enviar archivo al grupo:', err);
-        res.status(500).json({ success: false, error: 'Error al enviar archivo al grupo: ' + (err as Error).message });
-      }
-    }
-
-    public getStatus(req: Request, res: Response, next?: NextFunction) {
-      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
-      const state = isConnected ? 'conectado' : 'desconectado';
-      const hasQR = this.qrCodeData !== null;
-
-      res.json({
-        status: state,
-        connected: isConnected,
-        info: this.client.info || null,
-        qrAvailable: hasQR && !isConnected,
-        qrData: hasQR ? this.qrCodeData : null,
-        timestamp: new Date().toISOString(),
-        message: isConnected
-          ? 'WhatsApp está conectado y listo para usar'
-          : hasQR
-            ? 'QR disponible para escanear'
-            : 'Esperando inicialización de WhatsApp'
-      });
-    }
-
-    public getBotStatus(req: Request, res: Response, next?: NextFunction) {
-      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
-      const hasQR = this.qrCodeData !== null;
-
-      const status = {
-        connected: isConnected,
-        authenticated: isConnected,
-        ready: isConnected,
-        number: this.client.info?.wid?.user || null,
-        uptime: process.uptime(),
-        qrAvailable: hasQR && !isConnected,
-        qrData: hasQR && !isConnected ? this.qrCodeData : null,
-        timestamp: new Date().toISOString(),
-        statusText: isConnected
-          ? 'Conectado y listo'
-          : hasQR
-            ? 'Esperando escaneo del QR'
-            : 'Inicializando WhatsApp'
-      };
-      res.json(status);
-    }
-
-    public async getQR(req: Request, res: Response, next?: NextFunction) {
-      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
-
-      if (isConnected) {
-        return res.status(200).json({
-          error: 'Ya conectado',
-          message: 'WhatsApp ya está conectado. No se necesita QR.',
-          status: 'connected',
-          connected: true
-        });
-      }
-
-      if (!this.qrCodeData) {
-        return res.status(404).json({
-          error: 'QR no disponible',
-          message: 'El QR aún no se ha generado. Espera a que WhatsApp se inicialice.',
-          status: 'waiting'
-        });
-      }
-      try {
-        const qrImage = await QRCode.toDataURL(this.qrCodeData);
-        res.json({
-          qrImage,
-          qrText: this.qrCodeData,
-          status: 'ready',
-          message: 'Escanea este código QR con WhatsApp Web'
-        });
-      } catch (error) {
-        res.status(500).json({
-          error: 'Error generando QR',
-          details: (error as Error).message
-        });
-      }
-    }
-
-    public async notify(req: Request, res: Response, next?: NextFunction) {
-      const { message, targetNumber } = req.body;
-      if (!message) {
-        return res.status(400).json({ success: false, error: 'Mensaje de notificación requerido' });
-      }
-      const recipient = targetNumber || this.NOTIFICATION_NUMBER || this.ADMIN_NUMBER;
-      try {
-        await this.client.sendMessage(recipient + '@c.us', '📢 Notificación: ' + message);
-        res.json({ success: true, message: 'Notificación enviada exitosamente' });
-      } catch (err) {
-        console.error('Error enviando notificación:', err);
-        res.status(500).json({ success: false, error: 'Error al enviar notificación: ' + (err as Error).message });
-      }
-    }
-
-    public getBotConfig(req: Request, res: Response, next?: NextFunction) {
-      const config = {
-        adminNumber: this.ADMIN_NUMBER,
-        notificationNumber: this.NOTIFICATION_NUMBER,
-        autoResponses: this.autoResponses,
-        moderationEnabled: true,
-        welcomeEnabled: true,
-        commands: [
-          'help', 'status', 'ping', 'info', 'uptime', 'reglas',
-          'admin', 'miembros', 'bienvenida', 'moderacion', 'test'
-        ]
-      };
-      res.json(config);
-    }
-
-    public updateBotConfig(req: Request, res: Response, next?: NextFunction) {
-      const { adminNumber, notificationNumber, autoResponses: newAutoResponses } = req.body;
-      if (adminNumber) {
-        // This would update, but for now, just log
-        console.log('Updating admin number to:', adminNumber);
-      }
-      if (notificationNumber) {
-        console.log('Updating notification number to:', notificationNumber);
-      }
-      if (newAutoResponses) {
-        Object.assign(this.autoResponses, newAutoResponses);
-      }
-      res.json({ success: true, message: 'Configuración actualizada' });
-    }
-
-    // Función para enviar comprobante por WhatsApp usando el cliente del servidor
-    public async sendComprobanteWhatsApp(
-      telefono: string,
-      comprobanteCompleto: any,
-      ventaCompleta: any,
-      pedido: any,
-      detallesVentaCompletos: any[]
-    ): Promise<{ success: boolean; error?: string }> {
-      try {
-        // Verificar que WhatsApp esté conectado
-        if (!this.isWhatsAppConnected || !this.client.info) {
-          throw new Error('WhatsApp no está conectado');
-        }
-
-        console.log(`📱 Enviando comprobante por WhatsApp al número: ${telefono}`);
-
-        // Crear PDF usando la función existente
-        const { generarPDFComprobante } = await import('./controllers/wsp.controller');
-        const nombreArchivo = await generarPDFComprobante(
-          comprobanteCompleto,
-          ventaCompleta,
-          pedido,
-          detallesVentaCompletos
-        );
-        console.log(nombreArchivo)
-        // Leer el archivo PDF
-        // const filePath = path.join(__dirname, '..', 'uploads', nombreArchivo);
-          const filePath = path.join(__dirname, "../../backend/dist/uploads", nombreArchivo);
-        if (!fs.existsSync(filePath)) {
-          throw new Error(`Archivo PDF no encontrado: ${filePath}`);
-        }
-
-        // Crear media desde el archivo
-        const media = MessageMedia.fromFilePath(filePath);
-
-        // Preparar mensaje
-        const mensaje = `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}\n\n✅ Venta procesada exitosamente`;
-
-        // Enviar archivo por WhatsApp
-        await this.client.sendMessage(`51${telefono}@c.us`, media, { caption: mensaje });
-
-        console.log(`✅ Comprobante enviado exitosamente por WhatsApp al ${telefono}`);
-        return { success: true };
-
-      } catch (error) {
-        console.error('❌ Error enviando comprobante por WhatsApp:', error);
-        return {
-          success: false,
-          error: (error as Error).message
-        };
-      }
-    }
-
-    public getWhatsAppFrontendStatus(req: Request, res: Response, next?: NextFunction) {
-      const isConnected = this.isWhatsAppConnected && this.client.info ? true : false;
-      const hasQR = this.qrCodeData !== null;
-
-      let status = 'disconnected';
-      let message = 'WhatsApp no está conectado';
-      let qrImage = null;
-
-      if (isConnected) {
-        status = 'connected';
-        message = 'WhatsApp está conectado y listo para usar';
-      } else if (hasQR) {
-        status = 'waiting_qr';
-        message = 'Escanea el código QR para conectar WhatsApp';
-        // Generar QR si está disponible
-        if (this.qrCodeData) {
-          try {
-            qrImage = QRCode.toDataURL(this.qrCodeData);
-          } catch (error) {
-            console.error('Error generando QR para frontend:', error);
-          }
-        }
-      } else {
-        status = 'initializing';
-        message = 'Inicializando WhatsApp...';
-      }
-
-      res.json({
-        status,
-        connected: isConnected,
-        message,
-        qrAvailable: hasQR && !isConnected,
-        qrImage: qrImage ? qrImage : null,
-        qrText: hasQR && !isConnected ? this.qrCodeData : null,
-        number: this.client.info?.wid?.user || null,
-        timestamp: new Date().toISOString(),
-        serverUptime: process.uptime()
-      });
-    }
+ 
 
     
    }

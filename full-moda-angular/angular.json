@@ -49,11 +49,36 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "6kB",
+                  "maximumError": "10kB"
                 }
               ],
               "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "server": {
+          "builder": "@angular-devkit/build-angular:ssr-dev-server",
+          "options": {
+            "browserTarget": "full-moda-angular:build",
+            "serverTarget": "full-moda-angular:server"
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "media",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true
             },
             "development": {
               "optimization": false,
@@ -78,6 +103,30 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
         },
+        "server": {
+          "builder": "@angular-devkit/build-angular:ssr-dev-server",
+          "options": {
+            "buildTarget": "full-moda-angular:build",
+            "serverTarget": "full-moda-angular:server"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "full-moda-angular:build:production",
+              "serverTarget": "full-moda-angular:server:production"
+            }
+          }
+        },
+        "prerender": {
+          "builder": "@angular/ssr:prerender",
+          "options": {
+            "routesFile": "routes.txt"
+          },
+          "configurations": {
+            "production": {
+              "routesFile": "routes.txt"
+            }
+          }
+        },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
@@ -100,6 +149,32 @@
           }
         }
       }
+    }
+  },
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component"
+    },
+    "@schematics/angular:directive": {
+      "type": "directive"
+    },
+    "@schematics/angular:service": {
+      "type": "service"
+    },
+    "@schematics/angular:guard": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:interceptor": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:module": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:pipe": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:resolver": {
+      "typeSeparator": "."
     }
   }
 }

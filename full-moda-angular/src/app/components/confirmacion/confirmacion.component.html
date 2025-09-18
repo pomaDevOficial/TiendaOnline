@@ -30,8 +30,8 @@
     <h1 class="text-4xl font-bold text-gray-800 mb-4">¡Pedido Confirmado!</h1>
     <p class="text-xl text-gray-600 mb-6">Tu pedido ha sido procesado exitosamente</p>
     <div class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">
-      <i class="fas fa-clock mr-2"></i>
-      Procesando pedido...
+      <i class="fas fa-check-circle mr-2"></i>
+      Pedido Confirmado
     </div>
   </div>
 
@@ -46,31 +46,23 @@
               <i class="fas fa-shopping-bag mr-3 text-purple-600"></i>
               Detalles del Pedido
             </h3>
-            <p class="text-gray-600">ID del Pedido: <span class="font-mono font-semibold">{{ pedido?.id }}</span></p>
           </div>
           <div class="status-badge status-confirmed">
             <i class="fas fa-check-circle mr-1"></i>
-            Confirmado
+            Pedido Confirmado
           </div>
         </div>
 
-        <!-- Timeline de Estados -->
-        <div class="timeline mb-6">
-          <div class="timeline-item active">
-            <div class="font-semibold text-gray-800">Pedido Confirmado</div>
-            <div class="text-sm text-gray-600">Tu pedido ha sido recibido y confirmado</div>
-          </div>
-          <div class="timeline-item pending">
-            <div class="font-semibold text-gray-800">Preparando Pedido</div>
-            <div class="text-sm text-gray-600">Estamos preparando tu pedido para envío</div>
-          </div>
-          <div class="timeline-item pending">
-            <div class="font-semibold text-gray-800">En Camino</div>
-            <div class="text-sm text-gray-600">Tu pedido está en camino hacia tu dirección</div>
-          </div>
-          <div class="timeline-item pending">
-            <div class="font-semibold text-gray-800">Entregado</div>
-            <div class="text-sm text-gray-600">Pedido entregado exitosamente</div>
+        <!-- Estado del Pedido -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+              <i class="fas fa-check text-white"></i>
+            </div>
+            <div>
+              <div class="font-semibold text-green-800">Pedido Confirmado</div>
+              <div class="text-sm text-green-600">Tu pedido ha sido recibido y confirmado exitosamente</div>
+            </div>
           </div>
         </div>
 
@@ -79,7 +71,12 @@
           <h4 class="text-lg font-semibold text-gray-800 mb-4">Productos</h4>
           <div id="order-products">
             <div class="order-item" *ngFor="let producto of pedido?.productos">
-              <div class="order-item-image">{{ producto.icon || producto.nombre.charAt(0) }}</div>
+              <div class="order-item-image">
+                <img *ngIf="producto.imagen" [src]="producto.imagen" [alt]="producto.nombre" class="w-full h-full object-cover rounded">
+                <div *ngIf="!producto.imagen" class="w-full h-full bg-gray-200 rounded flex items-center justify-center text-gray-500 font-semibold">
+                  {{ producto.icon || producto.nombre.charAt(0) }}
+                </div>
+              </div>
               <div class="order-item-info">
                 <div class="order-item-name">{{ producto.nombre }}</div>
                 <div class="order-item-details">
@@ -92,24 +89,19 @@
         </div>
       </div>
 
-      <!-- Información de Envío -->
+      <!-- Información del Cliente -->
       <div class="order-card">
         <h3 class="text-2xl font-bold text-gray-800 mb-6">
-          <i class="fas fa-truck mr-3 text-purple-600"></i>
-          Información de Envío
+          <i class="fas fa-user mr-3 text-purple-600"></i>
+          Información del Cliente
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div id="shipping-info" *ngIf="pedido?.cliente">
+          <div id="client-info" *ngIf="pedido?.cliente">
             <div class="space-y-3">
               <div>
-                <span class="font-semibold text-gray-700">Destinatario:</span>
+                <span class="font-semibold text-gray-700">Cliente:</span>
                 <div class="text-gray-600">{{ pedido?.cliente?.nombre }}</div>
-              </div>
-              <div>
-                <span class="font-semibold text-gray-700">Dirección:</span>
-                <div class="text-gray-600">{{ pedido?.cliente?.direccion }}</div>
-                <div class="text-sm text-gray-500" *ngIf="pedido?.cliente?.referencias">Ref: {{ pedido?.cliente?.referencias }}</div>
               </div>
               <div>
                 <span class="font-semibold text-gray-700">Teléfono:</span>
@@ -121,19 +113,23 @@
               </div>
             </div>
           </div>
-          <div id="payment-info" *ngIf="pedido?.cliente">
+          <div id="order-info" *ngIf="pedido">
             <div class="space-y-3">
               <div>
                 <span class="font-semibold text-gray-700">Método de Pago:</span>
                 <div class="text-gray-600">{{ getMetodoPagoTexto(pedido?.cliente?.metodoPago) }}</div>
               </div>
               <div>
-                <span class="font-semibold text-gray-700">Estado:</span>
-                <div class="text-green-600 font-semibold">Pago Confirmado</div>
+                <span class="font-semibold text-gray-700">Estado del Pedido:</span>
+                <div class="text-green-600 font-semibold">{{ pedido?.estado === 'confirmado' ? 'Confirmado' : pedido?.estado }}</div>
               </div>
               <div>
-                <span class="font-semibold text-gray-700">Fecha:</span>
-                <div class="text-gray-600">{{ getFechaFormateada(pedido?.fecha) }}</div>
+                <span class="font-semibold text-gray-700">Fecha del Pedido:</span>
+                <div class="text-gray-600">{{ getFechaFormateada(pedido.fecha) }}</div>
+              </div>
+              <div>
+                <span class="font-semibold text-gray-700">ID del Pedido:</span>
+                <div class="text-gray-600 font-mono">{{ pedido.id }}</div>
               </div>
             </div>
           </div>
@@ -153,10 +149,6 @@
           <div class="flex justify-between">
             <span class="text-gray-600">Subtotal:</span>
             <span class="font-semibold">S/ {{ getSubtotal().toFixed(2) }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-600">Envío:</span>
-            <span class="font-semibold">{{ getShipping() === 0 ? 'Gratis' : 'S/ ' + getShipping().toFixed(2) }}</span>
           </div>
           <div class="border-t pt-3">
             <div class="flex justify-between text-lg font-bold">
@@ -190,10 +182,6 @@
 
         <!-- Acciones -->
         <div class="space-y-3">
-          <button (click)="printOrder()" class="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
-            <i class="fas fa-print mr-2"></i>
-            Imprimir Recibo
-          </button>
           <button routerLink="/catalog" class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition duration-300">
             <i class="fas fa-shopping-bag mr-2"></i>
             Seguir Comprando
@@ -208,25 +196,25 @@
       <!-- Información Adicional -->
       <div class="order-card">
         <h4 class="font-semibold text-gray-800 mb-4">
-          <i class="fas fa-shield-alt mr-2 text-green-600"></i>
-          Información Importante
+          <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+          Información del Pedido
         </h4>
         <ul class="space-y-2 text-sm text-gray-600">
           <li>
-            <i class="fas fa-check text-green-500 mr-2"></i>
-            Recibirás un email de confirmación
+            <i class="fas fa-mobile-alt text-blue-500 mr-2"></i>
+            Se te notificará al número registrado cuando tu pedido esté listo
           </li>
           <li>
-            <i class="fas fa-check text-green-500 mr-2"></i>
-            Te notificaremos cuando tu pedido sea enviado
+            <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+            Recibirás confirmación con el envío del comprobante de pago
           </li>
           <li>
-            <i class="fas fa-check text-green-500 mr-2"></i>
+            <i class="fas fa-clock text-blue-500 mr-2"></i>
+            Tiempo de entrega: 2-3 días hábiles
+          </li>
+          <li>
+            <i class="fas fa-shield-alt text-green-500 mr-2"></i>
             Tienes 30 días para cambios o devoluciones
-          </li>
-          <li>
-            <i class="fas fa-check text-green-500 mr-2"></i>
-            Compra protegida con garantía
           </li>
         </ul>
       </div>

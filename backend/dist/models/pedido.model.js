@@ -18,6 +18,7 @@ Pedido.init({
     idestado: { type: sequelize_1.DataTypes.INTEGER, allowNull: true },
     totalimporte: { type: sequelize_1.DataTypes.DECIMAL(10, 2), allowNull: true },
     adjunto: { type: sequelize_1.DataTypes.STRING(255), allowNull: true },
+    esWeb: { type: sequelize_1.DataTypes.INTEGER, allowNull: true },
 }, { sequelize: connection_db_1.default, tableName: "pedido", timestamps: false });
 // Relaciones
 Pedido.belongsTo(persona_model_1.default, { foreignKey: 'idpersona', as: 'Persona' });

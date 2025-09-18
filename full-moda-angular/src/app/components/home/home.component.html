@@ -8,104 +8,127 @@
     <div class="carousel-slide opacity-0 transition-opacity duration-1000 ease-in-out" style="background-image: url('/images/panorama4.jpg');"></div>
   </div>
 
-  <!-- Overlay para mejor legibilidad -->
-  <div class="absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.2);"></div>
+  <!-- Overlay para mejor legibilidad con gradiente moderno -->
+  <div class="absolute inset-0 bg-gradient-to-br from-black/40 via-purple-900/30 to-black/60"></div>
+
+  <!-- Elementos decorativos adicionales -->
+  <div class="absolute inset-0">
+    <!-- Círculos decorativos -->
+    <div class="absolute top-20 left-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-32 right-32 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 4s;"></div>
+
+    <!-- Líneas decorativas -->
+    <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+    <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+  </div>
 
   <!-- Contenido del hero -->
   <div class="hero-content relative z-10">
-   
-    <h1 class="hero-title text-center md:text-left">¡Bienvenido a FULL MODA!</h1>
-    <div class="bg-white bg-opacity-90 p-4 rounded-lg shadow-lg">
-      <p class="hero-subtitle text-center md:text-left text-gray-800">
-        🔥 La mejor moda urbana de Pucallpa desde 2025. Estilo, calidad y confianza en cada prenda. ¡Sé único con nosotros! ✨
-      </p>
+    <!-- Descripción mejorada con tipografía premium -->
+    <div class="max-w-2xl mb-8">
+      <div class="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg border border-white/20 p-6 rounded-2xl shadow-2xl">
+        <p class="text-body-premium text-center md:text-left text-white text-lg md:text-xl mb-4">
+          <strong class="text-yellow-300 font-semibold">Desde 2025</strong>, revolucionamos la moda urbana en Pucallpa con prendas exclusivas,
+          alta calidad y un servicio que marca la diferencia.
+        </p>
+        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
+            <i class="fas fa-crown text-yellow-300"></i>
+            Mejores Marcas
+          </span>
+          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
+            <i class="fas fa-shipping-fast text-green-300"></i>
+            Envío Gratis
+          </span>
+          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
+            <i class="fas fa-shield-alt text-blue-300"></i>
+            Garantía Total
+          </span>
+        </div>
+      </div>
     </div>
+
+    <!-- Botón de acción principal -->
     <div class="flex justify-center md:justify-start">
-      <button (click)="navigateToCatalog()" class="btn-primary">
-        <i class="fas fa-shopping-bag"></i>
-        Explorar Catálogo
+      <button (click)="navigateToCatalog()" class="group relative bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1">
+        <span class="relative z-10 flex items-center gap-3">
+          <i class="fas fa-shopping-bag text-xl group-hover:animate-bounce"></i>
+          Explorar Catálogo
+          <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+        </span>
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-purple-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </button>
     </div>
+
   </div>
 
-  <!-- Controles del carrusel -->
-  <div class="carousel-controls absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 z-20">
-    <button class="carousel-btn w-2 h-2 md:w-3 md:h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 mx-1 md:mx-2 transition duration-300" (click)="goToSlide(0)"></button>
-    <button class="carousel-btn w-2 h-2 md:w-3 md:h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 mx-1 md:mx-2 transition duration-300" (click)="goToSlide(1)"></button>
-    <button class="carousel-btn w-2 h-2 md:w-3 md:h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 mx-1 md:mx-2 transition duration-300" (click)="goToSlide(2)"></button>
-    <button class="carousel-btn w-2 h-2 md:w-3 md:h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 mx-1 md:mx-2 transition duration-300" (click)="goToSlide(3)"></button>
+  <!-- Controles del carrusel mejorados -->
+  <div class="carousel-controls absolute bottom-6 md:bottom-12 left-1/2 transform -translate-x-1/2 z-20">
+    <div class="bg-black/20 backdrop-blur-lg rounded-full px-6 py-3 border border-white/10">
+      <div class="flex gap-3">
+        <button class="carousel-btn w-3 h-3 rounded-full bg-white/40 hover:bg-white hover:scale-125 transition-all duration-300 shadow-lg" (click)="goToSlide(0)"></button>
+        <button class="carousel-btn w-3 h-3 rounded-full bg-white/40 hover:bg-white hover:scale-125 transition-all duration-300 shadow-lg" (click)="goToSlide(1)"></button>
+        <button class="carousel-btn w-3 h-3 rounded-full bg-white/40 hover:bg-white hover:scale-125 transition-all duration-300 shadow-lg" (click)="goToSlide(2)"></button>
+        <button class="carousel-btn w-3 h-3 rounded-full bg-white/40 hover:bg-white hover:scale-125 transition-all duration-300 shadow-lg" (click)="goToSlide(3)"></button>
+      </div>
+    </div>
   </div>
 
-  <!-- Flechas de navegación -->
-  <button class="carousel-arrow carousel-prev absolute left-2 md:left-8 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 md:w-12 md:h-12 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full flex items-center justify-center transition duration-300" (click)="prevSlide()">
-    <i class="fas fa-chevron-left text-white text-sm md:text-base"></i>
+  <!-- Flechas de navegación mejoradas -->
+  <button class="carousel-arrow carousel-prev absolute left-4 md:left-12 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-lg hover:bg-white/20 border border-white/20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl group" (click)="prevSlide()">
+    <i class="fas fa-chevron-left text-white text-lg md:text-xl group-hover:translate-x-[-2px] transition-transform duration-300"></i>
   </button>
-  <button class="carousel-arrow carousel-next absolute right-2 md:right-8 top-1/2 transform -translate-y-1/2 z-20 w-8 h-8 md:w-12 md:h-12 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full flex items-center justify-center transition duration-300" (click)="nextSlide()">
-    <i class="fas fa-chevron-right text-white text-sm md:text-base"></i>
+  <button class="carousel-arrow carousel-next absolute right-4 md:right-12 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-lg hover:bg-white/20 border border-white/20 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl group" (click)="nextSlide()">
+    <i class="fas fa-chevron-right text-white text-lg md:text-xl group-hover:translate-x-[2px] transition-transform duration-300"></i>
   </button>
 </section>
 
 <!-- Marcas Destacadas Section -->
 <section class="py-20 bg-gray-50 relative overflow-hidden">
-  <div class="container px-4 relative z-10">
-    <div class="text-center mb-8 md:mb-16">
+  <div class="container px-4 relative z-10 flex flex-col items-center">
+    <div class="text-center mb-8 md:mb-16 w-full">
       <div class="inline-block text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-4" style="background: linear-gradient(90deg, #7c3aed 0%, #db2777 100%);">
         🏷️ Marcas Destacadas
       </div>
-      <h2 class="section-title text-center">Nuestras Marcas Principales</h2>
-      <p class="section-subtitle text-center max-w-2xl mx-auto">
-        Trabajamos con las mejores marcas del mercado para ofrecerte calidad y estilo excepcional.
+      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4">Nuestras Marcas Principales</h2>
+      <p class="text-body-premium text-center max-w-2xl mx-auto text-lg text-gray-600">
+        Ofrecemos productos de calidad con el mejor estilo y atención personalizada.
       </p>
     </div>
 
-    <!-- Marcas rotativas con mejoras visuales -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-16">
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.1s;" (click)="filterByBrand('Nike')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-          <i class="fas fa-running"></i>
+    <!-- Marcas dinámicas desde API -->
+    <div class="flex justify-center">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-16 max-w-6xl" *ngIf="!marcasLoading && !marcasError">
+        <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative flex flex-col items-center justify-center"
+             *ngFor="let marca of marcas; let i = index"
+             [style.animation-delay]="(i * 0.1) + 's'"
+             (click)="filterByBrand(marca.nombre)">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl mx-auto mb-3 shadow-lg"
+               [style.background]="getMarcaBackground(i)">
+            <i [class]="getMarcaIcon(marca.nombre)"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wide text-center">{{ marca.nombre }}</h3>
         </div>
-        <h3 class="font-bold text-gray-800">Nike</h3>
-        <p class="text-sm text-gray-600">Deportiva Premium</p>
       </div>
+    </div>
 
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.2s;" (click)="filterByBrand('Adidas')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
-          <i class="fas fa-futbol"></i>
+    <!-- Loading state -->
+    <div class="flex justify-center mb-16" *ngIf="marcasLoading">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl">
+        <div class="bg-white p-6 rounded-2xl shadow-lg text-center animate-pulse flex flex-col items-center justify-center" *ngFor="let i of [0,1,2,3,4]">
+          <div class="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3"></div>
+          <div class="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
         </div>
-        <h3 class="font-bold text-gray-800">Adidas</h3>
-        <p class="text-sm text-gray-600">Deportiva Global</p>
       </div>
+    </div>
 
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.3s;" (click)="filterByBrand('Puma')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
-          <i class="fas fa-paw"></i>
-        </div>
-        <h3 class="font-bold text-gray-800">Puma</h3>
-        <p class="text-sm text-gray-600">Deportiva Urbana</p>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.4s;" (click)="filterByBrand('Levi\'s')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #7c3aed 0%, #6b21a8 100%);">
-          <i class="fas fa-tshirt"></i>
-        </div>
-        <h3 class="font-bold text-gray-800">Levi's</h3>
-        <p class="text-sm text-gray-600">Casual Clásico</p>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.5s;" (click)="filterByBrand('H&M')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
-          <i class="fas fa-store"></i>
-        </div>
-        <h3 class="font-bold text-gray-800">H&M</h3>
-        <p class="text-sm text-gray-600">Moda Accesible</p>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl shadow-lg text-center cursor-pointer marca-card group animate-fade-in-up relative" style="animation-delay: 0.6s;" (click)="filterByBrand('Zara')">
-        <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
-          <i class="fas fa-shopping-bag"></i>
-        </div>
-        <h3 class="font-bold text-gray-800">Zara</h3>
-        <p class="text-sm text-gray-600">Moda Contemporánea</p>
+    <!-- Error state -->
+    <div class="flex justify-center mb-16" *ngIf="marcasError && !marcasLoading">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
+        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+        <h3 class="text-red-800 font-semibold mb-2">Error al cargar marcas</h3>
+        <p class="text-red-600 text-sm">Mostrando marcas por defecto</p>
       </div>
     </div>
   </div>
@@ -125,13 +148,13 @@
       <div class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-4">
         🔥 Ofertas Especiales
       </div>
-      <h2 class="section-title text-center">Descubre Nuestras Ofertas</h2>
-      <p class="section-subtitle text-center max-w-2xl mx-auto">
+      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4">Descubre Nuestras Ofertas</h2>
+      <p class="text-body-premium text-center max-w-2xl mx-auto text-lg text-gray-600">
         Las mejores prendas con descuentos increíbles. Calidad garantizada y estilo único.
       </p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-      <!-- Polo Premium -->
+      <!-- Polo -->
       <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 animate-fade-in-up group product-card" style="animation-delay: 0.1s;">
         <div class="relative h-64 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
           <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 group-hover:scale-110 transition-transform duration-700"></div>
@@ -146,10 +169,10 @@
           </div>
         </div>
         <div class="p-6">
-          <div class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-2">Ropa Casual Premium</div>
-          <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors duration-300">Polos Premium</h3>
+          <div class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-2">Ropa Casual</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors duration-300">Polos</h3>
           <p class="text-gray-600 mb-4 leading-relaxed">
-            Colección exclusiva de polos de <strong class="text-purple-600">alta calidad premium</strong> en diferentes colores y estilos.
+            Colección exclusiva de polos de <strong class="text-purple-600">alta calidad</strong> en diferentes colores y estilos.
             Perfectos para el día a día con confort excepcional.
           </p>
           <div class="flex gap-3">
@@ -178,7 +201,7 @@
           </div>
         </div>
         <div class="p-6">
-          <div class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-2">Ropa Deportiva Premium</div>
+          <div class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-2">Ropa Deportiva</div>
           <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors duration-300">Shorts Urbanos</h3>
           <p class="text-gray-600 mb-4 leading-relaxed">
             Shorts cómodos y con estilo para la temporada de calor.
@@ -210,7 +233,7 @@
           </div>
         </div>
         <div class="p-6">
-          <div class="text-xs text-green-600 font-bold uppercase tracking-wider mb-2">Calzado Deportivo Premium</div>
+          <div class="text-xs text-green-600 font-bold uppercase tracking-wider mb-2">Calzado Deportivo </div>
           <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-green-600 transition-colors duration-300">Zapatillas Sport</h3>
           <p class="text-gray-600 mb-4 leading-relaxed">
             Las mejores marcas en zapatillas deportivas y casuales.
@@ -241,19 +264,19 @@
 
   <div class="container mx-auto px-4 relative z-10">
     <div class="text-center mb-12 md:mb-20">
-      <div class="inline-block bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6 shadow-lg animate-bounce">
+      <div class="inline-block bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold mb-4 md:mb-6 shadow-lg animate-bounce text-heading-premium">
         ✨ ¿Por qué elegirnos?
       </div>
       <h2 class="section-title bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent text-center">
         La Mejor Experiencia de Compra
       </h2>
       <p class="section-subtitle max-w-3xl mx-auto text-center">
-        Miles de clientes ya confían en nosotros. Descubre por qué somos la tienda preferida para compras en línea con productos premium, servicio excepcional y atención personalizada 24/7.
+        Miles de clientes ya confían en nosotros. Descubre por qué somos la tienda preferida para compras en línea con productos de calidad, servicio excepcional y atención personalizada.
       </p>
     </div>
 
     <!-- Cards principales con animaciones -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
       <div class="group relative">
         <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
         <div class="relative bg-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2">
@@ -271,166 +294,26 @@
       </div>
 
       <div class="group relative">
-        <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-        <div class="relative bg-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2">
-          <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <i class="fas fa-shipping-fast text-white text-3xl"></i>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Envío Express</h3>
-          <p class="text-gray-600 text-center leading-relaxed">
-            Entrega rápida en <strong class="text-blue-600">24-48 horas</strong> con seguimiento GPS en tiempo real y embalaje seguro. <strong class="text-green-600">Envío gratuito</strong> en compras mayores a S/150.
-          </p>
-          <div class="mt-6 flex justify-center">
-            <div class="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group relative">
         <div class="absolute -inset-1 bg-gradient-to-r from-green-600 to-teal-600 rounded-3xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
         <div class="relative bg-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2">
           <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
             <i class="fas fa-star text-white text-3xl"></i>
           </div>
-          <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Calidad Premium</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Calidad</h3>
           <p class="text-gray-600 text-center leading-relaxed">
-            Productos certificados con <strong class="text-green-600">garantía oficial</strong> de las marcas. Atención al cliente 24/7 y soporte técnico especializado.
+            Productos certificados con <strong class="text-green-600">garantía oficial</strong> de las marcas. Atención al cliente y soporte técnico especializado.
           </p>
           <div class="mt-6 flex justify-center">
             <div class="w-12 h-1 bg-gradient-to-r from-green-500 to-teal-500 rounded-full"></div>
           </div>
         </div>
       </div>
+
     </div>
 
-    <!-- Beneficios adicionales con diseño moderno -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="group bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-blue-200">
-        <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-          <i class="fas fa-lock text-white text-xl"></i>
-        </div>
-        <h4 class="font-bold text-gray-800 mb-2 text-center">Pago Seguro 100%</h4>
-        <p class="text-sm text-gray-600 text-center">Múltiples métodos de pago con encriptación SSL</p>
-      </div>
-
-      <div class="group bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-green-200">
-        <div class="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-          <i class="fas fa-undo text-white text-xl"></i>
-        </div>
-        <h4 class="font-bold text-gray-800 mb-2 text-center">Devoluciones Fáciles</h4>
-        <p class="text-sm text-gray-600 text-center">30 días para cambios sin costo</p>
-      </div>
-
-      <div class="group bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-purple-200">
-        <div class="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-          <i class="fas fa-headset text-white text-xl"></i>
-        </div>
-        <h4 class="font-bold text-gray-800 mb-2 text-center">Soporte 24/7</h4>
-        <p class="text-sm text-gray-600 text-center">Atención personalizada siempre</p>
-      </div>
-
-      <div class="group bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-orange-200">
-        <div class="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-          <i class="fas fa-gift text-white text-xl"></i>
-        </div>
-        <h4 class="font-bold text-gray-800 mb-2 text-center">Ofertas Exclusivas</h4>
-        <p class="text-sm text-gray-600 text-center">Descuentos especiales diarios</p>
-      </div>
-    </div>
   </div>
 </section>
 
-<!-- Estadísticas del Catálogo - Diseño Moderno -->
-<section class="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-50 relative overflow-hidden">
-  <!-- Elementos decorativos de fondo -->
-  <div class="absolute top-0 left-0 w-full h-full">
-    <div class="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full opacity-20 blur-3xl"></div>
-    <div class="absolute bottom-20 right-10 w-40 h-40 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full opacity-20 blur-3xl"></div>
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-gradient-to-br from-green-200 to-teal-200 rounded-full opacity-10 blur-3xl"></div>
-  </div>
-
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="text-center mb-8 md:mb-16">
-      <div class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-4 shadow-lg">
-        📊 Estadísticas en Tiempo Real
-      </div>
-      <h2 class="section-title text-center">Nuestro Impacto en la Comunidad</h2>
-      <p class="section-subtitle text-center max-w-2xl mx-auto">
-        Números que demuestran nuestro compromiso con la calidad y satisfacción del cliente
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-      <!-- Pedidos Generados -->
-      <div class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
-        <div class="relative z-10">
-          <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <i class="fas fa-shopping-cart"></i>
-          </div>
-          <div class="text-4xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors duration-300">2,847</div>
-          <h3 class="text-lg font-bold text-gray-800 mb-3">Pedidos Generados</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Total de pedidos procesados exitosamente desde nuestra apertura</p>
-          <div class="mt-4 flex items-center text-green-600 text-sm font-semibold">
-            <i class="fas fa-arrow-up mr-1"></i>
-            +12% este mes
-          </div>
-        </div>
-      </div>
-
-      <!-- Prendas Totales Vendidas -->
-      <div class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
-        <div class="relative z-10">
-          <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <i class="fas fa-tshirt"></i>
-          </div>
-          <div class="text-4xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors duration-300">15,632</div>
-          <h3 class="text-lg font-bold text-gray-800 mb-3">Prendas Vendidas</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Total de prendas y productos entregados a nuestros clientes</p>
-          <div class="mt-4 flex items-center text-green-600 text-sm font-semibold">
-            <i class="fas fa-arrow-up mr-1"></i>
-            +8% este mes
-          </div>
-        </div>
-      </div>
-
-      <!-- Clientes Satisfechos -->
-      <div class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-pink-500 to-red-500 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
-        <div class="relative z-10">
-          <div class="w-20 h-20 bg-gradient-to-br from-pink-500 to-red-500 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="text-4xl font-bold text-gray-800 mb-2 group-hover:text-pink-600 transition-colors duration-300">1,429</div>
-          <h3 class="text-lg font-bold text-gray-800 mb-3">Clientes Satisfechos</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Clientes únicos que han realizado al menos un pedido con nosotros</p>
-          <div class="mt-4 flex items-center text-green-600 text-sm font-semibold">
-            <i class="fas fa-arrow-up mr-1"></i>
-            +15% este mes
-          </div>
-        </div>
-      </div>
-
-      <!-- Tasa de Satisfacción -->
-      <div class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
-        <div class="relative z-10">
-          <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-            <i class="fas fa-star"></i>
-          </div>
-          <div class="text-4xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors duration-300">98%</div>
-          <h3 class="text-lg font-bold text-gray-800 mb-3">Satisfacción</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Porcentaje de clientes que recomiendan nuestros productos</p>
-          <div class="mt-4 flex items-center text-green-600 text-sm font-semibold">
-            <i class="fas fa-arrow-up mr-1"></i>
-            +2% este mes
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- Ubicación Section -->
 <section id="ubicacion" class="py-20 bg-white">
@@ -439,8 +322,8 @@
       <div class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-4">
         📍 Ubicación
       </div>
-      <h2 class="section-title text-center">Visítanos en Pucallpa</h2>
-      <p class="section-subtitle text-center max-w-2xl mx-auto">
+      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4">Visítanos en Pucallpa</h2>
+      <p class="text-body-premium text-center max-w-2xl mx-auto text-lg text-gray-600">
         Te esperamos en nuestra tienda física con la mejor atención personalizada.
       </p>
     </div>
@@ -482,7 +365,7 @@
           </div>
           <div class="flex justify-between items-center py-3">
             <span class="font-semibold text-gray-800">Domingos:</span>
-            <span class="text-gray-600">Cerrado</span>
+            <span class="text-gray-600">09:00 a.m. - 01:00 p.m.</span>
           </div>
         </div>
 
@@ -518,10 +401,58 @@
 </section>
 
 <!-- Botón Flotante de WhatsApp -->
-<a href="https://wa.me/51974068266?text=Hola,%20me%20gustaría%20información%20sobre%20sus%20productos"
-   target="_blank"
-   rel="noopener noreferrer"
-   class="whatsapp-float">
+<button (click)="openWhatsAppModal()"
+    class="whatsapp-float">
   <i class="fab fa-whatsapp"></i>
   <span class="whatsapp-text">¡Contáctanos!</span>
-</a>
+</button>
+
+<!-- Modal de WhatsApp -->
+<div *ngIf="showWhatsAppModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+        <i class="fab fa-whatsapp text-white text-xl"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-800">Enviar mensaje por WhatsApp</h3>
+        <p class="text-sm text-gray-600">Escribe tu mensaje personalizado</p>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form (ngSubmit)="sendWhatsAppMessage()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tu mensaje:</label>
+        <textarea
+          [(ngModel)]="whatsappMessage"
+          name="message"
+          rows="4"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+          placeholder="Hola, me gustaría información sobre sus productos..."
+          required></textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex gap-3 pt-4">
+        <button type="button"
+          (click)="closeWhatsAppModal()"
+          class="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-300 transition duration-300">
+          Cancelar
+        </button>
+        <button type="submit"
+          class="flex-1 bg-green-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-600 transition duration-300 flex items-center justify-center gap-2">
+          <i class="fab fa-whatsapp"></i>
+          Enviar
+        </button>
+      </div>
+    </form>
+
+    <!-- Botón cerrar -->
+    <button (click)="closeWhatsAppModal()"
+      class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition duration-300">
+      <i class="fas fa-times text-xl"></i>
+    </button>
+  </div>
+</div>

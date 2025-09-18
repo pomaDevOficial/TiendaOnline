@@ -1,18 +1,9 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restaurarProducto = exports.getProductosEliminados = exports.deleteProducto = exports.getProductoById = exports.getProductosRegistrados = exports.getProductos = exports.verificarProductoCompleto = exports.updateProducto = exports.createProducto = exports.actualizarProductoConImagen = exports.crearProductoConImagen = void 0;
+exports.buscarProductos = exports.restaurarProducto = exports.getProductosEliminados = exports.deleteProducto = exports.getProductoById = exports.getProductosRegistrados = exports.getProductos = exports.verificarProductoCompleto = exports.updateProducto = exports.createProducto = exports.actualizarProductoConImagen = exports.crearProductoConImagen = void 0;
 const producto_model_1 = __importDefault(require("../models/producto.model"));
 const categoria_model_1 = __importDefault(require("../models/categoria.model"));
 const marca_model_1 = __importDefault(require("../models/marca.model"));
@@ -20,7 +11,7 @@ const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
 // CREATE - Crear producto con imagen
-const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const crearProductoConImagen = async (req, res) => {
     try {
         const { nombre, idcategoria, idmarca } = req.body;
         const file = req.file;
@@ -34,7 +25,7 @@ const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, f
             return;
         }
         // Verificar duplicado (mismo nombre, misma categoría, misma marca y no eliminado)
-        const existeProducto = yield producto_model_1.default.findOne({
+        const existeProducto = await producto_model_1.default.findOne({
             where: {
                 nombre,
                 idcategoria,
@@ -47,12 +38,12 @@ const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, f
             return;
         }
         // Verificar relaciones
-        const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+        const categoria = await categoria_model_1.default.findByPk(idcategoria);
         if (!categoria) {
             res.status(400).json({ msg: "La categoría no existe" });
             return;
         }
-        const marca = yield marca_model_1.default.findByPk(idmarca);
+        const marca = await marca_model_1.default.findByPk(idmarca);
         if (!marca) {
             res.status(400).json({ msg: "La marca no existe" });
             return;
@@ -60,7 +51,7 @@ const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, f
         // Ruta pública final de la imagen
         const imagePath = `${file.filename}`;
         // Crear producto
-        const nuevoProducto = yield producto_model_1.default.create({
+        const nuevoProducto = await producto_model_1.default.create({
             nombre,
             imagen: imagePath,
             idcategoria,
@@ -68,7 +59,7 @@ const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, f
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO,
         });
         // Traer con relaciones
-        const productoCreado = yield producto_model_1.default.findByPk(nuevoProducto.id, {
+        const productoCreado = await producto_model_1.default.findByPk(nuevoProducto.id, {
             include: [
                 { model: categoria_model_1.default, as: "Categoria", attributes: ["id", "nombre"] },
                 { model: marca_model_1.default, as: "Marca", attributes: ["id", "nombre"] },
@@ -84,10 +75,10 @@ const crearProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, f
         console.error("Error en crearProductoConImagen:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.crearProductoConImagen = crearProductoConImagen;
 // UPDATE - Actualizar producto con imagen opcional
-const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const actualizarProductoConImagen = async (req, res) => {
     try {
         const { id } = req.params;
         const { nombre, idcategoria, idmarca } = req.body;
@@ -96,14 +87,14 @@ const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void
             res.status(400).json({ msg: "El ID del producto es obligatorio" });
             return;
         }
-        const producto = yield producto_model_1.default.findByPk(id);
+        const producto = await producto_model_1.default.findByPk(id);
         if (!producto) {
             res.status(404).json({ msg: `No existe un producto con el id ${id}` });
             return;
         }
         // Verificar duplicado (excluyendo el producto actual)
         if (nombre && nombre !== producto.nombre) {
-            const existeProducto = yield producto_model_1.default.findOne({
+            const existeProducto = await producto_model_1.default.findOne({
                 where: {
                     nombre,
                     idcategoria: idcategoria || producto.idcategoria,
@@ -119,14 +110,14 @@ const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void
         }
         // Verificar relaciones si se están actualizando
         if (idcategoria) {
-            const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+            const categoria = await categoria_model_1.default.findByPk(idcategoria);
             if (!categoria) {
                 res.status(400).json({ msg: "La categoría no existe" });
                 return;
             }
         }
         if (idmarca) {
-            const marca = yield marca_model_1.default.findByPk(idmarca);
+            const marca = await marca_model_1.default.findByPk(idmarca);
             if (!marca) {
                 res.status(400).json({ msg: "La marca no existe" });
                 return;
@@ -147,9 +138,9 @@ const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void
         if (producto.idestado !== estados_constans_1.EstadoGeneral.ELIMINADO) {
             producto.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
         }
-        yield producto.save();
+        await producto.save();
         // Obtener el producto actualizado con relaciones
-        const productoActualizado = yield producto_model_1.default.findByPk(id, {
+        const productoActualizado = await producto_model_1.default.findByPk(id, {
             include: [
                 { model: categoria_model_1.default, as: "Categoria", attributes: ["id", "nombre"] },
                 { model: marca_model_1.default, as: "Marca", attributes: ["id", "nombre"] },
@@ -165,10 +156,10 @@ const actualizarProductoConImagen = (req, res) => __awaiter(void 0, void 0, void
         console.error("Error en actualizarProductoConImagen:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.actualizarProductoConImagen = actualizarProductoConImagen;
 // CREATE - Insertar nuevo producto
-const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createProducto = async (req, res) => {
     const { nombre, imagen, idcategoria, idmarca } = req.body;
     try {
         // Validaciones
@@ -179,7 +170,7 @@ const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             return;
         }
         // Verificar si el producto ya existe con la misma combinación
-        const existingProducto = yield producto_model_1.default.findOne({
+        const existingProducto = await producto_model_1.default.findOne({
             where: {
                 nombre,
                 idcategoria,
@@ -193,18 +184,18 @@ const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             return;
         }
         // Verificar si existen las referencias
-        const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+        const categoria = await categoria_model_1.default.findByPk(idcategoria);
         if (!categoria) {
             res.status(400).json({ msg: 'La categoría no existe' });
             return;
         }
-        const marca = yield marca_model_1.default.findByPk(idmarca);
+        const marca = await marca_model_1.default.findByPk(idmarca);
         if (!marca) {
             res.status(400).json({ msg: 'La marca no existe' });
             return;
         }
         // Crear nuevo producto
-        const nuevoProducto = yield producto_model_1.default.create({
+        const nuevoProducto = await producto_model_1.default.create({
             nombre,
             imagen,
             idcategoria,
@@ -212,7 +203,7 @@ const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener el producto creado con sus relaciones
-        const productoCreado = yield producto_model_1.default.findByPk(nuevoProducto.id, {
+        const productoCreado = await producto_model_1.default.findByPk(nuevoProducto.id, {
             include: [
                 {
                     model: categoria_model_1.default,
@@ -240,10 +231,10 @@ const createProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error en createProducto:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createProducto = createProducto;
 // UPDATE - Actualizar producto (CORREGIDO)
-const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateProducto = async (req, res) => {
     const { id } = req.params;
     const { nombre, imagen, idcategoria, idmarca } = req.body;
     try {
@@ -251,7 +242,7 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             res.status(400).json({ msg: "El ID del producto es obligatorio" });
             return;
         }
-        const producto = yield producto_model_1.default.findByPk(id);
+        const producto = await producto_model_1.default.findByPk(id);
         if (!producto) {
             res.status(404).json({ msg: `No existe un producto con el id ${id}` });
             return;
@@ -261,7 +252,7 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             const nombreToCheck = nombre || producto.nombre;
             const categoriaToCheck = idcategoria || producto.idcategoria;
             const marcaToCheck = idmarca || producto.idmarca;
-            const existingProducto = yield producto_model_1.default.findOne({
+            const existingProducto = await producto_model_1.default.findOne({
                 where: {
                     nombre: nombreToCheck,
                     idcategoria: categoriaToCheck,
@@ -278,14 +269,14 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         // Verificar si existen las referencias
         if (idcategoria) {
-            const categoria = yield categoria_model_1.default.findByPk(idcategoria);
+            const categoria = await categoria_model_1.default.findByPk(idcategoria);
             if (!categoria) {
                 res.status(400).json({ msg: 'La categoría no existe' });
                 return;
             }
         }
         if (idmarca) {
-            const marca = yield marca_model_1.default.findByPk(idmarca);
+            const marca = await marca_model_1.default.findByPk(idmarca);
             if (!marca) {
                 res.status(400).json({ msg: 'La marca no existe' });
                 return;
@@ -302,9 +293,9 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
             producto.imagen = imagen;
         // Cambiar estado a ACTUALIZADO
         producto.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
-        yield producto.save();
+        await producto.save();
         // Obtener el producto actualizado con relaciones
-        const productoActualizado = yield producto_model_1.default.findByPk(id, {
+        const productoActualizado = await producto_model_1.default.findByPk(id, {
             include: [
                 {
                     model: categoria_model_1.default,
@@ -332,10 +323,10 @@ const updateProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error("Error en updateProducto:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateProducto = updateProducto;
 // READ - Verificar si existe un producto con la misma combinación
-const verificarProductoCompleto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verificarProductoCompleto = async (req, res) => {
     const { nombre, idcategoria, idmarca } = req.params;
     try {
         if (!nombre || !idcategoria || !idmarca) {
@@ -344,7 +335,7 @@ const verificarProductoCompleto = (req, res) => __awaiter(void 0, void 0, void 0
             });
             return;
         }
-        const producto = yield producto_model_1.default.findOne({
+        const producto = await producto_model_1.default.findOne({
             where: {
                 nombre,
                 idcategoria: parseInt(idcategoria),
@@ -386,12 +377,12 @@ const verificarProductoCompleto = (req, res) => __awaiter(void 0, void 0, void 0
         console.error('Error en verificarProductoCompleto:', error);
         res.status(500).json({ msg: 'Error al verificar la combinación del producto' });
     }
-});
+};
 exports.verificarProductoCompleto = verificarProductoCompleto;
 // READ - Listar todos los productos
-const getProductos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getProductos = async (req, res) => {
     try {
-        const productos = yield producto_model_1.default.findAll({
+        const productos = await producto_model_1.default.findAll({
             include: [
                 {
                     model: categoria_model_1.default,
@@ -420,12 +411,12 @@ const getProductos = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.error('Error en getProductos:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de productos' });
     }
-});
+};
 exports.getProductos = getProductos;
 // READ - Listar productos registrados (no eliminados)
-const getProductosRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getProductosRegistrados = async (req, res) => {
     try {
-        const productos = yield producto_model_1.default.findAll({
+        const productos = await producto_model_1.default.findAll({
             where: {
                 idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO]
             },
@@ -457,13 +448,13 @@ const getProductosRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, 
         console.error('Error en getProductosRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener productos registrados' });
     }
-});
+};
 exports.getProductosRegistrados = getProductosRegistrados;
 // READ - Obtener producto por ID
-const getProductoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getProductoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const producto = yield producto_model_1.default.findByPk(id, {
+        const producto = await producto_model_1.default.findByPk(id, {
             include: [
                 {
                     model: categoria_model_1.default,
@@ -495,20 +486,20 @@ const getProductoById = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en getProductoById:', error);
         res.status(500).json({ msg: 'Error al obtener el producto' });
     }
-});
+};
 exports.getProductoById = getProductoById;
 // DELETE - Eliminar producto (cambiar estado a eliminado)
-const deleteProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteProducto = async (req, res) => {
     const { id } = req.params;
     try {
-        const producto = yield producto_model_1.default.findByPk(id);
+        const producto = await producto_model_1.default.findByPk(id);
         if (!producto) {
             res.status(404).json({ msg: 'Producto no encontrado' });
             return;
         }
         // Cambiar estado a ELIMINADO en lugar de eliminar físicamente
         producto.idestado = estados_constans_1.EstadoGeneral.ELIMINADO;
-        yield producto.save();
+        await producto.save();
         res.json({
             msg: 'Producto eliminado con éxito',
             data: { id: producto.id, estado: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -518,12 +509,12 @@ const deleteProducto = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error en deleteProducto:', error);
         res.status(500).json({ msg: 'Error al eliminar el producto' });
     }
-});
+};
 exports.deleteProducto = deleteProducto;
 // READ - Listar productos eliminados
-const getProductosEliminados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getProductosEliminados = async (req, res) => {
     try {
-        const productos = yield producto_model_1.default.findAll({
+        const productos = await producto_model_1.default.findAll({
             where: { idestado: estados_constans_1.EstadoGeneral.ELIMINADO },
             include: [
                 {
@@ -548,20 +539,20 @@ const getProductosEliminados = (req, res) => __awaiter(void 0, void 0, void 0, f
         console.error('Error in getProductosEliminados:', error);
         res.status(500).json({ msg: 'Error al obtener productos eliminados' });
     }
-});
+};
 exports.getProductosEliminados = getProductosEliminados;
 // UPDATE - Restaurar producto eliminado
-const restaurarProducto = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarProducto = async (req, res) => {
     const { id } = req.params;
     try {
-        const producto = yield producto_model_1.default.findByPk(id);
+        const producto = await producto_model_1.default.findByPk(id);
         if (!producto) {
             res.status(404).json({ msg: 'Producto no encontrado' });
             return;
         }
         // Cambiar estado to REGISTRADO
         producto.idestado = estados_constans_1.EstadoGeneral.REGISTRADO;
-        yield producto.save();
+        await producto.save();
         res.json({
             msg: 'Producto restaurado con éxito',
             data: { id: producto.id, estado: estados_constans_1.EstadoGeneral.REGISTRADO }
@@ -571,5 +562,55 @@ const restaurarProducto = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en restaurarProducto:', error);
         res.status(500).json({ msg: 'Error al restaurar el producto' });
     }
-});
+};
 exports.restaurarProducto = restaurarProducto;
+// READ - Buscar productos para select/autocomplete
+const buscarProductos = async (req, res) => {
+    const qraw = req.query.q;
+    const q = typeof qraw === "string" ? qraw.trim() : "";
+    // Parámetros opcionales: limit (máx resultados)
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    try {
+        if (!q) {
+            res.status(400).json({ msg: "El parámetro q (búsqueda) es obligatorio" });
+            return;
+        }
+        const like = `%${q}%`;
+        const productos = await producto_model_1.default.findAll({
+            where: {
+                idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO],
+                [sequelize_1.Op.or]: [
+                    { nombre: { [sequelize_1.Op.like]: like } }
+                ],
+            },
+            include: [
+                {
+                    model: categoria_model_1.default,
+                    as: "Categoria",
+                    attributes: ["id", "nombre"]
+                },
+                {
+                    model: marca_model_1.default,
+                    as: "Marca",
+                    attributes: ["id", "nombre"]
+                },
+                {
+                    model: estado_model_1.default,
+                    as: "Estado",
+                    attributes: ["id", "nombre"]
+                }
+            ],
+            order: [["nombre", "ASC"]],
+            limit, // ⬅️ limitar resultados
+        });
+        res.json({
+            msg: "Resultados de búsqueda de productos obtenidos exitosamente",
+            data: productos,
+        });
+    }
+    catch (error) {
+        console.error("Error en buscarProductos:", error);
+        res.status(500).json({ msg: "Error al buscar productos" });
+    }
+};
+exports.buscarProductos = buscarProductos;

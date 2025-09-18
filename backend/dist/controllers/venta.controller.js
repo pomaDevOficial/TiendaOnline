@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,7 +11,7 @@ const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
 // CREATE - Insertar nueva venta
-const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createVenta = async (req, res) => {
     const { fechaventa, idusuario, idpedido } = req.body;
     try {
         // Validaciones
@@ -31,19 +22,19 @@ const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return;
         }
         // Verificar si existe el usuario
-        const usuario = yield usuario_model_1.default.findByPk(idusuario);
+        const usuario = await usuario_model_1.default.findByPk(idusuario);
         if (!usuario) {
             res.status(400).json({ msg: 'El usuario no existe' });
             return;
         }
         // Verificar si existe el pedido
-        const pedido = yield pedido_model_1.default.findByPk(idpedido);
+        const pedido = await pedido_model_1.default.findByPk(idpedido);
         if (!pedido) {
             res.status(400).json({ msg: 'El pedido no existe' });
             return;
         }
         // Verificar si el pedido ya tiene una venta asociada
-        const ventaExistente = yield venta_model_1.default.findOne({
+        const ventaExistente = await venta_model_1.default.findOne({
             where: { idpedido }
         });
         if (ventaExistente) {
@@ -51,14 +42,14 @@ const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return;
         }
         // Crear nueva venta
-        const nuevaVenta = yield venta_model_1.default.create({
+        const nuevaVenta = await venta_model_1.default.create({
             fechaventa: fechaventa || new Date(),
             idusuario,
             idpedido,
             idestado: estados_constans_1.VentaEstado.REGISTRADO
         });
         // Obtener la venta creada con sus relaciones
-        const ventaCreada = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+        const ventaCreada = await venta_model_1.default.findByPk(nuevaVenta.id, {
             include: [
                 {
                     model: usuario_model_1.default,
@@ -98,10 +89,10 @@ const createVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         console.error('Error en createVenta:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createVenta = createVenta;
 // UPDATE - Actualizar venta
-const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateVenta = async (req, res) => {
     const { id } = req.params;
     const { fechaventa, idusuario, idpedido } = req.body;
     try {
@@ -109,14 +100,14 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(400).json({ msg: "El ID de la venta es obligatorio" });
             return;
         }
-        const venta = yield venta_model_1.default.findByPk(id);
+        const venta = await venta_model_1.default.findByPk(id);
         if (!venta) {
             res.status(404).json({ msg: `No existe una venta con el id ${id}` });
             return;
         }
         // Verificar si existe el usuario (si se está actualizando)
         if (idusuario) {
-            const usuario = yield usuario_model_1.default.findByPk(idusuario);
+            const usuario = await usuario_model_1.default.findByPk(idusuario);
             if (!usuario) {
                 res.status(400).json({ msg: 'El usuario no existe' });
                 return;
@@ -124,13 +115,13 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         // Verificar si existe el pedido (si se está actualizando)
         if (idpedido && idpedido !== venta.idpedido) {
-            const pedido = yield pedido_model_1.default.findByPk(idpedido);
+            const pedido = await pedido_model_1.default.findByPk(idpedido);
             if (!pedido) {
                 res.status(400).json({ msg: 'El pedido no existe' });
                 return;
             }
             // Verificar si el nuevo pedido ya tiene una venta asociada
-            const ventaExistente = yield venta_model_1.default.findOne({
+            const ventaExistente = await venta_model_1.default.findOne({
                 where: { idpedido }
             });
             if (ventaExistente) {
@@ -145,9 +136,9 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             venta.idusuario = idusuario;
         if (idpedido)
             venta.idpedido = idpedido;
-        yield venta.save();
+        await venta.save();
         // Obtener la venta actualizada con relaciones
-        const ventaActualizada = yield venta_model_1.default.findByPk(id, {
+        const ventaActualizada = await venta_model_1.default.findByPk(id, {
             include: [
                 {
                     model: usuario_model_1.default,
@@ -187,12 +178,12 @@ const updateVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         console.error("Error en updateVenta:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateVenta = updateVenta;
 // READ - Listar todas las ventas
-const getVentas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentas = async (req, res) => {
     try {
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             include: [
                 {
                     model: usuario_model_1.default,
@@ -233,12 +224,12 @@ const getVentas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.error('Error en getVentas:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de ventas' });
     }
-});
+};
 exports.getVentas = getVentas;
 // READ - Listar ventas registradas (no anuladas)
-const getVentasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentasRegistradas = async (req, res) => {
     try {
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             where: {
                 idestado: estados_constans_1.VentaEstado.REGISTRADO
             },
@@ -282,13 +273,13 @@ const getVentasRegistradas = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en getVentasRegistradas:', error);
         res.status(500).json({ msg: 'Error al obtener ventas registradas' });
     }
-});
+};
 exports.getVentasRegistradas = getVentasRegistradas;
 // READ - Obtener venta por ID
-const getVentaById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentaById = async (req, res) => {
     const { id } = req.params;
     try {
-        const venta = yield venta_model_1.default.findByPk(id, {
+        const venta = await venta_model_1.default.findByPk(id, {
             include: [
                 {
                     model: usuario_model_1.default,
@@ -332,13 +323,13 @@ const getVentaById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.error('Error en getVentaById:', error);
         res.status(500).json({ msg: 'Error al obtener la venta' });
     }
-});
+};
 exports.getVentaById = getVentaById;
 // READ - Obtener ventas por usuario
-const getVentasByUsuario = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentasByUsuario = async (req, res) => {
     const { idusuario } = req.params;
     try {
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             where: { idusuario },
             include: [
                 {
@@ -380,13 +371,13 @@ const getVentasByUsuario = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en getVentasByUsuario:', error);
         res.status(500).json({ msg: 'Error al obtener ventas del usuario' });
     }
-});
+};
 exports.getVentasByUsuario = getVentasByUsuario;
 // READ - Obtener ventas por pedido
-const getVentasByPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentasByPedido = async (req, res) => {
     const { idpedido } = req.params;
     try {
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             where: { idpedido },
             include: [
                 {
@@ -428,12 +419,12 @@ const getVentasByPedido = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en getVentasByPedido:', error);
         res.status(500).json({ msg: 'Error al obtener ventas del pedido' });
     }
-});
+};
 exports.getVentasByPedido = getVentasByPedido;
 // READ - Listar ventas anuladas
-const getVentasAnuladas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentasAnuladas = async (req, res) => {
     try {
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             where: { idestado: estados_constans_1.VentaEstado.ANULADO },
             include: [
                 {
@@ -470,19 +461,19 @@ const getVentasAnuladas = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en getVentasAnuladas:', error);
         res.status(500).json({ msg: 'Error al obtener ventas anuladas' });
     }
-});
+};
 exports.getVentasAnuladas = getVentasAnuladas;
 // UPDATE - Cambiar estado de la venta (anular)
-const anularVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const anularVenta = async (req, res) => {
     const { id } = req.params;
     try {
-        const venta = yield venta_model_1.default.findByPk(id);
+        const venta = await venta_model_1.default.findByPk(id);
         if (!venta) {
             res.status(404).json({ msg: 'Venta no encontrada' });
             return;
         }
         venta.idestado = estados_constans_1.VentaEstado.ANULADO;
-        yield venta.save();
+        await venta.save();
         res.json({
             msg: 'Venta anulada con éxito',
             data: { id: venta.id, estado: estados_constans_1.VentaEstado.ANULADO }
@@ -492,20 +483,20 @@ const anularVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         console.error('Error en anularVenta:', error);
         res.status(500).json({ msg: 'Error al anular la venta' });
     }
-});
+};
 exports.anularVenta = anularVenta;
 // UPDATE - Restaurar venta anulada
-const restaurarVenta = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarVenta = async (req, res) => {
     const { id } = req.params;
     try {
-        const venta = yield venta_model_1.default.findByPk(id);
+        const venta = await venta_model_1.default.findByPk(id);
         if (!venta) {
             res.status(404).json({ msg: 'Venta no encontrada' });
             return;
         }
         // Cambiar estado a REGISTRADO
         venta.idestado = estados_constans_1.VentaEstado.REGISTRADO;
-        yield venta.save();
+        await venta.save();
         res.json({
             msg: 'Venta restaurada con éxito',
             data: { id: venta.id, estado: estados_constans_1.VentaEstado.REGISTRADO }
@@ -515,17 +506,17 @@ const restaurarVenta = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error en restaurarVenta:', error);
         res.status(500).json({ msg: 'Error al restaurar la venta' });
     }
-});
+};
 exports.restaurarVenta = restaurarVenta;
 // ========================================
 // MÉTODO PARA VENTAS CONTROLLER
 // ========================================
 // READ - Obtener datos de ventas por mes para gráfica de barras
-const getVentasPorMes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getVentasPorMes = async (req, res) => {
     const { año, mes } = req.query;
     try {
         let whereCondition = {
-            idestado: estados_constans_1.VentaEstado.REGISTRADO
+            idestado: estados_constans_1.VentaEstado.REGISTRADO // Solo ventas registradas (no anuladas)
         };
         // Si se proporciona año, filtrar por año
         if (año) {
@@ -543,13 +534,17 @@ const getVentasPorMes = (req, res) => __awaiter(void 0, void 0, void 0, function
                 [sequelize_1.Op.between]: [monthStart, monthEnd]
             };
         }
-        const ventas = yield venta_model_1.default.findAll({
+        const ventas = await venta_model_1.default.findAll({
             where: whereCondition,
             include: [
                 {
                     model: pedido_model_1.default,
                     as: 'Pedido',
-                    attributes: ['id', 'totalimporte']
+                    where: {
+                        idestado: estados_constans_1.PedidoEstado.PAGADO // Solo pedidos pagados (no cancelados)
+                    },
+                    attributes: ['id', 'totalimporte'],
+                    required: true // INNER JOIN para asegurar que solo traiga ventas con pedidos pagados
                 }
             ],
             attributes: ['id', 'fechaventa'],
@@ -583,5 +578,5 @@ const getVentasPorMes = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en getVentasPorMes:', error);
         res.status(500).json({ msg: 'Error al obtener datos de ventas por mes' });
     }
-});
+};
 exports.getVentasPorMes = getVentasPorMes;

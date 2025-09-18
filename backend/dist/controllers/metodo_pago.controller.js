@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,7 +9,7 @@ const estado_model_1 = __importDefault(require("../models/estado.model"));
 const estados_constans_1 = require("../estadosTablas/estados.constans");
 const sequelize_1 = require("sequelize");
 // CREATE - Insertar nuevo método de pago
-const createMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createMetodoPago = async (req, res) => {
     const { nombre } = req.body;
     try {
         // Validaciones
@@ -29,7 +20,7 @@ const createMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return;
         }
         // Verificar si ya existe un método de pago con el mismo nombre (no eliminado)
-        const metodoPagoExistente = yield metodo_pago_model_1.default.findOne({
+        const metodoPagoExistente = await metodo_pago_model_1.default.findOne({
             where: {
                 nombre,
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -42,12 +33,12 @@ const createMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return;
         }
         // Crear nuevo método de pago
-        const nuevoMetodoPago = yield metodo_pago_model_1.default.create({
+        const nuevoMetodoPago = await metodo_pago_model_1.default.create({
             nombre,
             idestado: estados_constans_1.EstadoGeneral.REGISTRADO
         });
         // Obtener el método de pago creado con sus relaciones
-        const metodoPagoCreado = yield metodo_pago_model_1.default.findByPk(nuevoMetodoPago.id, {
+        const metodoPagoCreado = await metodo_pago_model_1.default.findByPk(nuevoMetodoPago.id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -65,10 +56,10 @@ const createMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.error('Error en createMetodoPago:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createMetodoPago = createMetodoPago;
 // UPDATE - Actualizar método de pago
-const updateMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateMetodoPago = async (req, res) => {
     const { id } = req.params;
     const { nombre } = req.body;
     try {
@@ -76,14 +67,14 @@ const updateMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
             res.status(400).json({ msg: "El ID del método de pago es obligatorio" });
             return;
         }
-        const metodoPago = yield metodo_pago_model_1.default.findByPk(id);
+        const metodoPago = await metodo_pago_model_1.default.findByPk(id);
         if (!metodoPago) {
             res.status(404).json({ msg: `No existe un método de pago con el id ${id}` });
             return;
         }
         // Verificar si ya existe otro método de pago con el mismo nombre (no eliminado)
         if (nombre && nombre !== metodoPago.nombre) {
-            const metodoPagoExistente = yield metodo_pago_model_1.default.findOne({
+            const metodoPagoExistente = await metodo_pago_model_1.default.findOne({
                 where: {
                     nombre,
                     id: { [sequelize_1.Op.ne]: id },
@@ -104,9 +95,9 @@ const updateMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
         if (metodoPago.idestado !== estados_constans_1.EstadoGeneral.ELIMINADO) {
             metodoPago.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
         }
-        yield metodoPago.save();
+        await metodoPago.save();
         // Obtener el método de pago actualizado con relaciones
-        const metodoPagoActualizado = yield metodo_pago_model_1.default.findByPk(id, {
+        const metodoPagoActualizado = await metodo_pago_model_1.default.findByPk(id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -124,12 +115,12 @@ const updateMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.error("Error en updateMetodoPago:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updateMetodoPago = updateMetodoPago;
 // READ - Listar todos los métodos de pago
-const getMetodosPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMetodosPago = async (req, res) => {
     try {
-        const metodosPago = yield metodo_pago_model_1.default.findAll({
+        const metodosPago = await metodo_pago_model_1.default.findAll({
             include: [
                 {
                     model: estado_model_1.default,
@@ -148,12 +139,12 @@ const getMetodosPago = (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.error('Error en getMetodosPago:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de métodos de pago' });
     }
-});
+};
 exports.getMetodosPago = getMetodosPago;
 // READ - Listar métodos de pago registrados/actualizados (no eliminados)
-const getMetodosPagoRegistrados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMetodosPagoRegistrados = async (req, res) => {
     try {
-        const metodosPago = yield metodo_pago_model_1.default.findAll({
+        const metodosPago = await metodo_pago_model_1.default.findAll({
             where: {
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
             },
@@ -175,13 +166,13 @@ const getMetodosPagoRegistrados = (req, res) => __awaiter(void 0, void 0, void 0
         console.error('Error en getMetodosPagoRegistrados:', error);
         res.status(500).json({ msg: 'Error al obtener métodos de pago registrados' });
     }
-});
+};
 exports.getMetodosPagoRegistrados = getMetodosPagoRegistrados;
 // READ - Obtener método de pago por ID
-const getMetodoPagoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMetodoPagoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const metodoPago = yield metodo_pago_model_1.default.findByPk(id, {
+        const metodoPago = await metodo_pago_model_1.default.findByPk(id, {
             include: [
                 {
                     model: estado_model_1.default,
@@ -203,13 +194,13 @@ const getMetodoPagoById = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en getMetodoPagoById:', error);
         res.status(500).json({ msg: 'Error al obtener el método de pago' });
     }
-});
+};
 exports.getMetodoPagoById = getMetodoPagoById;
 // READ - Verificar si existe un método de pago por nombre
-const verificarNombreMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verificarNombreMetodoPago = async (req, res) => {
     const { nombre } = req.params;
     try {
-        const metodoPago = yield metodo_pago_model_1.default.findOne({
+        const metodoPago = await metodo_pago_model_1.default.findOne({
             where: {
                 nombre,
                 idestado: { [sequelize_1.Op.ne]: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -224,12 +215,12 @@ const verificarNombreMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0
         console.error('Error en verificarNombreMetodoPago:', error);
         res.status(500).json({ msg: 'Error al verificar el nombre del método de pago' });
     }
-});
+};
 exports.verificarNombreMetodoPago = verificarNombreMetodoPago;
 // READ - Listar métodos de pago eliminados
-const getMetodosPagoEliminados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMetodosPagoEliminados = async (req, res) => {
     try {
-        const metodosPago = yield metodo_pago_model_1.default.findAll({
+        const metodosPago = await metodo_pago_model_1.default.findAll({
             where: { idestado: estados_constans_1.EstadoGeneral.ELIMINADO },
             include: [
                 {
@@ -249,20 +240,20 @@ const getMetodosPagoEliminados = (req, res) => __awaiter(void 0, void 0, void 0,
         console.error('Error en getMetodosPagoEliminados:', error);
         res.status(500).json({ msg: 'Error al obtener métodos de pago eliminados' });
     }
-});
+};
 exports.getMetodosPagoEliminados = getMetodosPagoEliminados;
 // DELETE - Eliminar método de pago (cambiar estado a eliminado)
-const deleteMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteMetodoPago = async (req, res) => {
     const { id } = req.params;
     try {
-        const metodoPago = yield metodo_pago_model_1.default.findByPk(id);
+        const metodoPago = await metodo_pago_model_1.default.findByPk(id);
         if (!metodoPago) {
             res.status(404).json({ msg: 'Método de pago no encontrado' });
             return;
         }
         // Cambiar estado a ELIMINADO en lugar de eliminar físicamente
         metodoPago.idestado = estados_constans_1.EstadoGeneral.ELIMINADO;
-        yield metodoPago.save();
+        await metodoPago.save();
         res.json({
             msg: 'Método de pago eliminado con éxito',
             data: { id: metodoPago.id, estado: estados_constans_1.EstadoGeneral.ELIMINADO }
@@ -272,20 +263,20 @@ const deleteMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, functio
         console.error('Error en deleteMetodoPago:', error);
         res.status(500).json({ msg: 'Error al eliminar el método de pago' });
     }
-});
+};
 exports.deleteMetodoPago = deleteMetodoPago;
 // UPDATE - Restaurar método de pago eliminado
-const restaurarMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarMetodoPago = async (req, res) => {
     const { id } = req.params;
     try {
-        const metodoPago = yield metodo_pago_model_1.default.findByPk(id);
+        const metodoPago = await metodo_pago_model_1.default.findByPk(id);
         if (!metodoPago) {
             res.status(404).json({ msg: 'Método de pago no encontrado' });
             return;
         }
         // Cambiar estado a ACTUALIZADO
         metodoPago.idestado = estados_constans_1.EstadoGeneral.ACTUALIZADO;
-        yield metodoPago.save();
+        await metodoPago.save();
         res.json({
             msg: 'Método de pago restaurado con éxito',
             data: { id: metodoPago.id, estado: estados_constans_1.EstadoGeneral.ACTUALIZADO }
@@ -295,5 +286,5 @@ const restaurarMetodoPago = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en restaurarMetodoPago:', error);
         res.status(500).json({ msg: 'Error al restaurar el método de pago' });
     }
-});
+};
 exports.restaurarMetodoPago = restaurarMetodoPago;

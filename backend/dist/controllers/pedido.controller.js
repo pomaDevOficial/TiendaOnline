@@ -1,18 +1,9 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.aprobarPedido = exports.restaurarPedido = exports.getPedidosCancelados = exports.deletePedido = exports.cambiarEstadoPedido = exports.getPedidosByPersona = exports.getPedidoById = exports.getPedidosByEstado = exports.getPedidos = exports.updatePedido = exports.createPedido = void 0;
+exports.aprobarPedido = exports.restaurarPedido = exports.getPedidosCancelados = exports.deletePedido = exports.cambiarEstadoPedido = exports.getPedidosByPersona = exports.getPedidoById = exports.getPedidosByEstado = exports.getPedidos = exports.updatePedido = exports.createPedido = exports.crearPedidoConComprobante = void 0;
 const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const persona_model_1 = __importDefault(require("../models/persona.model"));
 const metodo_pago_model_1 = __importDefault(require("../models/metodo_pago.model"));
@@ -27,8 +18,273 @@ const detalle_venta_model_1 = __importDefault(require("../models/detalle_venta.m
 const movimiento_lote_model_1 = __importDefault(require("../models/movimiento_lote.model"));
 const connection_db_1 = __importDefault(require("../db/connection.db"));
 const wsp_controller_1 = require("./wsp.controller");
+const moment_1 = __importDefault(require("moment"));
+//CREAR PEDIDO WEB
+// export const crearPedidoConComprobante = async (req: Request, res: Response): Promise<void> => {
+//     const { persona, metodoPago, productos, total, idusuario, fechaventa } = req.body;
+//     console.log(persona)
+//     const file = req.file;
+//     const {nroidentidad, correo, nombres, telefono, apellidos}: Persona = persona;
+//     var cli;
+//     var esCliente = false;
+//     if (nroidentidad) {
+//       const existingPersona = await Persona.findOne({ where: { nroidentidad } });
+//       if (existingPersona) {
+//          cli= existingPersona;
+//          esCliente = true;
+//         res.status(400).json({ msg: 'El número de identidad ya existe' });
+//         return;
+//       }
+//     }
+//      // Verificar si el correo ya existe
+//     if (correo) {
+//       const existingPersona = await Persona.findOne({ where: { correo } });
+//       if (existingPersona && esCliente == false) {
+//         res.status(400).json({ msg: 'El correo electrónico ya existe' });
+//         return;
+//       }
+//     }
+// if(esCliente == false){
+//    const cliente: any = await Persona.create({
+//       idtipopersona: 1,
+//       nombres,
+//       apellidos,
+//       idtipoidentidad: 1 ,
+//       nroidentidad: nroidentidad || null,
+//       correo: correo || null,
+//       telefono: telefono || null,
+//       idestado: EstadoGeneral.REGISTRADO
+//     });
+//   cli= cliente
+// }
+//   // 0) VALIDACIONES BÁSICAS
+//   if (!cli?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
+//     res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
+//     return;
+//   }
+//   if (!idusuario && !(req as any).user?.id) {
+//     res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
+//     return;
+//   }
+//    if (!file) {
+//       res.status(400).json({ msg: "La imagen es obligatoria" });
+//       return;
+//     } 
+//   const transaction = await db.transaction();
+//   const imagePath = `${file.filename}`;
+//   try {
+//     // 1) CREAR PEDIDO (cabecera)
+//     const pedido = await Pedido.create({
+//       idpersona: cli.id,
+//       idmetodopago: metodoPago.id,
+//       adjunto: imagePath,
+//       esWeb: 1,
+//       fechaoperacion: new Date(),
+//       totalimporte: Number(total) || 0,
+//       idestado: PedidoEstado.EN_ESPERA
+//     }, { transaction });
+//     // 2) DETALLES DE PEDIDO + DESCUENTO DE STOCK (ATÓMICO Y CONCURRENTE)
+//     const pedidoDetalles: PedidoDetalle[] = [];
+//     for (const p of productos) {
+//       const { loteTalla, cantidad, precio, subtotal } = p;
+//       if (!loteTalla?.id || cantidad == null || precio == null) {
+//         throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
+//       }
+//       const cantidadNum = Number(cantidad);
+//       const precioNum = Number(precio);
+//       const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
+//       // 🔐 Descontar stock atómicamente
+//       const [results, metadata] = await db.query(
+//             `
+//             UPDATE lote_talla
+//             SET stock = stock - :cantidad
+//             WHERE id = :id AND stock >= :cantidad
+//             `,
+//             {
+//               replacements: { id: loteTalla.id, cantidad: cantidadNum },
+//               transaction
+//             }
+//           ) as [any, { affectedRows: number }];
+//       // Validar que se haya actualizado (stock suficiente)
+//       if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
+//         throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+//       }
+//       // Crear detalle de pedido
+//       const det = await PedidoDetalle.create({
+//         idpedido: pedido.id,
+//         idlote_talla: loteTalla.id,
+//         cantidad: cantidadNum,
+//         precio: precioNum,
+//         subtotal: subtotalNum
+//       }, { transaction });
+//       pedidoDetalles.push(det);
+//       // Registrar movimiento de salida
+//       await MovimientoLote.create({
+//         idlote_talla: loteTalla.id,
+//         tipomovimiento: TipoMovimientoLote.SALIDA,
+//         cantidad: cantidadNum,
+//         fechamovimiento: moment().tz("America/Lima").toDate(),
+//         idestado: EstadoGeneral.REGISTRADO
+//       }, { transaction });
+//     }
+//     // 8) GENERAR PDF Y ENVIAR POR WHATSAPP
+//     const telefonoRaw = cli?.telefono;
+//     const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
+//     const phoneRegex = /^\d{9,15}$/;
+//     if (telefono && phoneRegex.test(telefono)) {
+//       try {
+//         const resultadoEnvio = await enviarMensajePedido(
+//           telefono, 'Se envia la informacion '
+//         );
+//         if (!resultadoEnvio.success) {
+//           throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+//         }
+//         res.status(201).json({
+//           msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
+//         });
+//         return;
+//       } catch (err) {
+//         console.error('Error al generar/enviar comprobante por WhatsApp:', err);
+//         // seguimos igual, no rompemos la venta
+//       }
+//     }
+//     // RESPUESTA FINAL
+//     res.status(201).json({
+//       msg: `Venta, detalles y comprobante creados exitosamente${telefono ? ' (intento de envío por WhatsApp)' : ''}`,
+//     });
+//   }catch (error) {
+//     await transaction.rollback();
+//     console.error('Error en crearVentaCompletaConComprobante:', error);
+//     res.status(500).json({
+//       msg: 'Ocurrió un error al crear la venta completa',
+//       error: (error as Error).message
+//     });
+//   }
+// };
+// controllers/PedidoController.ts
+const crearPedidoConComprobante = async (req, res) => {
+    var _a;
+    console.log("hola");
+    const transaction = await connection_db_1.default.transaction();
+    try {
+        // 1) Parsear datos (porque vienen en FormData como string JSON)
+        const personaObj = JSON.parse(req.body.persona);
+        console.log(personaObj);
+        const metodoPagoObj = JSON.parse(req.body.metodoPago);
+        const productosArr = JSON.parse(req.body.productos);
+        const total = Number(req.body.total);
+        const idusuario = req.body.idusuario;
+        const file = req.file;
+        if (!file) {
+            res.status(400).json({ msg: "La imagen es obligatoria" });
+            return;
+        }
+        const { nroidentidad, correo, nombres, telefono, apellidos } = personaObj;
+        // 2) Validar duplicados
+        var cli;
+        var esCliente = false;
+        if (nroidentidad) {
+            const existing = await persona_model_1.default.findOne({ where: { nroidentidad } });
+            if (existing) {
+                cli = existing;
+                esCliente = true;
+                // res.status(400).json({ msg: "El número de identidad ya existe" });
+                // return;
+            }
+        }
+        if (correo) {
+            const existing = await persona_model_1.default.findOne({ where: { correo } });
+            if (existing && esCliente == false) {
+                res.status(400).json({ msg: "El correo electrónico ya existe" });
+                return;
+            }
+        }
+        if (esCliente == false) {
+            const cliente = await persona_model_1.default.create({
+                idtipopersona: 1,
+                nombres,
+                apellidos,
+                idtipoidentidad: 1,
+                nroidentidad: nroidentidad || null,
+                correo: correo || null,
+                telefono: telefono || null,
+                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+            }, { transaction });
+            cli = cliente;
+        }
+        // 3) Crear cliente
+        // 4) Crear pedido
+        const pedido = await pedido_model_1.default.create({
+            idpersona: cli.id,
+            idmetodopago: metodoPagoObj.id,
+            adjunto: file.filename,
+            esWeb: 1,
+            fechaoperacion: new Date(),
+            totalimporte: total,
+            idestado: estados_constans_1.PedidoEstado.EN_ESPERA
+        }, { transaction });
+        // 5) Detalles + stock
+        for (const p of productosArr) {
+            const { loteTalla, cantidad, precio, subtotal } = p;
+            const cantidadNum = Number(cantidad);
+            const precioNum = Number(precio);
+            const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
+            // Descontar stock
+            const [results, metadata] = await connection_db_1.default.query(`
+        UPDATE lote_talla
+        SET stock = stock - :cantidad
+        WHERE id = :id AND stock >= :cantidad
+        `, {
+                replacements: { id: loteTalla.id, cantidad: cantidadNum },
+                transaction
+            });
+            if (((_a = metadata.rowCount) !== null && _a !== void 0 ? _a : metadata.affectedRows) === 0) {
+                throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
+            }
+            // Crear detalle
+            await pedido_detalle_model_1.default.create({
+                idpedido: pedido.id,
+                idlote_talla: loteTalla.id,
+                cantidad: cantidadNum,
+                precio: precioNum,
+                subtotal: subtotalNum
+            }, { transaction });
+            // Registrar movimiento
+            await movimiento_lote_model_1.default.create({
+                idlote_talla: loteTalla.id,
+                tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
+                cantidad: cantidadNum,
+                fechamovimiento: (0, moment_1.default)().tz("America/Lima").toDate(),
+                idestado: estados_constans_1.EstadoGeneral.REGISTRADO
+            }, { transaction });
+        }
+        await transaction.commit();
+        // 6) Enviar WhatsApp
+        let telefonoParsed = String((cli === null || cli === void 0 ? void 0 : cli.telefono) || "").replace(/\D/g, "");
+        if (telefonoParsed.length === 9)
+            telefonoParsed = "51" + telefonoParsed;
+        if (telefonoParsed) {
+            const resultadoEnvio = await (0, wsp_controller_1.enviarMensajePedido)(telefonoParsed, `Hola ${cli.nombres}, tu pedido fue registrado con éxito. Total: S/ ${total}`);
+            if (!resultadoEnvio.success) {
+                console.error("Error WhatsApp:", resultadoEnvio.error);
+            }
+        }
+        res.status(201).json({
+            msg: "Venta, detalles y comprobante creados correctamente"
+        });
+    }
+    catch (error) {
+        await transaction.rollback();
+        console.error("Error en crearPedidoConComprobante:", error);
+        res.status(500).json({
+            msg: "Ocurrió un error al crear el pedido",
+            error: error.message
+        });
+    }
+};
+exports.crearPedidoConComprobante = crearPedidoConComprobante;
 // CREATE - Insertar nuevo pedido
-const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createPedido = async (req, res) => {
     const { idpersona, idmetodopago, fechaoperacion, totalimporte, adjunto } = req.body;
     try {
         // Validaciones
@@ -39,28 +295,29 @@ const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return;
         }
         // Verificar si existe la persona
-        const persona = yield persona_model_1.default.findByPk(idpersona);
+        const persona = await persona_model_1.default.findByPk(idpersona);
         if (!persona) {
             res.status(400).json({ msg: 'La persona no existe' });
             return;
         }
         // Verificar si existe el método de pago
-        const metodoPago = yield metodo_pago_model_1.default.findByPk(idmetodopago);
+        const metodoPago = await metodo_pago_model_1.default.findByPk(idmetodopago);
         if (!metodoPago) {
             res.status(400).json({ msg: 'El método de pago no existe' });
             return;
         }
         // Crear nuevo pedido
-        const nuevoPedido = yield pedido_model_1.default.create({
+        const nuevoPedido = await pedido_model_1.default.create({
             idpersona,
             idmetodopago,
             fechaoperacion: fechaoperacion || new Date(),
             totalimporte,
             adjunto: adjunto || null,
-            idestado: estados_constans_1.PedidoEstado.EN_ESPERA
+            idestado: estados_constans_1.PedidoEstado.EN_ESPERA,
+            esWeb: 1
         });
         // Obtener el pedido creado con sus relaciones
-        const pedidoCreado = yield pedido_model_1.default.findByPk(nuevoPedido.id, {
+        const pedidoCreado = await pedido_model_1.default.findByPk(nuevoPedido.id, {
             include: [
                 {
                     model: persona_model_1.default,
@@ -88,10 +345,10 @@ const createPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.error('Error en createPedido:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createPedido = createPedido;
 // UPDATE - Actualizar pedido
-const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updatePedido = async (req, res) => {
     const { id } = req.params;
     const { idpersona, idmetodopago, fechaoperacion, totalimporte, adjunto, idestado } = req.body;
     try {
@@ -99,14 +356,14 @@ const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             res.status(400).json({ msg: "El ID del pedido es obligatorio" });
             return;
         }
-        const pedido = yield pedido_model_1.default.findByPk(id);
+        const pedido = await pedido_model_1.default.findByPk(id);
         if (!pedido) {
             res.status(404).json({ msg: `No existe un pedido con el id ${id}` });
             return;
         }
         // Verificar si existe la persona (si se está actualizando)
         if (idpersona) {
-            const persona = yield persona_model_1.default.findByPk(idpersona);
+            const persona = await persona_model_1.default.findByPk(idpersona);
             if (!persona) {
                 res.status(400).json({ msg: 'La persona no existe' });
                 return;
@@ -114,7 +371,7 @@ const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         // Verificar si existe el método de pago (si se está actualizando)
         if (idmetodopago) {
-            const metodoPago = yield metodo_pago_model_1.default.findByPk(idmetodopago);
+            const metodoPago = await metodo_pago_model_1.default.findByPk(idmetodopago);
             if (!metodoPago) {
                 res.status(400).json({ msg: 'El método de pago no existe' });
                 return;
@@ -140,9 +397,9 @@ const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             pedido.adjunto = adjunto;
         if (idestado)
             pedido.idestado = idestado;
-        yield pedido.save();
+        await pedido.save();
         // Obtener el pedido actualizado con relaciones
-        const pedidoActualizado = yield pedido_model_1.default.findByPk(id, {
+        const pedidoActualizado = await pedido_model_1.default.findByPk(id, {
             include: [
                 {
                     model: persona_model_1.default,
@@ -170,12 +427,15 @@ const updatePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.error("Error en updatePedido:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updatePedido = updatePedido;
 // READ - Listar todos los pedidos
-const getPedidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidos = async (req, res) => {
     try {
-        const pedidos = yield pedido_model_1.default.findAll({
+        const pedidos = await pedido_model_1.default.findAll({
+            where: {
+                esWeb: 1
+            },
             include: [
                 {
                     model: persona_model_1.default,
@@ -204,14 +464,16 @@ const getPedidos = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         console.error('Error en getPedidos:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de pedidos' });
     }
-});
+};
 exports.getPedidos = getPedidos;
 // READ - Listar pedidos por estado
-const getPedidosByEstado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidosByEstado = async (req, res) => {
     const { estado } = req.params;
     try {
-        const pedidos = yield pedido_model_1.default.findAll({
-            where: { idestado: estado },
+        const pedidos = await pedido_model_1.default.findAll({
+            where: { idestado: estado,
+                esWeb: 1
+            },
             include: [
                 {
                     model: persona_model_1.default,
@@ -240,13 +502,13 @@ const getPedidosByEstado = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.error('Error en getPedidosByEstado:', error);
         res.status(500).json({ msg: 'Error al obtener pedidos por estado' });
     }
-});
+};
 exports.getPedidosByEstado = getPedidosByEstado;
 // READ - Obtener pedido por ID
-const getPedidoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidoById = async (req, res) => {
     const { id } = req.params;
     try {
-        const pedido = yield pedido_model_1.default.findByPk(id, {
+        const pedido = await pedido_model_1.default.findByPk(id, {
             include: [
                 {
                     model: persona_model_1.default,
@@ -278,13 +540,13 @@ const getPedidoById = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.error('Error en getPedidoById:', error);
         res.status(500).json({ msg: 'Error al obtener el pedido' });
     }
-});
+};
 exports.getPedidoById = getPedidoById;
 // READ - Obtener pedidos por persona
-const getPedidosByPersona = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidosByPersona = async (req, res) => {
     const { idpersona } = req.params;
     try {
-        const pedidos = yield pedido_model_1.default.findAll({
+        const pedidos = await pedido_model_1.default.findAll({
             where: { idpersona },
             include: [
                 {
@@ -314,10 +576,10 @@ const getPedidosByPersona = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en getPedidosByPersona:', error);
         res.status(500).json({ msg: 'Error al obtener pedidos de la persona' });
     }
-});
+};
 exports.getPedidosByPersona = getPedidosByPersona;
 // UPDATE - Cambiar estado del pedido
-const cambiarEstadoPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const cambiarEstadoPedido = async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     try {
@@ -327,13 +589,13 @@ const cambiarEstadoPedido = (req, res) => __awaiter(void 0, void 0, void 0, func
             });
             return;
         }
-        const pedido = yield pedido_model_1.default.findByPk(id);
+        const pedido = await pedido_model_1.default.findByPk(id);
         if (!pedido) {
             res.status(404).json({ msg: 'Pedido no encontrado' });
             return;
         }
         pedido.idestado = estado;
-        yield pedido.save();
+        await pedido.save();
         res.json({
             msg: 'Estado del pedido actualizado con éxito',
             data: { id: pedido.id, estado }
@@ -343,20 +605,20 @@ const cambiarEstadoPedido = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en cambiarEstadoPedido:', error);
         res.status(500).json({ msg: 'Error al cambiar el estado del pedido' });
     }
-});
+};
 exports.cambiarEstadoPedido = cambiarEstadoPedido;
 // DELETE - Eliminar pedido (cambiar estado a cancelado)
-const deletePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deletePedido = async (req, res) => {
     const { id } = req.params;
     try {
-        const pedido = yield pedido_model_1.default.findByPk(id);
+        const pedido = await pedido_model_1.default.findByPk(id);
         if (!pedido) {
             res.status(404).json({ msg: 'Pedido no encontrado' });
             return;
         }
         // Cambiar estado a CANCELADO en lugar de eliminar físicamente
         pedido.idestado = estados_constans_1.PedidoEstado.CANCELADO;
-        yield pedido.save();
+        await pedido.save();
         res.json({
             msg: 'Pedido cancelado con éxito',
             data: { id: pedido.id, estado: estados_constans_1.PedidoEstado.CANCELADO }
@@ -366,12 +628,12 @@ const deletePedido = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.error('Error en deletePedido:', error);
         res.status(500).json({ msg: 'Error al cancelar el pedido' });
     }
-});
+};
 exports.deletePedido = deletePedido;
 // READ - Listar pedidos cancelados
-const getPedidosCancelados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidosCancelados = async (req, res) => {
     try {
-        const pedidos = yield pedido_model_1.default.findAll({
+        const pedidos = await pedido_model_1.default.findAll({
             where: { idestado: estados_constans_1.PedidoEstado.CANCELADO },
             include: [
                 {
@@ -396,20 +658,20 @@ const getPedidosCancelados = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en getPedidosCancelados:', error);
         res.status(500).json({ msg: 'Error al obtener pedidos cancelados' });
     }
-});
+};
 exports.getPedidosCancelados = getPedidosCancelados;
 // UPDATE - Restaurar pedido cancelado
-const restaurarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const restaurarPedido = async (req, res) => {
     const { id } = req.params;
     try {
-        const pedido = yield pedido_model_1.default.findByPk(id);
+        const pedido = await pedido_model_1.default.findByPk(id);
         if (!pedido) {
             res.status(404).json({ msg: 'Pedido no encontrado' });
             return;
         }
         // Cambiar estado a EN_ESPERA
         pedido.idestado = estados_constans_1.PedidoEstado.EN_ESPERA;
-        yield pedido.save();
+        await pedido.save();
         res.json({
             msg: 'Pedido restaurado con éxito',
             data: { id: pedido.id, estado: estados_constans_1.PedidoEstado.EN_ESPERA }
@@ -419,19 +681,19 @@ const restaurarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function
         console.error('Error en restaurarPedido:', error);
         res.status(500).json({ msg: 'Error al restaurar el pedido' });
     }
-});
+};
 exports.restaurarPedido = restaurarPedido;
-const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
-    const { idPedido } = req.body;
+const aprobarPedido = async (req, res) => {
+    var _a, _b, _c;
+    const { id } = req.params;
     try {
         // Validaciones
-        if (!idPedido) {
+        if (!id) {
             res.status(400).json({ msg: 'El ID del pedido es obligatorio' });
             return;
         }
         // Buscar el pedido por ID con la persona
-        const pedido = yield pedido_model_1.default.findByPk(idPedido, {
+        const pedido = await pedido_model_1.default.findByPk(id, {
             include: [
                 {
                     model: persona_model_1.default,
@@ -451,8 +713,8 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return;
         }
         // Obtener los detalles del pedido
-        const detallesPedido = yield pedido_detalle_model_1.default.findAll({
-            where: { idpedido: idPedido },
+        const detallesPedido = await pedido_detalle_model_1.default.findAll({
+            where: { idpedido: id },
             include: [
                 {
                     model: lote_talla_model_1.default,
@@ -465,14 +727,14 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return;
         }
         // Iniciar transacción
-        const transaction = yield connection_db_1.default.transaction();
+        const transaction = await connection_db_1.default.transaction();
         try {
             // 1. Actualizar estado del pedido a PAGADO
-            yield pedido.update({
+            await pedido.update({
                 idestado: estados_constans_1.PedidoEstado.PAGADO
             }, { transaction });
             // 2. Crear la venta
-            const nuevaVenta = yield venta_model_1.default.create({
+            const nuevaVenta = await venta_model_1.default.create({
                 fechaventa: new Date(),
                 idusuario: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id,
                 idpedido: pedido.id,
@@ -481,7 +743,7 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             // 3. Crear detalles de venta y actualizar stock
             for (const detallePedido of detallesPedido) {
                 // Crear detalle de venta
-                yield detalle_venta_model_1.default.create({
+                await detalle_venta_model_1.default.create({
                     idpedidodetalle: detallePedido.id,
                     idventa: nuevaVenta.id,
                     precio_venta_real: detallePedido.precio,
@@ -490,15 +752,15 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 }, { transaction });
                 // Actualizar stock solo si tiene lote_talla válido
                 if (detallePedido.idlote_talla && detallePedido.cantidad) {
-                    const loteTalla = yield lote_talla_model_1.default.findByPk(detallePedido.idlote_talla, { transaction });
+                    const loteTalla = await lote_talla_model_1.default.findByPk(detallePedido.idlote_talla, { transaction });
                     if (loteTalla && loteTalla.stock !== null) {
                         const nuevoStock = Number(loteTalla.stock) - Number(detallePedido.cantidad);
-                        yield loteTalla.update({
+                        await loteTalla.update({
                             stock: nuevoStock,
                             idestado: nuevoStock > 0 ? estados_constans_1.LoteEstado.DISPONIBLE : estados_constans_1.LoteEstado.AGOTADO
                         }, { transaction });
                         // Registrar movimiento de lote
-                        yield movimiento_lote_model_1.default.create({
+                        await movimiento_lote_model_1.default.create({
                             idlote_talla: detallePedido.idlote_talla,
                             tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
                             cantidad: detallePedido.cantidad,
@@ -517,26 +779,26 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 idTipoComprobante = 1; // BOLETA
             }
             // 5. Crear comprobante
-            const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
+            const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idTipoComprobante, { transaction });
             if (!tipoComprobante) {
                 throw new Error('Tipo de comprobante no encontrado');
             }
             // Calcular IGV (18% del total)
             const total = Number(pedido.totalimporte) || 0;
             const igv = total * 0.18;
-            const nuevoComprobante = yield comprobante_model_1.default.create({
+            const nuevoComprobante = await comprobante_model_1.default.create({
                 idventa: nuevaVenta.id,
                 igv: igv,
                 descuento: 0,
                 total: total,
                 idtipocomprobante: tipoComprobante.id,
-                numserie: yield generarNumeroSerieUnico(tipoComprobante.id, transaction),
+                numserie: await generarNumeroSerieUnico(tipoComprobante.id, transaction),
                 idestado: estados_constans_1.ComprobanteEstado.REGISTRADO
             }, { transaction });
             // Confirmar transacción
-            yield transaction.commit();
+            await transaction.commit();
             // Obtener datos completos para respuesta
-            const ventaCompleta = yield venta_model_1.default.findByPk(nuevaVenta.id, {
+            const ventaCompleta = await venta_model_1.default.findByPk(nuevaVenta.id, {
                 include: [
                     {
                         model: pedido_model_1.default,
@@ -550,7 +812,7 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     }
                 ]
             });
-            const comprobanteCompleto = yield comprobante_model_1.default.findByPk(nuevoComprobante.id, {
+            const comprobanteCompleto = await comprobante_model_1.default.findByPk(nuevoComprobante.id, {
                 include: [
                     {
                         model: tipo_comprobante_model_1.default,
@@ -562,7 +824,7 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     }
                 ]
             });
-            const detallesVenta = yield detalle_venta_model_1.default.findAll({
+            const detallesVenta = await detalle_venta_model_1.default.findAll({
                 where: { idventa: nuevaVenta.id },
                 include: [
                     {
@@ -580,36 +842,46 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             // Generar el PDF del comprobante SOLO si el teléfono es válido
             const telefono = (_c = (_b = pedido === null || pedido === void 0 ? void 0 : pedido.Persona) === null || _b === void 0 ? void 0 : _b.telefono) !== null && _c !== void 0 ? _c : '';
             const phoneRegex = /^\d{9,15}$/; // valida de 9 a 15 dígitos
-            if (telefono && phoneRegex.test(telefono)) {
-                // Generar PDF
-                const nombreArchivo = yield (0, wsp_controller_1.generarPDFComprobante)(comprobanteCompleto, ventaCompleta, pedido, detallesVenta);
-                // Enviar por WhatsApp
-                yield (0, wsp_controller_1.enviarArchivoWSP)(telefono, nombreArchivo, `📄 ${((_d = comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.TipoComprobante) === null || _d === void 0 ? void 0 : _d.nombre) || 'Comprobante'} ${comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.numserie}`);
-                res.status(200).json({
-                    msg: 'Pedido aprobado exitosamente y comprobante enviado',
-                    data: {
-                        pedido,
-                        venta: ventaCompleta,
-                        comprobante: comprobanteCompleto,
-                        detallesVenta
-                    }
-                });
-            }
-            else {
-                res.status(200).json({
-                    msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
-                    data: {
-                        pedido,
-                        venta: ventaCompleta,
-                        comprobante: comprobanteCompleto,
-                        detallesVenta
-                    }
-                });
-            }
+            var resultado = await (0, wsp_controller_1.enviarComprobanteService)(comprobanteCompleto === null || comprobanteCompleto === void 0 ? void 0 : comprobanteCompleto.id);
+            res.status(200).json(resultado);
+            // if (telefono && phoneRegex.test(telefono)) {
+            //   // Generar PDF
+            //   const nombreArchivo = await generarPDFComprobante(
+            //     comprobanteCompleto, 
+            //     ventaCompleta, 
+            //     pedido, 
+            //     detallesVenta
+            //   );
+            //   // Enviar por WhatsApp
+            //   await enviarArchivoWSP(
+            //     telefono, 
+            //     nombreArchivo,
+            //     `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+            //   );
+            //   res.status(200).json({
+            //     msg: 'Pedido aprobado exitosamente y comprobante enviado',
+            //     data: {
+            //       pedido,
+            //       venta: ventaCompleta,
+            //       comprobante: comprobanteCompleto,
+            //       detallesVenta
+            //     }
+            //   });
+            // } else {
+            //   res.status(200).json({
+            //     msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
+            //     data: {
+            //       pedido,
+            //       venta: ventaCompleta,
+            //       comprobante: comprobanteCompleto,
+            //       detallesVenta
+            //     }
+            //   });
+            // }
         }
         catch (error) {
             // Revertir transacción en caso de error
-            yield transaction.rollback();
+            await transaction.rollback();
             throw error;
         }
     }
@@ -620,11 +892,11 @@ const aprobarPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             error: error.message
         });
     }
-});
+};
 exports.aprobarPedido = aprobarPedido;
 // Función para generar número de serie único
-const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(void 0, void 0, void 0, function* () {
-    const tipoComprobante = yield tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
+const generarNumeroSerieUnico = async (idTipoComprobante, transaction) => {
+    const tipoComprobante = await tipo_comprobante_model_1.default.findByPk(idTipoComprobante, {
         include: [{ model: connection_db_1.default.models.TipoSerie, as: 'TipoSerie' }],
         transaction
     });
@@ -632,7 +904,7 @@ const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(vo
         throw new Error('Tipo de comprobante o serie no encontrado');
     }
     // Obtener el último comprobante de este tipo
-    const ultimoComprobante = yield comprobante_model_1.default.findOne({
+    const ultimoComprobante = await comprobante_model_1.default.findOne({
         where: { idtipocomprobante: idTipoComprobante },
         order: [['id', 'DESC']],
         transaction
@@ -648,4 +920,4 @@ const generarNumeroSerieUnico = (idTipoComprobante, transaction) => __awaiter(vo
     }
     // Formato: [SERIE]-[NÚMERO]
     return `${tipoComprobante.TipoSerie.nombre}-${siguienteNumero.toString().padStart(8, '0')}`;
-});
+};

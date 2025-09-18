@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,7 +8,7 @@ const pedido_detalle_model_1 = __importDefault(require("../models/pedido_detalle
 const pedido_model_1 = __importDefault(require("../models/pedido.model"));
 const lote_talla_model_1 = __importDefault(require("../models/lote_talla.model"));
 // CREATE - Insertar nuevo detalle de pedido
-const createPedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createPedidoDetalle = async (req, res) => {
     const { idpedido, idlote_talla, cantidad, precio, subtotal } = req.body;
     try {
         // Validaciones
@@ -28,13 +19,13 @@ const createPedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
             return;
         }
         // Verificar si existe el pedido
-        const pedido = yield pedido_model_1.default.findByPk(idpedido);
+        const pedido = await pedido_model_1.default.findByPk(idpedido);
         if (!pedido) {
             res.status(400).json({ msg: 'El pedido no existe' });
             return;
         }
         // Verificar si existe el lote_talla
-        const loteTalla = yield lote_talla_model_1.default.findByPk(idlote_talla);
+        const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla);
         if (!loteTalla) {
             res.status(400).json({ msg: 'El lote_talla no existe' });
             return;
@@ -42,7 +33,7 @@ const createPedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         // Calcular subtotal si no se proporciona
         const calculatedSubtotal = subtotal || (cantidad * precio);
         // Crear nuevo detalle de pedido
-        const nuevoDetalle = yield pedido_detalle_model_1.default.create({
+        const nuevoDetalle = await pedido_detalle_model_1.default.create({
             idpedido,
             idlote_talla,
             cantidad,
@@ -50,7 +41,7 @@ const createPedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
             subtotal: calculatedSubtotal,
         });
         // Obtener el detalle creado con sus relaciones
-        const detalleCreado = yield pedido_detalle_model_1.default.findByPk(nuevoDetalle.id, {
+        const detalleCreado = await pedido_detalle_model_1.default.findByPk(nuevoDetalle.id, {
             include: [
                 {
                     model: pedido_model_1.default,
@@ -92,10 +83,10 @@ const createPedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en createPedidoDetalle:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createPedidoDetalle = createPedidoDetalle;
 // CREATE - Insertar múltiples detalles de pedido
-const createMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createMultiplePedidoDetalle = async (req, res) => {
     const { detalles } = req.body;
     try {
         // Validaciones
@@ -116,13 +107,13 @@ const createMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
                 return;
             }
             // Verificar si existe el pedido
-            const pedido = yield pedido_model_1.default.findByPk(idpedido);
+            const pedido = await pedido_model_1.default.findByPk(idpedido);
             if (!pedido) {
                 res.status(400).json({ msg: `El pedido con id ${idpedido} no existe` });
                 return;
             }
             // Verificar si existe el lote_talla
-            const loteTalla = yield lote_talla_model_1.default.findByPk(idlote_talla);
+            const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla);
             if (!loteTalla) {
                 res.status(400).json({ msg: `El lote_talla con id ${idlote_talla} no existe` });
                 return;
@@ -130,7 +121,7 @@ const createMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
             // Calcular subtotal si no se proporciona
             const calculatedSubtotal = subtotal || (cantidad * precio);
             // Crear nuevo detalle de pedido
-            const nuevoDetalle = yield pedido_detalle_model_1.default.create({
+            const nuevoDetalle = await pedido_detalle_model_1.default.create({
                 idpedido,
                 idlote_talla,
                 cantidad,
@@ -138,7 +129,7 @@ const createMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
                 subtotal: calculatedSubtotal,
             });
             // Obtener el detalle creado con sus relaciones
-            const detalleCreado = yield pedido_detalle_model_1.default.findByPk(nuevoDetalle.id, {
+            const detalleCreado = await pedido_detalle_model_1.default.findByPk(nuevoDetalle.id, {
                 include: [
                     {
                         model: pedido_model_1.default,
@@ -182,10 +173,10 @@ const createMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
         console.error('Error en createMultiplePedidoDetalle:', error);
         res.status(500).json({ msg: 'Ocurrió un error, comuníquese con soporte' });
     }
-});
+};
 exports.createMultiplePedidoDetalle = createMultiplePedidoDetalle;
 // UPDATE - Actualizar detalle de pedido
-const updatePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updatePedidoDetalle = async (req, res) => {
     const { id } = req.params;
     const { idpedido, idlote_talla, cantidad, precio, subtotal } = req.body;
     try {
@@ -193,14 +184,14 @@ const updatePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
             res.status(400).json({ msg: "El ID del detalle es obligatorio" });
             return;
         }
-        const detalle = yield pedido_detalle_model_1.default.findByPk(id);
+        const detalle = await pedido_detalle_model_1.default.findByPk(id);
         if (!detalle) {
             res.status(404).json({ msg: `No existe un detalle con el id ${id}` });
             return;
         }
         // Verificar si existe el pedido (si se está actualizando)
         if (idpedido) {
-            const pedido = yield pedido_model_1.default.findByPk(idpedido);
+            const pedido = await pedido_model_1.default.findByPk(idpedido);
             if (!pedido) {
                 res.status(400).json({ msg: 'El pedido no existe' });
                 return;
@@ -208,7 +199,7 @@ const updatePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         // Verificar si existe el lote_talla (si se está actualizando)
         if (idlote_talla) {
-            const loteTalla = yield lote_talla_model_1.default.findByPk(idlote_talla);
+            const loteTalla = await lote_talla_model_1.default.findByPk(idlote_talla);
             if (!loteTalla) {
                 res.status(400).json({ msg: 'El lote_talla no existe' });
                 return;
@@ -232,9 +223,9 @@ const updatePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         else if (subtotal !== undefined) {
             detalle.subtotal = subtotal;
         }
-        yield detalle.save();
+        await detalle.save();
         // Obtener el detalle actualizado con relaciones
-        const detalleActualizado = yield pedido_detalle_model_1.default.findByPk(id, {
+        const detalleActualizado = await pedido_detalle_model_1.default.findByPk(id, {
             include: [
                 {
                     model: pedido_model_1.default,
@@ -276,12 +267,12 @@ const updatePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error("Error en updatePedidoDetalle:", error);
         res.status(500).json({ msg: "Ocurrió un error, comuníquese con soporte" });
     }
-});
+};
 exports.updatePedidoDetalle = updatePedidoDetalle;
 // READ - Listar todos los detalles de pedido
-const getPedidosDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidosDetalle = async (req, res) => {
     try {
-        const detalles = yield pedido_detalle_model_1.default.findAll({
+        const detalles = await pedido_detalle_model_1.default.findAll({
             include: [
                 {
                     model: pedido_model_1.default,
@@ -324,13 +315,13 @@ const getPedidosDetalle = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.error('Error en getPedidosDetalle:', error);
         res.status(500).json({ msg: 'Error al obtener la lista de detalles' });
     }
-});
+};
 exports.getPedidosDetalle = getPedidosDetalle;
 // READ - Obtener detalle por ID
-const getPedidoDetalleById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPedidoDetalleById = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalle = yield pedido_detalle_model_1.default.findByPk(id, {
+        const detalle = await pedido_detalle_model_1.default.findByPk(id, {
             include: [
                 {
                     model: pedido_model_1.default,
@@ -376,13 +367,13 @@ const getPedidoDetalleById = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.error('Error en getPedidoDetalleById:', error);
         res.status(500).json({ msg: 'Error al obtener el detalle' });
     }
-});
+};
 exports.getPedidoDetalleById = getPedidoDetalleById;
 // READ - Obtener detalles por pedido
-const getDetallesByPedido = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getDetallesByPedido = async (req, res) => {
     const { idpedido } = req.params;
     try {
-        const detalles = yield pedido_detalle_model_1.default.findAll({
+        const detalles = await pedido_detalle_model_1.default.findAll({
             where: { idpedido },
             include: [
                 {
@@ -426,19 +417,19 @@ const getDetallesByPedido = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en getDetallesByPedido:', error);
         res.status(500).json({ msg: 'Error al obtener detalles del pedido' });
     }
-});
+};
 exports.getDetallesByPedido = getDetallesByPedido;
 // DELETE - Eliminar detalle de pedido
-const deletePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deletePedidoDetalle = async (req, res) => {
     const { id } = req.params;
     try {
-        const detalle = yield pedido_detalle_model_1.default.findByPk(id);
+        const detalle = await pedido_detalle_model_1.default.findByPk(id);
         if (!detalle) {
             res.status(404).json({ msg: 'Detalle de pedido no encontrado' });
             return;
         }
         // Eliminar físicamente el detalle (no se usa eliminación lógica aquí)
-        yield detalle.destroy();
+        await detalle.destroy();
         res.json({
             msg: 'Detalle de pedido eliminado con éxito',
             data: { id }
@@ -448,10 +439,10 @@ const deletePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, func
         console.error('Error en deletePedidoDetalle:', error);
         res.status(500).json({ msg: 'Error al eliminar el detalle' });
     }
-});
+};
 exports.deletePedidoDetalle = deletePedidoDetalle;
 // DELETE - Eliminar múltiples detalles de pedido
-const deleteMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteMultiplePedidoDetalle = async (req, res) => {
     const { ids } = req.body;
     try {
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -461,7 +452,7 @@ const deleteMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
             return;
         }
         // Eliminar físicamente los detalles
-        yield pedido_detalle_model_1.default.destroy({
+        await pedido_detalle_model_1.default.destroy({
             where: {
                 id: ids
             }
@@ -475,5 +466,5 @@ const deleteMultiplePedidoDetalle = (req, res) => __awaiter(void 0, void 0, void
         console.error('Error en deleteMultiplePedidoDetalle:', error);
         res.status(500).json({ msg: 'Error al eliminar los detalles' });
     }
-});
+};
 exports.deleteMultiplePedidoDetalle = deleteMultiplePedidoDetalle;

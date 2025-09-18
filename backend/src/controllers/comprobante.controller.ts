@@ -5,7 +5,7 @@ import TipoComprobante from '../models/tipo_comprobante.model';
 import Estado from '../models/estado.model';
 import { ComprobanteEstado, EstadoGeneral, PedidoEstado, TipoMovimientoLote, VentaEstado } from '../estadosTablas/estados.constans';
 import { Op } from 'sequelize';
-import { generarPDFComprobante, enviarArchivoWSP } from './wsp.controller';
+import { generarPDFComprobante, enviarArchivoWSP, enviarComprobante } from './wsp.controller';
 import PedidoDetalle from '../models/pedido_detalle.model';
 import DetalleVenta from '../models/detalle_venta.model';
 import LoteTalla from '../models/lote_talla.model';
@@ -1104,30 +1104,31 @@ export const crearVentaCompletaConComprobanteAdministracion = async (req: Reques
 
     if (telefono && phoneRegex.test(telefono)) {
       try {
-        // const nombreArchivo = await generarPDFComprobante(
-        //   comprobanteCompleto,
-        //   ventaCompleta,
-        //   ventaCompleta?.Pedido,
-        //   detallesVentaCompletos
-        // );
-
-        // await enviarArchivoWSP(
-        //   telefono,
-        //   nombreArchivo,
-        //   `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-        // );
-         // Usar la función del servidor para enviar el comprobante
-        const resultadoEnvio = await server.sendComprobanteWhatsApp(
-          telefono,
+        const nombreArchivo = await generarPDFComprobante(
           comprobanteCompleto,
           ventaCompleta,
           ventaCompleta?.Pedido,
           detallesVentaCompletos
         );
 
-        if (!resultadoEnvio.success) {
-          throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
-        }
+        await enviarArchivoWSP(
+          telefono,
+          nombreArchivo,
+          `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
+        );
+         // Usar la función del servidor para enviar el comprobante
+        //  await enviarComprobante(comprobanteCompleto?.id);
+        // const resultadoEnvio = await server.sendComprobanteWhatsApp(
+        //   telefono,
+        //   comprobanteCompleto,
+        //   ventaCompleta,
+        //   ventaCompleta?.Pedido,
+        //   detallesVentaCompletos
+        // );
+
+        // if (!resultadoEnvio.success) {
+        //   throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
+        // }
 
         res.status(201).json({
           msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',

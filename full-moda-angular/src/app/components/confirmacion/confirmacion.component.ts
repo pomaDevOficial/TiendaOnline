@@ -9,10 +9,6 @@ interface Pedido {
     nombre: string;
     email: string;
     telefono: string;
-    direccion: string;
-    distrito?: string;
-    provincia?: string;
-    referencias?: string;
     metodoPago: string;
   };
   productos: any[];
@@ -73,8 +69,6 @@ export class ConfirmacionComponent implements OnInit {
         return 'Yape';
       case 'plin':
         return 'Plin';
-      case 'efectivo':
-        return 'Efectivo (contra entrega)';
       case 'transferencia':
         return 'Transferencia Bancaria';
       default:
@@ -103,8 +97,7 @@ export class ConfirmacionComponent implements OnInit {
   }
 
   getShipping(): number {
-    const subtotal = this.getSubtotal();
-    return subtotal >= 150 ? 0 : 15;
+    return 0; // Sin costo de envío
   }
 
   printOrder(): void {

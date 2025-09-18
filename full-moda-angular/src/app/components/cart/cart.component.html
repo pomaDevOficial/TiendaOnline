@@ -27,7 +27,10 @@
     <!-- Lista de productos -->
     <div class="cart-items" *ngIf="cartItems.length > 0">
       <div class="cart-item" *ngFor="let item of cartItems">
-        <div class="cart-item-image">{{ item.nombre.charAt(0) }}</div>
+        <div class="cart-item-image">
+          <img *ngIf="item.imagen" [src]="item.imagen" [alt]="item.nombre" class="cart-item-img">
+          <div *ngIf="!item.imagen" class="cart-item-fallback">{{ item.nombre.charAt(0) }}</div>
+        </div>
         <div class="cart-item-info">
           <div class="cart-item-name">{{ item.nombre }}</div>
           <div class="cart-item-category">{{ item.categoria }}{{ item.talla ? ' | Talla: ' + item.talla : '' }}</div>
@@ -52,10 +55,6 @@
       <div class="cart-summary-row">
         <span>Subtotal:</span>
         <span>S/ {{ subtotal.toFixed(2) }}</span>
-      </div>
-      <div class="cart-summary-row">
-        <span>Envío:</span>
-        <span>{{ shipping === 0 ? 'Gratis' : 'S/ ' + shipping.toFixed(2) }}</span>
       </div>
       <div class="cart-summary-row total">
         <span>Total:</span>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, debounceTime, distinctUntilChanged } from 'rxjs';
-import { ProductService, Product } from '../../services/product.service';
+import { ProductService, Product, ProductFilters } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { CartStateService } from '../../services/cart-state.service';
 import { ProductCardComponent } from '../product-card/product-card.component';
@@ -37,6 +37,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   currentImageIndex = 0;
   isImageZoomed = false;
   currentStock: number = 0;
+  currentPrice: number = 0;
 
   // Notification properties
   showNotification = false;
@@ -53,6 +54,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeForm();
     this.loadData();
+    this.setupProductSubscription();
     // Configurar filtros después de que los datos estén cargados
     setTimeout(() => {
       this.setupFilters();
@@ -74,15 +76,34 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }
 
   private loadData(): void {
-    // Cargar productos directamente del servicio
-    this.products = this.productService.getCurrentProducts();
-    this.filteredProducts = [...this.products];
+    // Cargar productos desde la API
+    this.productService.loadProducts().subscribe({
+      next: (products) => {
+        this.products = products;
+        this.filteredProducts = [...this.products];
+        this.updateFilterOptions();
+      },
+      error: (error) => {
+        console.error('Error al cargar productos desde la API:', error);
+        // Fallback a datos locales si hay error
+        this.products = this.productService.getCurrentProducts();
+        this.filteredProducts = [...this.products];
+        this.updateFilterOptions();
+      }
+    });
+  }
 
-    // Cargar marcas
+  // Actualizar opciones de filtro basadas en los productos actuales
+  private updateFilterOptions(): void {
     this.brands = this.productService.getBrands();
-
-    // Cargar categorías
     this.categories = this.productService.getCategories();
+  }
+
+  // Configurar suscripción a cambios en productos filtrados
+  private setupProductSubscription(): void {
+    this.productService.filteredProducts$.pipe(takeUntil(this.destroy$)).subscribe(products => {
+      this.filteredProducts = products;
+    });
   }
 
   private setupFilters(): void {
@@ -131,33 +152,24 @@ export class CatalogComponent implements OnInit, OnDestroy {
     // Activar indicador de búsqueda si hay término de búsqueda
     this.isSearching = !!(search && search.trim());
 
-    let filtered = [...this.products];
+    // Crear objeto de filtros
+    const filters: ProductFilters = {
+      busqueda: search || '',
+      genero: gender || 'todos',
+      marca: brand || 'todas',
+      categoria: 'todas', // No tenemos filtro de categoría en el formulario actual
+      precioMin: 0,
+      precioMax: 0,
+      orden: sort || 'default'
+    };
 
-    // Filtro de búsqueda
-    if (search && search.trim()) {
-      const searchTerm = search.toLowerCase().trim();
-      filtered = filtered.filter(product =>
-        product.nombre.toLowerCase().includes(searchTerm) ||
-        product.marca.toLowerCase().includes(searchTerm) ||
-        product.categoria.toLowerCase().includes(searchTerm) ||
-        product.descripcion.toLowerCase().includes(searchTerm)
-      );
-    }
+    // Aplicar filtros a través del servicio (filtrado local)
+    this.productService.applyFilters(filters);
 
-    // Filtro de género
-    if (gender && gender !== 'todos') {
-      filtered = filtered.filter(product => product.genero === gender);
-    }
-
-    // Filtro de marca
-    if (brand && brand !== 'todas') {
-      filtered = filtered.filter(product => product.marca === brand);
-    }
-
-    // Ordenamiento
-    this.sortProducts(filtered, sort);
-
-    this.filteredProducts = filtered;
+    // Actualizar opciones de filtro basadas en los resultados
+    setTimeout(() => {
+      this.updateFilterOptions();
+    }, 100);
 
     // Desactivar indicador de búsqueda después de un breve delay
     if (this.isSearching) {
@@ -190,8 +202,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
     }
   }
 
-  onProductAdded(product: Product): void {
-    this.showProductNotification(product, 1);
+  onProductAdded(event: {product: Product, quantity: number}): void {
+    this.showProductNotification(event.product, event.quantity);
   }
 
   private showProductNotification(product: Product, quantity: number): void {
@@ -281,6 +293,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
     // Set initial stock
     this.currentStock = product.stockPorTalla?.[this.selectedSize] || product.stock;
+    // Set initial price
+    this.currentPrice = product.preciosPorTalla?.[this.selectedSize] || product.precio;
   }
 
   closeProductPreview(): void {
@@ -290,7 +304,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   addToCart(product: Product): void {
     if (product && this.selectedSize) {
-      this.cartService.addToCart(product, this.previewQuantity, this.selectedSize);
+      this.cartService.addToCart(product, this.previewQuantity, this.selectedSize, this.currentPrice);
       this.showProductNotification(product, this.previewQuantity);
     }
   }
@@ -303,6 +317,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.selectedSize = size;
     if (this.selectedProduct) {
       this.currentStock = this.selectedProduct.stockPorTalla?.[size] || this.selectedProduct.stock;
+      // Actualizar precio según la talla seleccionada
+      this.currentPrice = this.selectedProduct.preciosPorTalla?.[size] || this.selectedProduct.precio;
       // Reset quantity if it exceeds the new stock
       if (this.previewQuantity > this.currentStock) {
         this.previewQuantity = this.currentStock;

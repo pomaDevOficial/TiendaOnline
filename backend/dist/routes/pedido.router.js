@@ -2,7 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const pedido_controller_1 = require("../controllers/pedido.controller");
+const pedidoImage_1 = require("../middlewares/pedidoImage");
 const PedidoRouter = (0, express_1.Router)();
+PedidoRouter.post('/create/comprobante-imagen', pedidoImage_1.PedidoImage.single("imagen"), pedido_controller_1.crearPedidoConComprobante);
 PedidoRouter.post('/', pedido_controller_1.createPedido); // Crear un nuevo pedido
 PedidoRouter.post('/aprobar/:id', pedido_controller_1.aprobarPedido); // Aprobar un nuevo pedido
 PedidoRouter.get('/', pedido_controller_1.getPedidos); // Obtener todos los pedidos
