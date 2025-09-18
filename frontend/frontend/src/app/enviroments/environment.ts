@@ -4,8 +4,10 @@
 
 export const environment = {
   production: false,
-  endpoint: 'http://localhost:3000/api/v1',
-  endpointWs: 'http://localhost:3000',
+  // endpoint: 'http://localhost:3000/api/v1',
+  // endpointWs: 'http://localhost:3000',
+  endpoint: `https://api.fullmodaperu.com/api/v1`,
+  endpointWs: 'https://api.fullmodaperu.com',
 };
 
 /*

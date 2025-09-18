@@ -27,7 +27,6 @@ const venta_router_1 = __importDefault(require("./routes/venta.router"));
 const detalleventa_router_1 = __importDefault(require("./routes/detalleventa.router"));
 const comprobante_router_1 = __importDefault(require("./routes/comprobante.router"));
 const wsp_router_1 = __importDefault(require("./routes/wsp.router"));
-const sharp_1 = __importDefault(require("sharp"));
 const morgan_1 = __importDefault(require("morgan"));
 const tipo_comprobante_router_1 = __importDefault(require("./routes/tipo_comprobante.router"));
 const tiposerie_router_1 = __importDefault(require("./routes/tiposerie.router"));
@@ -168,20 +167,21 @@ class Server {
             });
         });
         const imagesFolder = path_1.default.resolve(__dirname, "..", "..", "backend/dist/uploads");
-        this.app.use("/uploads", (req, res, next) => {
-            const rutaImagen = path_1.default.join(imagesFolder, req.url);
-            console.log("📂 Buscando imagen en:", rutaImagen);
-            (0, sharp_1.default)(rutaImagen)
-                .resize(800)
-                .toBuffer((err, buffer) => {
-                if (err) {
-                    console.error("❌ Error procesando imagen:", err.message);
-                    return res.status(404).send("Imagen no encontrada");
-                }
-                res.setHeader("Content-Type", "image/jpeg");
-                res.send(buffer);
-            });
-        });
+        this.app.use("/uploads", express_1.default.static(imagesFolder));
+        // this.app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
+        //   const rutaImagen = path.join(imagesFolder, req.url);
+        //   console.log("📂 Buscando imagen en:", rutaImagen);
+        //   sharp(rutaImagen)
+        //     .resize(800)
+        //     .toBuffer((err, buffer) => {
+        //       if (err) {
+        //         console.error("❌ Error procesando imagen:", err.message);
+        //         return res.status(404).send("Imagen no encontrada");
+        //       }
+        //       res.setHeader("Content-Type", "image/jpeg");
+        //       res.send(buffer);
+        //     });
+        // });
         this.app.use('/api/v1/login', login_router_1.default);
         this.app.use('/api/v1/usuarios', usuario_router_1.default);
         this.app.use('/api/v1/productos', producto_router_1.default);
