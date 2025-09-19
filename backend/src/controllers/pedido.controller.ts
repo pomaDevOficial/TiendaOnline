@@ -4,7 +4,7 @@ import Persona from '../models/persona.model';
 import MetodoPago from '../models/metodo_pago.model';
 import Estado from '../models/estado.model';
 import { ComprobanteEstado, EstadoGeneral, LoteEstado, PedidoEstado, TipoMovimientoLote, VentaEstado } from '../estadosTablas/estados.constans';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import Comprobante from '../models/comprobante.model';
 import TipoComprobante from '../models/tipo_comprobante.model';
 import TipoSerie from '../models/tiposerie.model';
@@ -20,175 +20,8 @@ import { server } from '../server';
 import db from '../db/connection.db';
 import { generarPDFComprobante, enviarArchivoWSP, enviarComprobanteWSP,enviarMensajePedido, enviarComprobanteService } from './wsp.controller';
 import moment from 'moment';
+import 'dotenv/config' ; 
 import Usuario from '../models/usuario.model';
-
-//CREAR PEDIDO WEB
-// export const crearPedidoConComprobante = async (req: Request, res: Response): Promise<void> => {
-//     const { persona, metodoPago, productos, total, idusuario, fechaventa } = req.body;
-//     console.log(persona)
-
-//     const file = req.file;
-//     const {nroidentidad, correo, nombres, telefono, apellidos}: Persona = persona;
-//     var cli;
-//     var esCliente = false;
-//     if (nroidentidad) {
-//       const existingPersona = await Persona.findOne({ where: { nroidentidad } });
-//       if (existingPersona) {
-//          cli= existingPersona;
-//          esCliente = true;
-//         res.status(400).json({ msg: 'El número de identidad ya existe' });
-//         return;
-//       }
-//     }
-//      // Verificar si el correo ya existe
-//     if (correo) {
-//       const existingPersona = await Persona.findOne({ where: { correo } });
-//       if (existingPersona && esCliente == false) {
-//         res.status(400).json({ msg: 'El correo electrónico ya existe' });
-//         return;
-//       }
-//     }
-// if(esCliente == false){
-//    const cliente: any = await Persona.create({
-//       idtipopersona: 1,
-//       nombres,
-//       apellidos,
-//       idtipoidentidad: 1 ,
-//       nroidentidad: nroidentidad || null,
-//       correo: correo || null,
-//       telefono: telefono || null,
-//       idestado: EstadoGeneral.REGISTRADO
-//     });
-//   cli= cliente
-// }
-    
-//   // 0) VALIDACIONES BÁSICAS
-//   if (!cli?.id || !metodoPago?.id || !Array.isArray(productos) || productos.length === 0) {
-//     res.status(400).json({ msg: 'cliente.id, metodoPago.id y productos[] son obligatorios' });
-//     return;
-//   }
-//   if (!idusuario && !(req as any).user?.id) {
-//     res.status(400).json({ msg: 'idusuario es obligatorio (o debe venir en req.user)' });
-//     return;
-//   }
-//    if (!file) {
-//       res.status(400).json({ msg: "La imagen es obligatoria" });
-//       return;
-//     } 
-//   const transaction = await db.transaction();
-//   const imagePath = `${file.filename}`;
-//   try {
-//     // 1) CREAR PEDIDO (cabecera)
-//     const pedido = await Pedido.create({
-//       idpersona: cli.id,
-//       idmetodopago: metodoPago.id,
-//       adjunto: imagePath,
-//       esWeb: 1,
-//       fechaoperacion: new Date(),
-//       totalimporte: Number(total) || 0,
-//       idestado: PedidoEstado.EN_ESPERA
-//     }, { transaction });
-
-//     // 2) DETALLES DE PEDIDO + DESCUENTO DE STOCK (ATÓMICO Y CONCURRENTE)
-//     const pedidoDetalles: PedidoDetalle[] = [];
-
-//     for (const p of productos) {
-//       const { loteTalla, cantidad, precio, subtotal } = p;
-
-//       if (!loteTalla?.id || cantidad == null || precio == null) {
-//         throw new Error('Cada producto debe incluir loteTalla.id, cantidad y precio');
-//       }
-
-//       const cantidadNum = Number(cantidad);
-//       const precioNum = Number(precio);
-//       const subtotalNum = subtotal != null ? Number(subtotal) : cantidadNum * precioNum;
-
-//       // 🔐 Descontar stock atómicamente
-//       const [results, metadata] = await db.query(
-//             `
-//             UPDATE lote_talla
-//             SET stock = stock - :cantidad
-//             WHERE id = :id AND stock >= :cantidad
-//             `,
-//             {
-//               replacements: { id: loteTalla.id, cantidad: cantidadNum },
-//               transaction
-//             }
-//           ) as [any, { affectedRows: number }];
-
-
-//       // Validar que se haya actualizado (stock suficiente)
-//       if (((metadata as any).rowCount ?? (metadata as any).affectedRows) === 0) {
-//         throw new Error(`Stock insuficiente para LoteTalla ${loteTalla.id}`);
-//       }
-
-
-//       // Crear detalle de pedido
-//       const det = await PedidoDetalle.create({
-//         idpedido: pedido.id,
-//         idlote_talla: loteTalla.id,
-//         cantidad: cantidadNum,
-//         precio: precioNum,
-//         subtotal: subtotalNum
-//       }, { transaction });
-
-//       pedidoDetalles.push(det);
-
-//       // Registrar movimiento de salida
-//       await MovimientoLote.create({
-//         idlote_talla: loteTalla.id,
-//         tipomovimiento: TipoMovimientoLote.SALIDA,
-//         cantidad: cantidadNum,
-//         fechamovimiento: moment().tz("America/Lima").toDate(),
-//         idestado: EstadoGeneral.REGISTRADO
-//       }, { transaction });
-//     }
-
-   
-//     // 8) GENERAR PDF Y ENVIAR POR WHATSAPP
-//     const telefonoRaw = cli?.telefono;
-//     const telefono = String(telefonoRaw).replace(/\D/g, ''); // solo dígitos
-//     const phoneRegex = /^\d{9,15}$/;
-
-//     if (telefono && phoneRegex.test(telefono)) {
-//       try {
-    
-//         const resultadoEnvio = await enviarMensajePedido(
-//           telefono, 'Se envia la informacion '
-//         );
-
-//         if (!resultadoEnvio.success) {
-//           throw new Error(resultadoEnvio.error || 'Error desconocido al enviar WhatsApp');
-//         }
-
-//         res.status(201).json({
-//           msg: 'Venta, detalles y comprobante creados y enviados exitosamente por WhatsApp',
-         
-//         });
-//         return;
-//       } catch (err) {
-//         console.error('Error al generar/enviar comprobante por WhatsApp:', err);
-//         // seguimos igual, no rompemos la venta
-//       }
-//     }
-
-//     // RESPUESTA FINAL
-//     res.status(201).json({
-//       msg: `Venta, detalles y comprobante creados exitosamente${telefono ? ' (intento de envío por WhatsApp)' : ''}`,
-      
-//     });
-
-//   }catch (error) {
-//     await transaction.rollback();
-//     console.error('Error en crearVentaCompletaConComprobante:', error);
-//     res.status(500).json({
-//       msg: 'Ocurrió un error al crear la venta completa',
-//       error: (error as Error).message
-//     });
-//   }
-// };
-// controllers/PedidoController.ts
-
 
 export const crearPedidoConComprobante = async (req: Request, res: Response): Promise<void> => {
  console.log("hola")
@@ -302,16 +135,66 @@ export const crearPedidoConComprobante = async (req: Request, res: Response): Pr
       }, { transaction });
     }
 
-    await transaction.commit();
 
     // 6) Enviar WhatsApp
     let telefonoParsed = String(cli?.telefono || "").replace(/\D/g, "");
     if (telefonoParsed.length === 9) telefonoParsed = "51" + telefonoParsed;
+    // NOTIFICAR USUARIO
+    var nroUsuario = "51"+process.env.NRO_NOTIFICCION!
 
+    // DESGLOSAR LA INFORMACION DEL PEDIDO EN DETALLE PARA NOTIFICAR AL USUARIO SOBRE EL PEDIDO DEL CLIENTE
+    const detallesPedido = await PedidoDetalle.findAll({
+        where: { idpedido: pedido.id },
+        include: [
+          {
+            model: LoteTalla,
+            as: "LoteTalla", // 👈 usa el alias real que definiste en la asociación
+            include: [
+              {
+                model: Lote,
+                as: "Lote", // 👈 alias usado en la relación
+                include: [
+                  {
+                    model: Producto,
+                    as: "Producto", // 👈 alias usado en la relación
+                    attributes: ["nombre"]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        transaction
+      });
+      console.log(detallesPedido)
+            // Generar el texto del detalle
+     const listaProductos = detallesPedido.map(
+  (d, i) =>
+    `${i + 1}. ${d.LoteTalla?.Lote?.Producto?.nombre} x${d.cantidad} = S/ ${Number(d.subtotal!).toFixed(2)}`
+).join("\n");
+
+      // Armar el mensaje
+      const mensaje = `📢 Nuevo pedido registrado
+      👤 Cliente: ${cli.nombres}
+      🛒 Ítems: ${detallesPedido.length}
+      💵 Total: S/ ${total.toFixed(2)}
+
+      📦 Detalles:
+      ${listaProductos}`;
+
+    await transaction.commit();
+
+    await enviarMensajePedido(
+            nroUsuario,
+           mensaje
+    );
+    //NOTIFICAR CLIENTE
     if (telefonoParsed) {
       const resultadoEnvio = await enviarMensajePedido(
         telefonoParsed,
-        `Hola ${cli.nombres}, tu pedido fue registrado con éxito. Total: S/ ${total}`
+        `Hola ${cli.nombres}, tu pedido fue registrado con éxito 🛒\n` +
+        `💵 Total: S/ ${total.toFixed(2)}\n` +
+        `⏳ Tu pedido está pendiente de revisión del comprobante. Te informaremos una vez sea aprobado.`
       );
       if (!resultadoEnvio.success) {
         console.error("Error WhatsApp:", resultadoEnvio.error);
@@ -756,7 +639,7 @@ export const restaurarPedido = async (req: Request, res: Response): Promise<void
 
 export const aprobarPedido = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-
+let transaction: Transaction | null = null;
   try {
     // Validaciones
     if (!id) {
@@ -804,7 +687,7 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
     }
 
     // Iniciar transacción
-    const transaction = await db.transaction();
+     transaction = await db.transaction();
 
     try {
       // 1. Actualizar estado del pedido a PAGADO
@@ -886,7 +769,9 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
       }, { transaction });
 
       // Confirmar transacción
-      await transaction.commit();
+       
+    await transaction.commit();
+    transaction = null;
 
       // Obtener datos completos para respuesta
       const ventaCompleta = await Venta.findByPk(nuevaVenta.id, {
@@ -916,6 +801,8 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
           }
         ]
       });
+      console.log(nuevoComprobante)
+      console.log(comprobanteCompleto)
 
       const detallesVenta = await DetalleVenta.findAll({
         where: { idventa: nuevaVenta.id },
@@ -937,51 +824,18 @@ export const aprobarPedido = async (req: Request, res: Response): Promise<void> 
 const telefono = pedido?.Persona?.telefono ?? '';
 const phoneRegex = /^\d{9,15}$/; // valida de 9 a 15 dígitos
 
-var resultado = await enviarComprobanteService(comprobanteCompleto?.id!)
+console.log(comprobanteCompleto)
+var resultado = await enviarComprobanteService(nuevoComprobante?.id!)
 res.status(200).json(resultado);
-// if (telefono && phoneRegex.test(telefono)) {
-//   // Generar PDF
-//   const nombreArchivo = await generarPDFComprobante(
-//     comprobanteCompleto, 
-//     ventaCompleta, 
-//     pedido, 
-//     detallesVenta
-//   );
-
-//   // Enviar por WhatsApp
-//   await enviarArchivoWSP(
-//     telefono, 
-//     nombreArchivo,
-//     `📄 ${comprobanteCompleto?.TipoComprobante?.nombre || 'Comprobante'} ${comprobanteCompleto?.numserie}`
-//   );
-
-//   res.status(200).json({
-//     msg: 'Pedido aprobado exitosamente y comprobante enviado',
-//     data: {
-//       pedido,
-//       venta: ventaCompleta,
-//       comprobante: comprobanteCompleto,
-//       detallesVenta
-//     }
-//   });
-// } else {
-//   res.status(200).json({
-//     msg: 'Pedido aprobado exitosamente (sin envío por WhatsApp: número no válido)',
-//     data: {
-//       pedido,
-//       venta: ventaCompleta,
-//       comprobante: comprobanteCompleto,
-//       detallesVenta
-//     }
-//   });
-// }
 
     } catch (error) {
       // Revertir transacción en caso de error
-      await transaction.rollback();
+      if (transaction) {
+        await transaction.rollback();
+      }
       throw error;
     }
-
+ 
   } catch (error) {
     console.error('Error en aprobarPedido:', error);
     res.status(500).json({ 

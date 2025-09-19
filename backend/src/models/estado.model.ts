@@ -15,7 +15,7 @@ class Estado extends Model<EstadoAttributes, EstadoCreationAttributes>
   public id!: number;
   public nombre!: string | null;
   public estado!: number | null;
-}
+} 
 
 Estado.init(
   {

@@ -14,6 +14,7 @@ import PedidoDetalle from '../models/pedido_detalle.model';
 import LoteTalla from '../models/lote_talla.model';
 import Lote from '../models/lote.model';
 import Producto from '../models/producto.model';
+import db from '../db/connection.db';
 
 // Configuración de GreenAPI
 const ID_INSTANCE = "7105309578";
@@ -493,6 +494,7 @@ export const enviarMensaje = async (req: Request, res: Response): Promise<void> 
 };
 export const enviarComprobanteService = async (idComprobante: number) => {
   // 1. Buscar comprobante con sus relaciones
+  console.log(idComprobante)
   const comprobante = await Comprobante.findByPk(idComprobante, {
     include: [
       {
@@ -511,7 +513,7 @@ export const enviarComprobanteService = async (idComprobante: number) => {
   });
 
   if (!comprobante) {
-    throw new Error('Comprobante no encontrado');
+    throw new Error('Comprobante no encontrado 1');
   }
 
   // 2. Buscar detalles de la venta
@@ -551,6 +553,15 @@ export const enviarComprobanteService = async (idComprobante: number) => {
   if (!telefono || !comprobante?.Venta?.Pedido?.Persona?.telefono) {
     throw new Error('El comprobante no tiene un número de teléfono válido asociado');
   }
+  const total = Number(comprobante.Venta.Pedido?.totalimporte || 0);
+  const mensajeAprobacion = `✅ Hola ${comprobante?.Venta?.Pedido?.Persona?.nombres}, tu pedido ha sido aprobado.
+    💵 Monto total: S/ ${total.toFixed(2)}
+    📄 La boleta/comprobante generada es correcta según el monto de tu pedido.
+    Se adjunta el comprobante a continuación.`;
+   await enviarMensajePedido(
+            telefono,
+           mensajeAprobacion
+    );
 
   // 5. Enviar WhatsApp
   const resultadoWSP = await enviarArchivoWSP(

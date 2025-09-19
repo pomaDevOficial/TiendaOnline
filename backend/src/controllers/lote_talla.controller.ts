@@ -1235,16 +1235,16 @@ export const getProductosFormatoService = async (req: Request, res: Response): P
               as: 'Producto',
               where: { idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO] },
               include: [
-                {
-                  model: Categoria,
-                  as: 'Categoria',
-                  attributes: ['id', 'nombre']
-                },
-                {
-                  model: Marca,
-                  as: 'Marca',
-                  attributes: ['id', 'nombre']
-                }
+              {
+                model: Categoria,
+                as: 'Categoria',
+                attributes: ['id', 'nombre']
+              },
+              {
+                model: Marca,
+                as: 'Marca',
+                attributes: ['id', 'nombre']
+              }
               ]
             }
           ]
