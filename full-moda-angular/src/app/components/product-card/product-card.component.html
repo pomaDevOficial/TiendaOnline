@@ -1,4 +1,4 @@
-<div class="product-card group" role="article" [attr.aria-labelledby]="'product-title-' + product.id" [attr.aria-describedby]="'product-description-' + product.id">
+<div class="product-card group" [class.modal-open]="showSizeModal" role="article" [attr.aria-labelledby]="'product-title-' + product.id" [attr.aria-describedby]="'product-description-' + product.id">
   <!-- Imagen del producto -->
   <div class="image-container">
     <!-- Imagen principal -->
@@ -42,7 +42,7 @@
   </div>
   
   <!-- Modal para seleccionar talla y cantidad -->
-  <div *ngIf="showSizeModal" class="fixed inset-0 bg-black bg-opacity-50 z-[1200] flex items-center justify-center p-4" (click)="closeSizeModal()">
+  <div *ngIf="showSizeModal" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" (click)="closeSizeModal()">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold text-gray-800">Seleccionar Talla y Cantidad</h3>

@@ -171,7 +171,7 @@ class Server {
         // this.app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
         //   const rutaImagen = path.join(imagesFolder, req.url);
         //   console.log("📂 Buscando imagen en:", rutaImagen);
-        //   sharp(rutaImagen)
+        //   sharp(rutaImagen) 
         //     .resize(800)
         //     .toBuffer((err, buffer) => {
         //       if (err) {

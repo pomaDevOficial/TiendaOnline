@@ -129,7 +129,7 @@ class Server {
     }
   
     private middlewares() {
-      this.app.use(express.json());
+      this.app.use(express.json()); 
       this.app.use(morgan('dev'));
       //  const imagesFolder = path.join(__dirname, "../../dist/uploads/productos");
       //  console.log(imagesFolder)
@@ -180,8 +180,8 @@ class Server {
       this.app.get('/', (req: Request, res: Response) => {
         res.json({
           msg: 'API Working'
-        });
-      });
+        }); 
+      }); 
      
       const imagesFolder = path.resolve(__dirname, "..", "..", "backend/dist/uploads");
     this.app.use("/uploads", express.static(imagesFolder));
@@ -189,7 +189,7 @@ class Server {
     //   const rutaImagen = path.join(imagesFolder, req.url);
     //   console.log("📂 Buscando imagen en:", rutaImagen);
 
-    //   sharp(rutaImagen)
+    //   sharp(rutaImagen) 
     //     .resize(800)
     //     .toBuffer((err, buffer) => {
     //       if (err) {
@@ -240,4 +240,4 @@ class Server {
 
    const serverInstance = new Server();
    export default serverInstance;
-   export { serverInstance as server };
+   export { serverInstance as server }; 
