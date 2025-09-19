@@ -180,7 +180,7 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
       currentY += 12;
 
       if (pedido.Persona?.nroidentidad) {
-        const tipoDoc = pedido.Persona?.TipoIdentidad?.nombre || 'DOC';
+        const tipoDoc = pedido.Persona?.TipoIdentidad?.nombre || 'DNI';
         doc.text(`${tipoDoc}: ${pedido.Persona.nroidentidad}`, 8, currentY);
         currentY += 12;
       }
@@ -317,10 +317,10 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
          .text(`S/ ${subtotal.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
       currentY += 12;
 
-      // Mostrar IGV con el porcentaje configurado
-      doc.text(`IGV (${empresaConfig.porcentajeIgv}%):`, 120, currentY, { width: 60, align: 'left' })
-         .text(`S/ ${igv.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
-      currentY += 15;
+      // // Mostrar IGV con el porcentaje configurado
+      // doc.text(`IGV (${empresaConfig.porcentajeIgv}%):`, 120, currentY, { width: 60, align: 'left' })
+      //    .text(`S/ ${igv.toFixed(2)}`, 180, currentY, { width: 40, align: 'right' });
+      // currentY += 15;
 
       // Total final
       doc.fontSize(styles.subheader.size)
