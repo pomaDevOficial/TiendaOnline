@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Product {
   id: number;
@@ -44,8 +45,8 @@ export interface Marca {
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:3000/api/v1/lotetallas/filtro-productos';
-  private marcasApiUrl = 'http://localhost:3000/api/v1/marcas';
+  private apiUrl = `${environment.apiUrl}/api/v1/lotetallas/filtro-productos`;
+  private marcasApiUrl = `${environment.apiUrl}/api/v1/marcas`;
   private products: Product[] = []
 
   private productsSubject = new BehaviorSubject<Product[]>(this.products);
@@ -100,7 +101,7 @@ export class ProductService {
         return imagen;
       }
       // Si es un nombre de archivo, agregar la URL base
-      return `http://localhost:3000/uploads/productos/${imagen}`;
+      return `${environment.apiUrl}/uploads/productos/${imagen}`;
     });
   }
 

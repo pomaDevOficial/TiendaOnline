@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // Interfaces
 interface Persona {
@@ -41,7 +42,7 @@ interface PedidoResponse {
   providedIn: 'root'
 })
 export class PedidoService {
-  private apiUrl = 'http://localhost:3000/api/v1/pedidos';
+  private apiUrl = `${environment.apiUrl}/api/v1/pedidos`;
 
   constructor(private http: HttpClient) {}
 
