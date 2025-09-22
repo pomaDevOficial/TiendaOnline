@@ -231,7 +231,8 @@ export const generarPDFComprobante = async (
   return new Promise((resolve, reject) => {
     try {
       const filename = `comprobante_${comprobante.numserie}.pdf`;
-      const filePath = path.join(__dirname, "../../dist/uploads", filename);
+       
+      const filePath = getUploadPath(filename);
 
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -377,10 +378,15 @@ export const generarPDFComprobante = async (
     }
   });
 };
-
+function getUploadPath(filename: string) {
+    // carpeta de uploads en la raíz del proyecto
+    const uploadsDir = path.join(process.cwd(), "uploads");
+    return path.join(uploadsDir, filename);
+}
 // Función para enviar archivo por WhatsApp
 export const enviarArchivoWSP = async (phone: string, filename: string, caption: string = "📄 Comprobante de Venta"): Promise<any> => {
-  const localPath = path.join(__dirname, "../../dist/uploads", filename);
+  // const localPath = path.join(__dirname, "../../dist/uploads", filename);
+  const localPath = getUploadPath(filename);
   if (!fs.existsSync(localPath)) {
     throw new Error("Archivo no encontrado en el servidor");
   }

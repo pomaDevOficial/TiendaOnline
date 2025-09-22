@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, combineLatest, debounceTime, distinctUntilChanged } from 'rxjs';
+import { EventEmitter, Output } from '@angular/core';
 import { ProductService, Product, ProductFilters } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { CartStateService } from '../../services/cart-state.service';
@@ -23,12 +24,14 @@ import { CartComponent } from '../cart/cart.component';
 })
 export class CatalogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  closeSizeModals$ = new Subject<void>();
 
   filterForm!: FormGroup;
   products: Product[] = [];
   filteredProducts: Product[] = [];
   brands: string[] = [];
   categories: string[] = [];
+  popularSuggestions: string[] = [];
   isPreviewOpen = false;
   selectedProduct: Product | null = null;
   isSearching = false;
@@ -97,6 +100,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   private updateFilterOptions(): void {
     this.brands = this.productService.getBrands();
     this.categories = this.productService.getCategories();
+    this.popularSuggestions = [...this.categories];
   }
 
   // Configurar suscripción a cambios en productos filtrados
@@ -247,6 +251,13 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.applyFiltersFromForm();
   }
 
+  setBrandFilter(brand: string): void {
+    this.filterForm.patchValue({
+      brand: brand
+    });
+    this.applyFiltersFromForm();
+  }
+
   onSearchInput(event: any): void {
     // Aplicar filtros inmediatamente cuando el usuario escribe
     this.applyFiltersFromForm();
@@ -266,6 +277,12 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
 
   openProductPreview(event: {product: Product, selectedSize: string} | Product): void {
+    // Close any existing modals first
+    this.closeSizeModals$.next(); // Close all size modals
+    this.selectedProduct = null;
+    this.isPreviewOpen = false;
+    this.cartStateService.closeCart(); // Close cart modal if open
+
     let product: Product;
     let selectedSize: string = '';
 
@@ -276,8 +293,17 @@ export class CatalogComponent implements OnInit, OnDestroy {
       product = event;
     }
 
-    this.selectedProduct = product;
-    this.isPreviewOpen = true;
+    // Small delay to ensure modal closes before opening new one
+    setTimeout(() => {
+      this.selectedProduct = product;
+      this.isPreviewOpen = true;
+      this.selectedSize = selectedSize || (product.tallas && product.tallas.length > 0 ? product.tallas[0] : '');
+      this.currentStock = product.stockPorTalla?.[this.selectedSize] || product.stock;
+      this.currentPrice = product.preciosPorTalla?.[this.selectedSize] || product.precio;
+      this.previewQuantity = 1;
+      this.currentImageIndex = 0;
+      this.isImageZoomed = false;
+    }, 100);
     this.previewQuantity = 1;
     this.currentImageIndex = 0;
     this.isImageZoomed = false;

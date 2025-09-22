@@ -3,6 +3,7 @@
   <div class="container flex justify-between items-center px-4 h-full">
   <div class="flex items-center gap-2">
     <div class="group text-center leading-tight cursor-pointer select-none">
+        <a routerLink="/">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150" class="w-auto h-20">
           <!-- Texto FULL MODA -->
           <text x="50%" y="60" text-anchor="middle"
@@ -12,9 +13,10 @@
                 fill="black">
             FULL MODA
           </text>
-          
-          
+
+
         </svg>
+        </a>
     </div>
   </div>
 
@@ -67,6 +69,7 @@
       <div class="drawer-header">
         <div class="flex items-center gap-4 mb-6">
           <div class="logo-container-mobile group">
+             <a routerLink="/">
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150" class="w-auto h-20">
           <!-- Texto FULL MODA -->
           <text x="50%" y="60" text-anchor="middle"
@@ -76,7 +79,7 @@
                 fill="black">
             FULL MODA
           </text>
-          
+
           <!-- Texto ELURBISA E.I.R.L -->
           <text x="50%" y="110" text-anchor="middle"
                 font-family="Arial, Helvetica, sans-serif"
@@ -86,6 +89,7 @@
             ELURBISA E.I.R.L
           </text>
         </svg>
+             </a>
           </div>
         </div>
         <button class="close-drawer-btn" (click)="closeMobileMenu()">

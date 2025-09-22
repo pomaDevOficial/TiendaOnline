@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { Product } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 
@@ -11,11 +12,13 @@ import { CartService } from '../../services/cart.service';
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss'
 })
-export class ProductCardComponent implements OnInit {
+export class ProductCardComponent implements OnInit, OnDestroy {
   @Input() product!: Product ;
+  @Input() closeSizeModals$!: Subject<void>;
   @Output() productAdded = new EventEmitter<{product: Product, quantity: number}>();
   @Output() productPreview = new EventEmitter<{product: Product, selectedSize: string}>();
 
+  private destroy$ = new Subject<void>();
   currentImageIndex = 0;
   isZoomed = false;
   selectedSize: string = '';
@@ -28,6 +31,16 @@ export class ProductCardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.closeSizeModals$) {
+      this.closeSizeModals$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+        this.showSizeModal = false;
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   nextImage(): void {

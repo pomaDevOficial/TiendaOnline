@@ -17,6 +17,13 @@
             border-radius: 8px;
             font-size: 16px;
             transition: var(--transition);
+            color: #1f2937; // Dark text color
+            background-color: #ffffff;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af; // Gray placeholder color
+            opacity: 1; // Ensure placeholder is visible
         }
 
         .form-input:focus {

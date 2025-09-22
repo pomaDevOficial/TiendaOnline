@@ -26,29 +26,7 @@
   <!-- Contenido del hero -->
   <div class="hero-content relative z-10">
     <!-- Descripción mejorada con tipografía premium -->
-    <div class="max-w-2xl mb-8">
-      <div class="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg border border-white/20 p-6 rounded-2xl shadow-2xl">
-        <p class="text-body-premium text-center md:text-left text-white text-lg md:text-xl mb-4">
-          <strong class="text-yellow-300 font-semibold">Desde 2025</strong>, revolucionamos la moda urbana en Pucallpa con prendas exclusivas,
-          alta calidad y un servicio que marca la diferencia.
-        </p>
-        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
-            <i class="fas fa-crown text-yellow-300"></i>
-            Mejores Marcas
-          </span>
-          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
-            <i class="fas fa-shipping-fast text-green-300"></i>
-            Envío Gratis
-          </span>
-          <span class="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
-            <i class="fas fa-shield-alt text-blue-300"></i>
-            Garantía Total
-          </span>
-        </div>
-      </div>
-    </div>
-
+   
     <!-- Botón de acción principal -->
     <div class="flex justify-center md:justify-start">
       <button (click)="navigateToCatalog()" class="group relative bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1">
@@ -135,7 +113,7 @@
 </section>
 
 <!-- Ofertas Especiales Section -->
-<section class="py-20 bg-white relative overflow-hidden">
+<section class="py-12 md:py-20 bg-white relative overflow-hidden">
   <!-- Elementos decorativos de fondo -->
   <div class="absolute inset-0">
     <div class="absolute top-10 left-10 w-32 h-32 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full opacity-20 blur-3xl animate-pulse"></div>
@@ -148,104 +126,160 @@
       <div class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-4">
         🔥 Ofertas Especiales
       </div>
-      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4">Descubre Nuestras Ofertas</h2>
-      <p class="text-body-premium text-center max-w-2xl mx-auto text-lg text-gray-600">
+      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4 text-gray-900" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Descubre Nuestras Ofertas</h2>
+      <p class="text-body-premium text-center max-w-2xl mx-auto text-lg text-gray-800 font-semibold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
         Las mejores prendas con descuentos increíbles. Calidad garantizada y estilo único.
       </p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div class="space-y-16">
       <!-- Polo -->
-      <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 animate-fade-in-up group product-card" style="animation-delay: 0.1s;">
-        <div class="relative h-64 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 group-hover:scale-110 transition-transform duration-700"></div>
-          <div class="relative z-10 text-8xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 product-icon">
-            <i class="fas fa-tshirt"></i>
-          </div>
-          <div class="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300 price-badge">
-            <span class="text-xs">S/</span> 35
-          </div>
-          <div class="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-            🔥 HOT
+      <div class="flex flex-col lg:flex-row items-center gap-8 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="lg:w-1/2">
+          <div class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-2">Ropa Casual</div>
+          <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors duration-300" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Polos</h3>
+          <p class="text-gray-800 mb-6 leading-relaxed text-lg font-medium" style="text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.05);">
+            Nuestra colección de polos combina <strong class="text-purple-600">comodidad y estilo</strong> en prendas de alta calidad.
+            Disponibles en múltiples colores y tallas, perfectos para el uso diario, trabajo o salidas casuales.
+            Fabricados con materiales transpirables que garantizan frescura durante todo el día.
+          </p>
+          <button (click)="navigateToCatalog()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center gap-2">
+            <i class="fas fa-eye"></i>Ver Catálogo 
+          </button>
+        </div>
+        <div class="lg:w-1/2">
+          <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group">
+            <div class="relative h-80 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 group-hover:scale-110 transition-transform duration-700"></div>
+              <div class="relative z-10 text-9xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                <i class="fas fa-tshirt"></i>
+              </div>
+              <div class="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                🔥 HOT
+              </div>
+            </div>
           </div>
         </div>
-        <div class="p-6">
-          <div class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-2">Ropa Casual</div>
-          <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-purple-600 transition-colors duration-300">Polos</h3>
-          <p class="text-gray-600 mb-4 leading-relaxed">
-            Colección exclusiva de polos de <strong class="text-purple-600">alta calidad</strong> en diferentes colores y estilos.
-            Perfectos para el día a día con confort excepcional.
+      </div>
+
+      <!-- Pantalones -->
+      <div class="flex flex-col lg:flex-row-reverse items-center gap-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="lg:w-1/2">
+          <div class="text-xs text-green-600 font-bold uppercase tracking-wider mb-2">Ropa Casual</div>
+          <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 group-hover:text-green-600 transition-colors duration-300" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Pantalones</h3>
+          <p class="text-gray-800 mb-6 leading-relaxed text-lg font-medium" style="text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.05);">
+            Descubre nuestra amplia gama de pantalones diseñados para <strong class="text-green-600">versatilidad y confort</strong>.
+            Desde jeans clásicos hasta pantalones chinos modernos, cada prenda ofrece durabilidad excepcional
+            y un ajuste perfecto para cualquier estilo de vida.
           </p>
-          <div class="flex gap-3">
-            <button class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-eye mr-2"></i>Ver Detalles
-            </button>
-            <button class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:from-gray-200 hover:to-gray-300 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-shopping-cart"></i>
-            </button>
+          <button (click)="navigateToCatalog()" class="bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center gap-2">
+            <i class="fas fa-eye"></i>Ver Catálogo 
+          </button>
+        </div>
+        <div class="lg:w-1/2">
+          <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group">
+            <div class="relative h-80 bg-gradient-to-br from-green-400 via-green-500 to-blue-500 flex items-center justify-center overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 group-hover:scale-110 transition-transform duration-700"></div>
+              <div class="relative z-10 text-9xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                <i class="fas fa-stream"></i>
+              </div>
+              <div class="absolute top-4 left-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                ⚡ LIMITED
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Shorts Urbanos -->
-      <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 animate-fade-in-up group product-card" style="animation-delay: 0.2s;">
-        <div class="relative h-64 bg-gradient-to-br from-blue-400 via-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 group-hover:scale-110 transition-transform duration-700"></div>
-          <div class="relative z-10 text-8xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 product-icon">
-            <i class="fas fa-stream"></i>
-          </div>
-          <div class="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300 price-badge">
-            <span class="text-xs">S/</span> 75
-          </div>
-          <div class="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-            ⭐ NUEVO
-          </div>
-        </div>
-        <div class="p-6">
+      <div class="flex flex-col lg:flex-row items-center gap-8 animate-fade-in-up" style="animation-delay: 0.3s;">
+        <div class="lg:w-1/2">
           <div class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-2">Ropa Deportiva</div>
-          <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors duration-300">Shorts Urbanos</h3>
-          <p class="text-gray-600 mb-4 leading-relaxed">
-            Shorts cómodos y con estilo para la temporada de calor.
-            <strong class="text-blue-600">Ideales para cualquier ocasión</strong> con tela transpirable y diseño moderno.
+          <h3 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors duration-300" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">Shorts Urbanos</h3>
+          <p class="text-gray-800 mb-6 leading-relaxed text-lg font-medium" style="text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.05);">
+            Los shorts urbanos perfectos para el verano, combinando <strong class="text-blue-600">comodidad deportiva</strong> con estilo moderno.
+            Ideales para actividades al aire libre, gimnasio o uso diario. Materiales transpirables y diseños
+            que se adaptan a tu personalidad.
           </p>
-          <div class="flex gap-3">
-            <button class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-eye mr-2"></i>Ver Detalles
-            </button>
-            <button class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:from-gray-200 hover:to-gray-300 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-shopping-cart"></i>
-            </button>
+          <button (click)="navigateToCatalog()" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center gap-2">
+            <i class="fas fa-eye"></i>Ver Catálogo
+          </button>
+        </div>
+        <div class="lg:w-1/2">
+          <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group">
+            <div class="relative h-80 bg-gradient-to-br from-blue-400 via-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 group-hover:scale-110 transition-transform duration-700"></div>
+              <div class="relative z-10 text-9xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                <i class="fas fa-stream"></i>
+              </div>
+              <div class="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                ⭐ NUEVO
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
 
-      <!-- Zapatillas Sport -->
-      <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 animate-fade-in-up group product-card" style="animation-delay: 0.3s;">
-        <div class="relative h-64 bg-gradient-to-br from-green-400 via-green-500 to-blue-500 flex items-center justify-center overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 group-hover:scale-110 transition-transform duration-700"></div>
-          <div class="relative z-10 text-8xl text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 product-icon">
-            <i class="fas fa-shoe-prints"></i>
+<!-- Pedidos por Lotes Section -->
+<section class="py-20 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+  <!-- Elementos decorativos -->
+  <div class="absolute inset-0">
+    <div class="absolute top-10 left-10 w-32 h-32 bg-gradient-to-br from-blue-200 to-indigo-200 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-20 right-20 w-40 h-40 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full opacity-15 blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+  </div>
+
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="text-center mb-12">
+      <div class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold mb-4">
+        📦 Sistema de Pedidos
+      </div>
+      <h2 class="text-premium text-center text-4xl md:text-5xl mb-4">Cómo Realizar tu Pedido</h2>
+      <p class="text-body-premium text-center max-w-3xl mx-auto text-lg text-gray-600 mb-8">
+        En nuestra sección de catálogo aplicamos la compra de productos y generación automática de pedidos.
+        Recibirás notificación por mensaje con toda la información de tu orden.
+      </p>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <!-- Información -->
+          <div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Proceso de Compra</h3>
+            <ul class="space-y-3 text-gray-600">
+              <li class="flex items-start gap-3">
+                <i class="fas fa-search text-blue-500 mt-1"></i>
+                <span>Explora nuestro catálogo y selecciona tus productos</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-shopping-cart text-green-500 mt-1"></i>
+                <span>Agrega productos al carrito de compras</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-file-invoice text-purple-500 mt-1"></i>
+                <span>Se genera automáticamente tu pedido con detalles completos</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-envelope text-orange-500 mt-1"></i>
+                <span>Recibes notificación por mensaje con información de tu pedido</span>
+              </li>
+            </ul>
           </div>
-          <div class="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300 price-badge">
-            <span class="text-xs">S/</span> 120
-          </div>
-          <div class="absolute top-4 left-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-            ⚡ LIMITED
-          </div>
-        </div>
-        <div class="p-6">
-          <div class="text-xs text-green-600 font-bold uppercase tracking-wider mb-2">Calzado Deportivo </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-green-600 transition-colors duration-300">Zapatillas Sport</h3>
-          <p class="text-gray-600 mb-4 leading-relaxed">
-            Las mejores marcas en zapatillas deportivas y casuales.
-            <strong class="text-green-600">Comodidad y estilo garantizados</strong> con tecnología avanzada.
-          </p>
-          <div class="flex gap-3">
-            <button class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-eye mr-2"></i>Ver Detalles
+
+          <!-- Acción -->
+          <div class="text-center">
+            <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 text-white mb-6">
+              <i class="fas fa-store text-4xl mb-4"></i>
+              <h4 class="text-xl font-bold mb-2">¡Ir al Catálogo!</h4>
+              <p class="text-blue-100">Compra fácil y rápida</p>
+            </div>
+            <button (click)="navigateToCatalog()" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center gap-3">
+              <i class="fas fa-arrow-right"></i>
+              Explorar Catálogo
             </button>
-            <button class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-4 rounded-lg hover:from-gray-200 hover:to-gray-300 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-              <i class="fas fa-shopping-cart"></i>
-            </button>
+            
           </div>
         </div>
       </div>
@@ -389,10 +423,10 @@
 </section>
 
 <!-- CTA Section -->
-<section class="py-12 md:py-16 text-white" style="background: linear-gradient(90deg, #7c3aed 0%, #db2777 100%);">
+<section class="py-12 md:py-16 text-white" style="background: linear-gradient(135deg, #6b21a8 0%, #be185d 100%);">
   <div class="container px-4 text-center">
-    <h2 class="text-2xl md:text-3xl font-bold mb-4">¡Comienza tu compra ahora!</h2>
-    <p class="text-lg md:text-xl mb-6 md:mb-8 opacity-90">Descubre ofertas exclusivas y productos únicos en nuestro catálogo</p>
+    <h2 class="text-2xl md:text-3xl font-bold mb-4" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.8); color: #ffffff;">¡Comienza tu compra ahora!</h2>
+    <p class="text-lg md:text-xl mb-6 md:mb-8" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.6); color: #f8f9fa;">Descubre ofertas exclusivas y productos únicos en nuestro catálogo</p>
     <button (click)="navigateToCatalog()" class="bg-white text-purple-600 px-6 py-3 md:px-8 md:py-4 rounded-full font-semibold transition duration-300 inline-flex items-center gap-3 text-sm md:text-base" style="color: #7c3aed;">
       <i class="fas fa-arrow-right"></i>
       Ver Catálogo Completo

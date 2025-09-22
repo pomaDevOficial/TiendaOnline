@@ -54,6 +54,9 @@ export const createMarca = async (req: Request, res: Response): Promise<void> =>
 export const getMarcas = async (req: Request, res: Response): Promise<void> => {
   try {
     const marcas = await Marca.findAll({
+       where: { 
+        idestado: [EstadoGeneral.REGISTRADO, EstadoGeneral.ACTUALIZADO] 
+      },
       include: [
         { 
           model: Estado, 
@@ -61,7 +64,7 @@ export const getMarcas = async (req: Request, res: Response): Promise<void> => {
       attributes: ['id', 'nombre'] 
         }
       ],
-      order: [['id', 'ASC']]
+      order: [['id', 'DESC']]
     });
 
     res.json({

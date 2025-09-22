@@ -54,6 +54,9 @@ exports.createMarca = createMarca;
 const getMarcas = async (req, res) => {
     try {
         const marcas = await marca_model_1.default.findAll({
+            where: {
+                idestado: [estados_constans_1.EstadoGeneral.REGISTRADO, estados_constans_1.EstadoGeneral.ACTUALIZADO]
+            },
             include: [
                 {
                     model: estado_model_1.default,
@@ -61,7 +64,7 @@ const getMarcas = async (req, res) => {
                     attributes: ['id', 'nombre']
                 }
             ],
-            order: [['id', 'ASC']]
+            order: [['id', 'DESC']]
         });
         res.json({
             msg: 'Lista de marcas obtenida exitosamente',

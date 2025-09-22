@@ -34,7 +34,7 @@
 </mat-sidenav-container> -->
 
 <!-- Sidebar -->
-<nav class="sidebar d-flex flex-column p-3">
+<nav class="sidebar d-flex flex-column p-3" [class.sidebar-open]="sidebarOpen">
   <a href="#" class="nav-link text-white 1" [routerLink]="['/Admin']" routerLinkActive="active" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
 <img src="f2.png" alt="Logo FULLMODA" style="width: 90%;">
 
@@ -82,7 +82,7 @@
       '/Admin/comprobante'])}">
         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/pedido']" routerLinkActive="active"><i class="bx bx-user me-1" ></i> Pedidos</a></li>
-          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/venta']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Ventas</a></li>
+          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/venta']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Venta Directa</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/cliente']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Clientes</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/comprobante']" routerLinkActive="active"><i class="bx bx-credit-card me-1"></i> Comprobantes</a></li>
         </ul>
@@ -124,6 +124,10 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container-fluid">
+    <!-- Botón hamburguesa para móviles -->
+    <button class="btn btn-outline-light d-lg-none me-2" type="button" (click)="toggleSidebar()">
+      <i class="bx bx-menu"></i>
+    </button>
     <a class="navbar-brand" href="#"></a>
 
     <!-- Dropdown de configuración -->
@@ -138,6 +142,9 @@
     </div>
   </div>
 </nav>
+
+<!-- Overlay para móviles -->
+<div class="sidebar-overlay" [class.show]="sidebarOpen" (click)="closeSidebar()"></div>
 
 <!-- Contenido principal -->
 <div class="content">

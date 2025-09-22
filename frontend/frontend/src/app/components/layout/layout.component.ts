@@ -37,6 +37,7 @@ import { AuthService } from '../../services/auth.service'
 })
 export class LayoutComponent implements OnInit {
    sidebarVisible: boolean = false;
+   sidebarOpen: boolean = false; // para controlar la sidebar en móviles
 
   // DECLARA LA PROPIEDAD AQUÍ
   menuLateral: { label: string; icon: string; link: string }[] = [];
@@ -55,6 +56,14 @@ export class LayoutComponent implements OnInit {
     console.log('Cerrando sesión...');
 
        this.authService.logout();
+  }
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar() {
+    this.sidebarOpen = false;
   }
 
   isRutaActiva(rutas: string[]): boolean {
