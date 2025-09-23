@@ -38,6 +38,8 @@ export class ProductoComponent implements OnInit {
   abrirModalProducto: boolean = false;
   abrirModalMarca: boolean = false;
   abrirModalCategoria: boolean = false;
+  mostrarModalImagen: boolean = false;
+  imagenModal: string = "";
   imagenUrl: string |  null = "";
    @ViewChild('fileUpload') fileUpload!: FileUpload;
 
@@ -196,6 +198,16 @@ cargarProductos(){
   }
   cerrarDialogoMarca() {
     this.abrirModalMarca = false;
+  }
+
+  abrirModalImagen(imagen: string) {
+    this.imagenModal = imagen;
+    this.mostrarModalImagen = true;
+  }
+
+  cerrarModalImagen() {
+    this.mostrarModalImagen = false;
+    this.imagenModal = "";
   }
   guardarCategoria() {
     if (this.categoriaForm.invalid){

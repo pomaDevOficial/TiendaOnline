@@ -1,21 +1,21 @@
 <div class="mt-5 mb-2">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Lote</h2>
-   <div class="d-flex gap-2">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <h2 class="mb-2 mb-md-0">Lote</h2>
+   <div class="d-flex gap-2 flex-wrap">
     <!-- Botón Registrar -->
-    <p-button 
-      (click)="abrirRegistro()" 
-      label="Registrar" 
-      icon="pi pi-plus" 
+    <p-button
+      (click)="abrirRegistro()"
+      label="Registrar"
+      icon="pi pi-plus"
       styleClass="p-button-success">
     </p-button>
 
     <!-- Botón Actualizar -->
-    <p-button 
-      (click)="actualizarListado()" 
-      label="Actualizar" 
-      icon="pi pi-refresh" 
+    <p-button
+      (click)="actualizarListado()"
+      label="Actualizar"
+      icon="pi pi-refresh"
       styleClass="p-button-info">
     </p-button>
   </div>
@@ -123,15 +123,15 @@
 
 </div>
 <!-- Dialog para registrar / editar -->
-<p-dialog 
+<p-dialog
   header="{{editar ? 'Editar Lote' : 'Registrar Lote'}}"
-  [(visible)]="mostrarDialogo" 
-  [modal]="true" 
+  [(visible)]="mostrarDialogo"
+  [modal]="true"
   [position]="'top'"
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="true"
-  [style]="{width: '45vw'}">
+  [style]="{width: '90vw', maxWidth: '600px'}">
 
   <div class="p-fluid">
     <form [formGroup]="loteForm">
@@ -260,12 +260,12 @@
   </div>
 </p-dialog>
 
-<p-dialog 
-  header="Agregar Stock" 
-  [(visible)]="dialogoStock" 
-  [modal]="true" 
-  [closable]="true" 
-  [style]="{width: '30vw'}">
+<p-dialog
+  header="Agregar Stock"
+  [(visible)]="dialogoStock"
+  [modal]="true"
+  [closable]="true"
+  [style]="{width: '90vw', maxWidth: '400px'}">
 
   <div class="p-fluid">
     <div class="field">

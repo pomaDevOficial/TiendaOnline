@@ -1,26 +1,25 @@
 <div class="mt-5 mb-2">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
 
-    
-    <h2>Gestión de Comprobantes</h2>
-    <div class="d-flex gap-2">
-      <!-- <button pButton type="button" 
-              (click)="abrirNuevoComprobante()" 
-              label="Nuevo Comprobante" 
-              icon="pi pi-plus" 
+    <h2 class="mb-2 mb-md-0">Gestión de Comprobantes</h2>
+    <div class="d-flex gap-2 flex-wrap">
+      <!-- <button pButton type="button"
+              (click)="abrirNuevoComprobante()"
+              label="Nuevo Comprobante"
+              icon="pi pi-plus"
               class="p-button-success">
       </button> -->
       <!-- Botón de Generar Reporte PDF -->
-    <button #pdfButton pButton type="button" 
-            (click)="generarReportePDF()" 
-            label="Generar Reporte" 
-            icon="pi pi-file-pdf" 
+    <button #pdfButton pButton type="button"
+            (click)="generarReportePDF()"
+            label="Generar Reporte"
+            icon="pi pi-file-pdf"
             class="p-button-danger">
     </button>
-      <button pButton type="button" 
-              (click)="cargarComprobantes()" 
-              label="Actualizar" 
-              icon="pi pi-refresh" 
+      <button pButton type="button"
+              (click)="cargarComprobantes()"
+              label="Actualizar"
+              icon="pi pi-refresh"
               class="p-button-info">
       </button>
     </div>
@@ -88,14 +87,14 @@
                (onFilter)="actualizarComprobantesFiltrados($event)">
 
          <ng-template #caption>
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
       <span class="text-muted">
         Mostrando: {{comprobantesFiltrados.length || 0}} comprobantes
       </span>
-      <div class="p-input-icon-left w-25">
+      <div class="p-input-icon-left" style="min-width: 200px;">
         <i class="pi pi-search"></i>
-        <input type="text" pInputText 
-              (input)="dt1.filterGlobal($any($event).target.value, 'contains')" 
+        <input type="text" pInputText
+              (input)="dt1.filterGlobal($any($event).target.value, 'contains')"
               placeholder="Buscar comprobantes..." />
       </div>
     </div>
@@ -140,52 +139,52 @@
               </span>
             </td>
             <td style="min-width: 250px">
-              <div class="d-flex gap-1 flex-wrap">
-                <button pButton type="button" icon="pi pi-eye" 
-                        class="p-button-sm p-button-info" 
+              <div class="flex items-center justify-content-center gap-2">
+                <button pButton type="button" icon="pi pi-eye"
+                        class="p-button-sm p-button-info"
                         (click)="verDetalle(comprobante)"
                         pTooltip="Ver Detalle" tooltipPosition="top">
                 </button>
 
-                <button pButton type="button" icon="pi pi-pencil" 
-                        class="p-button-sm p-button-warning" 
+                <button pButton type="button" icon="pi pi-pencil"
+                        class="p-button-sm p-button-warning"
                         (click)="editar(comprobante)"
                         pTooltip="Editar" tooltipPosition="top"
                         [disabled]="comprobante?.idestado === 18">
                 </button>
 
-                <button pButton type="button" icon="pi pi-times" 
-                        class="p-button-sm p-button-danger" 
+                <button pButton type="button" icon="pi pi-times"
+                        class="p-button-sm p-button-danger"
                         (click)="anularComprobante(comprobante)"
                         pTooltip="Anular" tooltipPosition="top"
                         [disabled]="comprobante?.idestado === 18">
                 </button>
 
-                <button pButton type="button" icon="pi pi-refresh" 
-                        class="p-button-sm p-button-secondary" 
+                <button pButton type="button" icon="pi pi-refresh"
+                        class="p-button-sm p-button-secondary"
                         (click)="restaurarComprobante(comprobante)"
                         pTooltip="Restaurar" tooltipPosition="top"
                         [disabled]="comprobante?.idestado === 17">
                 </button>
 
-                <button pButton type="button" icon="pi pi-whatsapp" 
-                        class="p-button-sm p-button-success" 
+                <button pButton type="button" icon="pi pi-whatsapp"
+                        class="p-button-sm p-button-success"
                         (click)="reenviarComprobante(comprobante)"
                         pTooltip="Reenviar por WhatsApp" tooltipPosition="top"
                         [disabled]="comprobante?.idestado === 18">
                 </button>
-               <button 
-                pButton 
-                type="button" 
-                icon="pi pi-download" 
-                class="p-button-sm p-button-info" 
+               <button
+                pButton
+                type="button"
+                icon="pi pi-download"
+                class="p-button-sm p-button-info"
                 (click)="descargarComprobante(comprobante.id)"
-                pTooltip="Descargar comprobante" 
+                pTooltip="Descargar comprobante"
                 tooltipPosition="top">
               </button>
 
-                <!-- <button pButton type="button" icon="pi pi-trash" 
-                        class="p-button-sm p-button-danger" 
+                <!-- <button pButton type="button" icon="pi pi-trash"
+                        class="p-button-sm p-button-danger"
                         (click)="eliminarComprobante(comprobante)"
                         pTooltip="Eliminar Permanentemente" tooltipPosition="top">
                 </button> -->

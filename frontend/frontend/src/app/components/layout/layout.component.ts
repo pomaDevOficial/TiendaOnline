@@ -1,6 +1,6 @@
 import { CommonModule , isPlatformBrowser} from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
-import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { Router, RouterModule, RouterOutlet, NavigationEnd } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { PanelMenuModule, PanelMenuSub } from 'primeng/panelmenu'; 
 import { MenubarModule } from 'primeng/menubar'; 
@@ -50,6 +50,15 @@ export class LayoutComponent implements OnInit {
     { label: 'Productos', icon: 'inventory', link: '/productos' },
     { label: 'Pedidos', icon: 'shopping_cart', link: '/pedidos' },
   ];
+
+  // Cerrar sidebar automáticamente al navegar en móviles
+  if (isPlatformBrowser(this.platformId)) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.closeSidebar();
+      }
+    });
+  }
   }
 
   logout() {

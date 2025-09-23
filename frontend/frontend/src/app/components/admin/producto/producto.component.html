@@ -61,12 +61,13 @@
           <td>{{ productos.Categoria?.nombre}}</td>
           <td>{{ productos.Marca?.nombre}}</td>
           <td>
-        <img 
-          *ngIf="productos?.imagen" 
-          [src]="rutaUrl + productos.imagen" 
-          alt="{{ productos.nombre }}" 
-          width="40" height="40" 
-          style="object-fit: cover; border-radius: 4px;">
+        <img
+          *ngIf="productos?.imagen"
+          [src]="rutaUrl + productos.imagen"
+          alt="{{ productos.nombre }}"
+          width="40" height="40"
+          style="object-fit: cover; border-radius: 4px; cursor: pointer;"
+          (click)="abrirModalImagen(rutaUrl + productos.imagen)">
       </td>
           <td>
              <span class="badge bg-{{ productos.Estado.idestado === 1 ? 'success' : 'secondary' }}">
@@ -134,7 +135,7 @@
         </small>
       </div>
 
-  <p-fileUpload 
+  <p-fileUpload
   #fileUpload
     name="imagen"
     mode="advanced"
@@ -152,7 +153,8 @@
         <div class="flex flex-col items-center gap-2">
         <ng-container *ngIf="imagenUrl; else noImage">
           <img [src]="imagenUrl" alt="Imagen del producto"
-              width="150" height="150" class="rounded shadow" />
+              width="150" height="150" class="rounded shadow cursor-pointer"
+              (click)="abrirModalImagen(imagenUrl)" />
         </ng-container>
 
         <ng-template #noImage>
@@ -160,7 +162,7 @@
         </ng-template>
       </div>
       </ng-template>
-    
+
   </p-fileUpload>
 
       <div class="form-field">
@@ -300,11 +302,11 @@
 
 
 <!-- ================== DIALOG MARCA ================== -->
-<p-dialog 
+<p-dialog
   header="Registrar Marca"
-  [(visible)]="abrirModalMarca" 
-  [modal]="true" 
-  [style]="{width: '500px', maxWidth: '90vw'}"
+  [(visible)]="abrirModalMarca"
+  [modal]="true"
+  [style]="{width: '90vw', maxWidth: '500px'}"
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="true"
@@ -316,10 +318,10 @@
       <!-- Nombre -->
       <div class="form-field">
         <label for="nombre" class="form-label">Nombre *</label>
-        <input 
-          type="text" 
-          id="nombre" 
-          pInputText 
+        <input
+          type="text"
+          id="nombre"
+          pInputText
           formControlName="nombre"
            class="form-input"
           placeholder="Ingrese el nombre de la Marca"
@@ -347,6 +349,24 @@
 
     </div>
   </form>
+</p-dialog>
+
+<!-- Modal para imagen completa -->
+<p-dialog
+  [(visible)]="mostrarModalImagen"
+  [modal]="true"
+  [style]="{'width': '90vw', 'maxWidth': '800px', 'height': '90vh', 'maxHeight': '800px'}"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  (onHide)="cerrarModalImagen()"
+  [showHeader]="false"
+  class="image-modal">
+
+  <div class="image-modal-content">
+    <img [src]="imagenModal" alt="Imagen completa del producto" class="modal-image" />
+  </div>
+
 </p-dialog>
 
 <p-confirmDialog></p-confirmDialog>

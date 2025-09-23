@@ -1,21 +1,21 @@
 <div class="mt-5 mb-2">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Categoria</h2>
-   <div class="d-flex gap-2">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <h2 class="mb-2 mb-md-0">Categoria</h2>
+   <div class="d-flex gap-2 flex-wrap">
     <!-- Botón Registrar -->
-    <p-button 
-      (click)="abrirRegistro()" 
-      label="Registrar" 
-      icon="pi pi-plus" 
+    <p-button
+      (click)="abrirRegistro()"
+      label="Registrar"
+      icon="pi pi-plus"
       styleClass="p-button-success">
     </p-button>
 
     <!-- Botón Actualizar -->
-    <p-button 
-      (click)="actualizarListado()" 
-      label="Actualizar" 
-      icon="pi pi-refresh" 
+    <p-button
+      (click)="actualizarListado()"
+      label="Actualizar"
+      icon="pi pi-refresh"
       styleClass="p-button-info">
     </p-button>
   </div>
@@ -72,24 +72,24 @@
                     </span>
                 </td>
                 <td>
-                  <button pButton 
-                          type="button" 
-                          icon="pi pi-pencil" 
-                          class="p-button-sm p-button-warning p-mr-2" 
-                          style="display: inline-flex; align-items: center;" 
-                          (click)="editarCategoria(categoria)">
-                    <span class="p-ml-1">Editar</span>
-                  </button>
+                  <div class="flex items-center justify-content-center gap-2">
+                    <button pButton
+                            type="button"
+                            icon="pi pi-pencil"
+                            class="p-button-sm p-button-warning"
+                            (click)="editarCategoria(categoria)">
+                      <span class="p-ml-1">Editar</span>
+                    </button>
 
-                  <!-- Botón Eliminar -->
-                  <button pButton 
-                          type="button" 
-                          icon="pi pi-trash" 
-                          class="p-button-sm p-button-danger" 
-                          style="display: inline-flex; align-items: center;" 
-                          (click)="eliminarCategoria(categoria)">
-                    <span class="p-ml-1">Eliminar</span>
-                  </button>
+                    <!-- Botón Eliminar -->
+                    <button pButton
+                            type="button"
+                            icon="pi pi-trash"
+                            class="p-button-sm p-button-danger"
+                            (click)="eliminarCategoria(categoria)">
+                      <span class="p-ml-1">Eliminar</span>
+                    </button>
+                  </div>
                 </td>
             </tr>
         </ng-template>
@@ -104,20 +104,20 @@
 
 </div>
 <!-- Dialog para registrar / editar -->
-<p-dialog 
+<p-dialog
   header="{{editar ? 'Editar Categoria' : 'Registrar Categoria'}}"
-  [(visible)]="mostrarDialogo" 
-  [modal]="true" 
+  [(visible)]="mostrarDialogo"
+  [modal]="true"
   [position]="'top'"
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="true"
-  [style]="{width: '30vw'}">
+  [style]="{width: '90vw', maxWidth: '500px'}">
 
   <div class="p-fluid">
     <form [formGroup]="categoriaForm">
         <div class="mb-3">
-          <label for="nombre" class="form-label">Nombre de la Categoria</label>
+          <label for="nombre" class="form-label">Nombre de la Categoria *</label>
           <input type="text" id="nombre" class="form-control" formControlName="nombre" required>
         </div>
       </form>

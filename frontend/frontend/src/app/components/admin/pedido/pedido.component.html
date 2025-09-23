@@ -1,17 +1,17 @@
 <div class="mt-5 mb-2">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Gestión de Pedidos</h2>
-    <div class="d-flex gap-2">
-      <!-- <p-button 
-        (click)="abrirNuevoPedido()" 
-        label="Nuevo Pedido" 
-        icon="pi pi-plus" 
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <h2 class="mb-2 mb-md-0">Gestión de Pedidos</h2>
+    <div class="d-flex gap-2 flex-wrap">
+      <!-- <p-button
+        (click)="abrirNuevoPedido()"
+        label="Nuevo Pedido"
+        icon="pi pi-plus"
         styleClass="p-button-success">
       </p-button> -->
-      <p-button 
-        (click)="cargarPedidos()" 
-        label="Actualizar" 
-        icon="pi pi-refresh" 
+      <p-button
+        (click)="cargarPedidos()"
+        label="Actualizar"
+        icon="pi pi-refresh"
         styleClass="p-button-info">
       </p-button>
     </div>
@@ -24,14 +24,14 @@
              [globalFilterFields]="['id', 'Persona.nombres', 'Persona.apellidos', 'totalimporte']">
 
       <ng-template #caption>
-  <div class="d-flex justify-content-between align-items-center">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
     <span class="text-muted">Total de pedidos: {{pedidos.length || 0}}</span>
     <div class="position-relative">
       <i class="pi pi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
-      <input pInputText #globalFilterInput type="text" 
-             (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')" 
-             placeholder="Buscar pedidos..." 
-             class="p-2 ps-4 form-control" />
+      <input pInputText #globalFilterInput type="text"
+             (input)="dt1.filterGlobal(globalFilterInput.value, 'contains')"
+             placeholder="Buscar pedidos..."
+             class="p-2 ps-4 form-control" style="min-width: 200px;" />
     </div>
   </div>
 </ng-template>
@@ -68,36 +68,36 @@
             </span>
           </td>
           <td>
-            <div class="d-flex gap-1">
-              <button pButton type="button" icon="pi pi-eye" 
-                      class="p-button-sm p-button-info" 
+            <div class="flex items-center justify-content-center gap-2">
+              <button pButton type="button" icon="pi pi-eye"
+                      class="p-button-sm p-button-info"
                       (click)="verDetalle(pedido)"
                       pTooltip="Ver Detalle" tooltipPosition="top">
               </button>
 
-              <button pButton type="button" icon="pi pi-pencil" 
-                      class="p-button-sm p-button-warning" 
+              <button pButton type="button" icon="pi pi-pencil"
+                      class="p-button-sm p-button-warning"
                       (click)="editar(pedido)"
                       pTooltip="Editar" tooltipPosition="top"
                       [disabled]="pedido?.idestado === 14">
               </button>
 
-              <button pButton type="button" icon="pi pi-check" 
-                      class="p-button-sm p-button-success" 
+              <button pButton type="button" icon="pi pi-check"
+                      class="p-button-sm p-button-success"
                       (click)="aprobarPedido(pedido)"
                       pTooltip="Aprobar" tooltipPosition="top"
                       [disabled]="pedido?.idestado === 14">
               </button>
 
-              <button pButton type="button" icon="pi pi-times" 
-                      class="p-button-sm p-button-danger" 
+              <button pButton type="button" icon="pi pi-times"
+                      class="p-button-sm p-button-danger"
                       (click)="eliminar(pedido)"
                       pTooltip="Cancelar" tooltipPosition="top"
                       [disabled]="pedido?.idestado == 15 || 16">
               </button>
 
-              <button pButton type="button" icon="pi pi-refresh" 
-                      class="p-button-sm p-button-secondary" 
+              <button pButton type="button" icon="pi pi-refresh"
+                      class="p-button-sm p-button-secondary"
                       (click)="restaurarPedido(pedido)"
                       pTooltip="Restaurar" tooltipPosition="top"
                       [disabled]="pedido?.idestado !== 14 || 15">
@@ -256,7 +256,7 @@
       <div class="col-md-6" *ngIf="pedidoSeleccionado?.adjunto">
         <div class="info-item">
           <strong>Adjunto:</strong>
-          <img [src]="pedidoSeleccionado.adjunto " height="120" width="120">
+          <img [src]="pedidoSeleccionado.adjunto" height="120" width="120" class="cursor-pointer" (click)="pedidoSeleccionado?.adjunto && abrirModalImagen(pedidoSeleccionado.adjunto)">
         </div>
       </div>
     </div>
@@ -291,6 +291,24 @@
       </table>
     </div>
   </div>
+</p-dialog>
+
+<!-- Modal para imagen completa -->
+<p-dialog
+  [(visible)]="mostrarModalImagen"
+  [modal]="true"
+  [style]="{'width': '90vw', 'maxWidth': '800px', 'height': '90vh', 'maxHeight': '800px'}"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  (onHide)="cerrarModalImagen()"
+  [showHeader]="false"
+  class="image-modal">
+
+  <div class="image-modal-content">
+    <img [src]="imagenModal" alt="Imagen completa del adjunto" class="modal-image" />
+  </div>
+
 </p-dialog>
 
 <p-confirmDialog></p-confirmDialog>

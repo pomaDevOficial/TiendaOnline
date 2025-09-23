@@ -37,6 +37,8 @@ export class PedidoComponent implements OnInit {
   loading: boolean = true;
   editarPedido: boolean = false;
   mostrarDialogoDetalle: boolean = false;
+  mostrarModalImagen: boolean = false;
+  imagenModal: string = "";
   pedidoSeleccionado: Pedido | null = null;
   rutaUrl : string = environment.endpointWs+"/uploads/comprobantes/"
   clientes: Persona[] = [];
@@ -443,5 +445,17 @@ export class PedidoComponent implements OnInit {
   getMetodoPagoTexto(id: number): string {
     const metodo = this.metodoPagoOptions.find(m => m.value === id);
     return metodo ? metodo.label : 'Desconocido';
+  }
+
+  abrirModalImagen(imagen: string | null | undefined) {
+    if (imagen) {
+      this.imagenModal = imagen;
+      this.mostrarModalImagen = true;
+    }
+  }
+
+  cerrarModalImagen() {
+    this.mostrarModalImagen = false;
+    this.imagenModal = "";
   }
 }

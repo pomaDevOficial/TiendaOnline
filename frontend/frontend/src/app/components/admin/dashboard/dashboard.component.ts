@@ -391,9 +391,10 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
-}  
+}
 
-  aplicarFiltros() {
+
+ aplicarFiltros() {
     this.cargarVentasPorMes();
     this.cargarProductosMasVendidos();
   }

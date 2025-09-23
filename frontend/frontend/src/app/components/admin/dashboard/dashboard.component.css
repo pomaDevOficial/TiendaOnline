@@ -56,17 +56,76 @@
   .card-body {
     padding: 1rem;
   }
-  
+
   h2 {
     font-size: 1.5rem;
   }
-  
+
   h3 {
     font-size: 1.25rem;
   }
-  
+
   .chart-container {
     height: 300px !important;
+  }
+
+  /* Hacer tablas scrollables horizontalmente */
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  /* Ajustar padding en tablas */
+  .table th,
+  .table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Ocultar columnas menos importantes en móviles */
+  .table-responsive .table thead th:nth-child(4),
+  .table-responsive .table tbody td:nth-child(4) {
+    display: none; /* Ocultar "Total Vendido" en tabla productos */
+  }
+
+  .table-responsive .table thead th:nth-child(5),
+  .table-responsive .table tbody td:nth-child(5) {
+    display: none; /* Ocultar "Participación" en tabla productos */
+  }
+
+  /* Para tabla stock crítico */
+  .table-responsive .table thead th:nth-child(4),
+  .table-responsive .table tbody td:nth-child(4) {
+    display: none; /* Ocultar "Talla" */
+  }
+
+  .table-responsive .table thead th:nth-child(5),
+  .table-responsive .table tbody td:nth-child(5) {
+    display: none; /* Ocultar "Proveedor" */
+  }
+
+  .table-responsive .table thead th:nth-child(7),
+  .table-responsive .table tbody td:nth-child(7) {
+    display: none; /* Ocultar "Precio Costo" */
+  }
+
+  .table-responsive .table thead th:nth-child(8),
+  .table-responsive .table tbody td:nth-child(8) {
+    display: none; /* Ocultar "Precio Venta" */
+  }
+}
+
+@media (max-width: 576px) {
+  /* En pantallas muy pequeñas */
+  .table th,
+  .table td {
+    font-size: 0.75rem;
+    padding: 0.25rem;
+  }
+
+  /* Ocultar más columnas si es necesario */
+  .table-responsive .table thead th:nth-child(3),
+  .table-responsive .table tbody td:nth-child(3) {
+    display: none; /* Ocultar "Categoría" en stock */
   }
 }
 
