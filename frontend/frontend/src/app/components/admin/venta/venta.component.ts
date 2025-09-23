@@ -196,7 +196,7 @@ export class VentaComponent implements OnInit {
           console.log(nuevoCliente);
           const clienteConDisplayName = {
             ...nuevoCliente,
-            displayName2: `${nuevoCliente.nombres} ${nuevoCliente.apellidos} - ${nuevoCliente.correo || ''}`
+            displayName2: `${nuevoCliente.nombres} ${nuevoCliente.apellidos} || ''}`
           };
 
           this.clienteSeleccionado = clienteConDisplayName;
@@ -538,7 +538,7 @@ filtrarClientes(event: any) {
       next: (clientes: any) => {
         this.clientesFiltrados = clientes.data.map((cliente: any) => ({
           ...cliente,
-          displayName2: `${cliente.nombres} ${cliente.apellidos} - ${cliente.correo || ''}`
+          displayName2: `${cliente.nombres} ${cliente.apellidos}`
         }));
       },
       error: (error) => {

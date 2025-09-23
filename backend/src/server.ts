@@ -206,7 +206,7 @@ class Server {
        this.app.use('/api/v1/categorias', CategoriaRouter);
        this.app.use('/api/v1/marcas', MarcaRouter);
        this.app.use('/api/v1/tallas', TallaRouter);
-       this.app.use('/api/v1/roles', RolesRouter);
+       this.app.use('/api/v1/roles', RolesRouter); 
        this.app.use('/api/v1/personas', PersonaRouter);
        this.app.use('/api/v1/sunat', RouterSunat);
        this.app.use('/api/v1/lotes', LoteRouter);

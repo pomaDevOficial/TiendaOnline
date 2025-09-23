@@ -661,14 +661,6 @@ const aprobarPedido = async (req, res) => {
                             stock: nuevoStock,
                             idestado: nuevoStock > 0 ? estados_constans_1.LoteEstado.DISPONIBLE : estados_constans_1.LoteEstado.AGOTADO
                         }, { transaction });
-                        // Registrar movimiento de lote
-                        await movimiento_lote_model_1.default.create({
-                            idlote_talla: detallePedido.idlote_talla,
-                            tipomovimiento: estados_constans_1.TipoMovimientoLote.SALIDA,
-                            cantidad: detallePedido.cantidad,
-                            fechamovimiento: new Date(),
-                            idestado: estados_constans_1.EstadoGeneral.REGISTRADO
-                        }, { transaction });
                     }
                 }
             }

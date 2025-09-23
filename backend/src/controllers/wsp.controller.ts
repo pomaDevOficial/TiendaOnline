@@ -17,11 +17,11 @@ import Producto from '../models/producto.model';
 
 import { generarPDFComprobanteModelo } from '../helper/generarPdf.helper';
 
-
+ 
 // Configuración de GreenAPI
-const ID_INSTANCE = "7105309578";
+const ID_INSTANCE = "7105324677";
 
-const API_TOKEN_INSTANCE = "13cf8fdf2a3348fa9e802e080eb072d7b42acc76c6964d1f90";
+const API_TOKEN_INSTANCE = "68b7d927f47541f8929daa1c096b0f6b0a44a5bd1fee438abe";
 // const API_TOKEN_INSTANCE = "bfb0408724134cb59d908715edf9e3967519705a04be4227b5";
 
 
@@ -232,7 +232,7 @@ export const generarPDFComprobante = async (
     try {
       const filename = `comprobante_${comprobante.numserie}.pdf`;
        
-      const filePath = getUploadPath(filename);
+      const filePath = filename;
 
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -386,7 +386,7 @@ function getUploadPath(filename: string) {
 // Función para enviar archivo por WhatsApp
 export const enviarArchivoWSP = async (phone: string, filename: string, caption: string = "📄 Comprobante de Venta"): Promise<any> => {
   // const localPath = path.join(__dirname, "../../dist/uploads", filename);
-  const localPath = getUploadPath(filename);
+  const localPath = filename
   if (!fs.existsSync(localPath)) {
     throw new Error("Archivo no encontrado en el servidor");
   }

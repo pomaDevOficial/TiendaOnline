@@ -727,14 +727,6 @@ let transaction: Transaction | null = null;
               idestado: nuevoStock > 0 ? LoteEstado.DISPONIBLE : LoteEstado.AGOTADO
             }, { transaction });
 
-            // Registrar movimiento de lote
-            await MovimientoLote.create({
-              idlote_talla: detallePedido.idlote_talla,
-              tipomovimiento: TipoMovimientoLote.SALIDA,
-              cantidad: detallePedido.cantidad,
-              fechamovimiento: new Date(),
-              idestado: EstadoGeneral.REGISTRADO
-            }, { transaction });
           }
         }
       }

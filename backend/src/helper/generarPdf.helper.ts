@@ -45,7 +45,7 @@ export const generarPDFComprobanteModelo = async (comprobante: any, venta: any, 
     try {
       // Crear nombre de archivo único
       const filename = `comprobante_${comprobante.numserie}.pdf`;
-      const filePath = path.join(__dirname, '../uploads', filename);
+      const filePath = filename;
       
       // Crear directorio si no existe
       if (!fs.existsSync(path.dirname(filePath))) {

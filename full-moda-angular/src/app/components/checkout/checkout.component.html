@@ -62,14 +62,12 @@
             Método de Pago
           </h3>
 
-          <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="radio-option" [class.selected]="checkoutForm.get('metodoPago')?.value === 'yape'" (click)="selectPaymentMethod('yape')">
               <input type="radio" formControlName="metodoPago" value="yape">
               <div class="radio-circle"></div>
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span class="text-white font-bold text-sm">Y</span>
-                </div>
+                <img [src]="yapeLogoUrl" alt="Yape" class="w-8 h-8 rounded">
                 <div>
                   <div class="font-semibold">Yape</div>
                   <div class="text-sm text-gray-600">Pago instantáneo con Yape</div>
@@ -81,9 +79,7 @@
               <input type="radio" formControlName="metodoPago" value="plin">
               <div class="radio-circle"></div>
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span class="text-white font-bold text-sm">P</span>
-                </div>
+                <img [src]="plinLogoUrl" alt="Plin" class="w-8 h-8 rounded">
                 <div>
                   <div class="font-semibold">Plin</div>
                   <div class="text-sm text-gray-600">Pago instantáneo con Plin</div>
@@ -95,7 +91,7 @@
               <input type="radio" formControlName="metodoPago" value="transferencia" checked>
               <div class="radio-circle"></div>
               <div class="flex items-center gap-3">
-                <i class="fas fa-university text-2xl text-indigo-600"></i>
+                <img [src]="bancoLogoUrl" alt="BCP" class="w-8 h-8 rounded">
                 <div>
                   <div class="font-semibold">Transferencia Bancaria</div>
                   <div class="text-sm text-gray-600">Pago por depósito o transferencia</div>
@@ -105,9 +101,10 @@
 
           </div>
 
-          <!-- Información de Yape -->
-          <div id="info-yape" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'yape'">
-            <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200">
+          <!-- Información de Pago Unificada -->
+          <div class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value">
+            <!-- Información de Yape -->
+            <div *ngIf="checkoutForm.get('metodoPago')?.value === 'yape'" class="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border border-purple-200">
               <h4 class="text-lg font-bold text-purple-800 mb-4 flex items-center">
                 <i class="fas fa-mobile-alt mr-2"></i>
                 Información para Pago con Yape
@@ -115,11 +112,9 @@
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="text-center">
-                  <h5 class="font-semibold text-purple-800 mb-3">Escanea el Código QR</h5>
                   <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
-                    <img [src]="yapeQrUrl" alt="Código QR Yape" class="max-w-full h-auto qr-code">
+                    <img [src]="yapeLogoUrl" alt="Yape" class="max-w-full h-auto qr-code">
                   </div>
-                  <p class="text-sm text-gray-600 mt-2">O usa el número: +51 957 086 227</p>
                 </div>
 
                 <div class="space-y-3">
@@ -128,7 +123,7 @@
                     <div class="space-y-1 text-sm">
                       <div class="flex justify-between">
                         <span class="text-gray-600">Nombre:</span>
-                        <span class="font-semibold">FULL MODA</span>
+                        <span class="font-semibold">Tomohito Galán Loja</span>
                       </div>
                       <div class="flex justify-between">
                         <span class="text-gray-600">Número:</span>
@@ -153,10 +148,106 @@
                 </div>
               </div>
             </div>
+
+            <!-- Información de Plin -->
+            <div *ngIf="checkoutForm.get('metodoPago')?.value === 'plin'" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
+              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                <i class="fas fa-mobile-alt mr-2"></i>
+                Información para Pago con Plin
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center">
+                  <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
+                    <img [src]="plinLogoUrl" alt="Plin" class="max-w-full h-auto qr-code">
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-white p-4 rounded-lg shadow-sm payment-info-card">
+                    <h6 class="font-semibold text-blue-800 mb-2">Datos del Destinatario</h6>
+                    <div class="space-y-1 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Nombre:</span>
+                        <span class="font-semibold">Tomohito Galán Loja</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Número:</span>
+                        <span class="font-semibold">+51 974 684 266</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Monto a enviar:</span>
+                        <span class="font-bold text-blue-600">S/ {{ totalAmount.toFixed(2) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                      <div class="text-sm">
+                        <p class="text-yellow-800 font-medium">Importante:</p>
+                        <p class="text-yellow-700">Después de enviar el pago, adjunta la captura de pantalla para verificar la transacción.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de Transferencia Bancaria -->
+            <div *ngIf="checkoutForm.get('metodoPago')?.value === 'transferencia'" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
+              <h4 class="text-lg font-bold text-indigo-800 mb-4 flex items-center">
+                <i class="fas fa-university mr-2"></i>
+                Información para Transferencia Bancaria
+              </h4>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center">
+                  <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
+                    <img [src]="bancoLogoUrl" alt="Transferencia" class="w-30 object-contain rounded" style="height: 15rem;">
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h6 class="font-semibold text-indigo-800 mb-3">Datos Bancarios</h6>
+                    <div class="space-y-2 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Banco:</span>
+                        <span class="font-semibold">BCP</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Cuenta Corriente:</span>
+                        <span class="font-semibold">123-456789-012</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">CCI:</span>
+                        <span class="font-semibold">00212300456789012345</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-600">Titular:</span>
+                        <span class="font-semibold">FULL MODA S.A.C.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                    <div class="flex items-start gap-2">
+                      <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
+                      <div class="text-sm">
+                        <p class="text-yellow-800 font-medium">Importante:</p>
+                        <p class="text-yellow-700">Después de realizar la transferencia, envíanos el comprobante por WhatsApp para procesar tu pedido.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Sección para adjuntar comprobante -->
-          <div id="seccion-comprobante" class="mt-8">
+          <div id="seccion-comprobante" class="mt-8" *ngIf="checkoutForm.get('metodoPago')?.value && requiresComprobante(checkoutForm.get('metodoPago')?.value)">
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
               <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
                 <i class="fas fa-paperclip mr-2 text-blue-600"></i>
@@ -186,7 +277,7 @@
                     </div>
                     <p class="text-xs text-gray-400">Formatos aceptados: JPG, PNG, PDF (máx. 5MB)</p>
                   </div>
-                  <input type="file" #fileInput id="comprobante-file" accept=".jpg,.jpeg,.png,.pdf" class="hidden" (change)="onFileSelected($event)">
+                  <input type="file" #fileInput id="comprobante-file" accept="image/jpeg,image/png,application/pdf" class="hidden" (change)="onFileSelected($event)">
                 </div>
 
                 <div id="file-preview" class="hidden" *ngIf="selectedFile">
@@ -203,105 +294,6 @@
                         <i class="fas fa-times text-xl"></i>
                       </button>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Información de Plin -->
-          <div id="info-plin" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'plin'">
-            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
-              <h4 class="text-lg font-bold text-blue-800 mb-4 flex items-center">
-                <i class="fas fa-mobile-alt mr-2"></i>
-                Información para Pago con Plin
-              </h4>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="text-center">
-                  <h5 class="font-semibold text-blue-800 mb-3">Escanea el Código QR</h5>
-                  <div class="bg-white p-4 rounded-lg shadow-sm inline-block qr-container">
-                    <img [src]="plinQrUrl" alt="Código QR Plin" class="max-w-full h-auto qr-code">
-                  </div>
-                  <p class="text-sm text-gray-600 mt-2">O usa el número: +51 974 684 266</p>
-                </div>
-
-                <div class="space-y-3">
-                  <div class="bg-white p-4 rounded-lg shadow-sm payment-info-card">
-                    <h6 class="font-semibold text-blue-800 mb-2">Datos del Destinatario</h6>
-                    <div class="space-y-1 text-sm">
-                      <div class="flex justify-between">
-                        <span class="text-gray-600">Nombre:</span>
-                        <span class="font-semibold">FULL MODA</span>
-                      </div>
-                      <div class="flex justify-between">
-                        <span class="text-gray-600">Número:</span>
-                        <span class="font-semibold">+51 974 684 266</span>
-                      </div>
-                      <div class="flex justify-between">
-                        <span class="text-gray-600">Monto a enviar:</span>
-                        <span class="font-bold text-blue-600">S/ {{ totalAmount.toFixed(2) }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                    <div class="flex items-start gap-2">
-                      <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
-                      <div class="text-sm">
-                        <p class="text-yellow-800 font-medium">Importante:</p>
-                        <p class="text-yellow-700">Después de enviar el pago, adjunta la captura de pantalla para verificar la transacción.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Información de Transferencia Bancaria -->
-          <div id="info-transferencia" class="mt-6" *ngIf="checkoutForm.get('metodoPago')?.value === 'transferencia'">
-            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-200">
-              <h4 class="text-lg font-bold text-indigo-800 mb-4 flex items-center">
-                <i class="fas fa-university mr-2"></i>
-                Información para Transferencia Bancaria
-              </h4>
-
-              <div class="bg-white p-4 rounded-lg shadow-sm border">
-                <div class="flex items-center gap-3 mb-3">
-                  <i class="fas fa-university text-2xl text-indigo-600"></i>
-                  <span class="font-semibold text-gray-800">Datos Bancarios</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div class="space-y-2">
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Banco:</span>
-                      <span class="font-semibold">BCP</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Cuenta Corriente:</span>
-                      <span class="font-semibold">123-456789-012</span>
-                    </div>
-                  </div>
-                  <div class="space-y-2">
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">CCI:</span>
-                      <span class="font-semibold">00212300456789012345</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Titular:</span>
-                      <span class="font-semibold">FULL MODA S.A.C.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-4">
-                <div class="flex items-start gap-2">
-                  <i class="fas fa-info-circle text-yellow-600 mt-1"></i>
-                  <div class="text-sm">
-                    <p class="text-yellow-800 font-medium">Importante:</p>
-                    <p class="text-yellow-700">Después de realizar la transferencia, envíanos el comprobante por WhatsApp para procesar tu pedido.</p>
                   </div>
                 </div>
               </div>
@@ -355,17 +347,6 @@
             <span id="order-total">S/ {{ totalAmount.toFixed(2) }}</span>
           </div>
         </div>
-
-        <!-- Información de entrega -->
-        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-info-circle text-blue-600 mt-1"></i>
-            <div>
-              <h4 class="font-semibold text-blue-800 mb-1">Información de Entrega</h4>
-              <p class="text-sm text-blue-700">Entrega sin costo adicional. Tiempo de entrega: 2-3 días hábiles.</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -377,8 +358,6 @@
   (closeCart)="closeCart()">
 </app-cart>
 
-<!-- Footer -->
-<app-footer></app-footer>
 
 <!-- Modal de Animación de Carga -->
 <div *ngIf="showLoadingAnimation" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">

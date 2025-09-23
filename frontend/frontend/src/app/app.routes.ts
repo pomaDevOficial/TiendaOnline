@@ -7,7 +7,6 @@ import { LoginGuard } from './services/login.guard';
 import { TallaComponent } from './components/admin/talla/talla.component';
 import { CategoriaComponent } from './components/admin/categoria/categoria.component';
 import { MarcaComponent } from './components/admin/marca/marca.component';
-import { PersonaComponent } from './components/admin/persona/persona.component';
 import { UsuarioComponent } from './components/admin/usuario/usuario.component';
 import { ProductoComponent } from './components/admin/producto/producto.component';
 import { MovimientoComponent } from './components/admin/movimiento/movimiento.component';
@@ -34,7 +33,6 @@ export const routes: Routes = [
       { path: 'inventario/producto', component: ProductoComponent },
       { path: 'inventario/movimiento', component: MovimientoComponent },
       { path: 'inventario/lote', component: LoteComponent },
-      { path: 'persona', component: PersonaComponent },
       { path: 'usuario', component: UsuarioComponent },
       { path: 'pedido', component: PedidoComponent },
       { path: 'comprobante', component: ComprobanteComponent },

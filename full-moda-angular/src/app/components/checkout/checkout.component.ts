@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,7 +25,7 @@ interface Persona {
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss'
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   checkoutForm!: FormGroup;
@@ -45,19 +45,23 @@ export class CheckoutComponent implements OnInit {
   showLoadingAnimation: boolean = false;
   animationStep: 'cart' | 'success' = 'cart';
 
-  // URLs de códigos QR - Preparadas para ser dinámicas desde un servicio externo
+  // URLs de códigos QR y logos - Preparadas para ser dinámicas desde un servicio externo
   // Actualmente usando imágenes estáticas en base64
   // TODO: Estas URLs serán proporcionadas por parámetros desde un servicio de pagos
   // Ejemplo: this.paymentService.getQrCode('yape', totalAmount)
   yapeQrUrl: string = '';
   plinQrUrl: string = '';
+  yapeLogoUrl: string = '';
+  plinLogoUrl: string = '';
+  bancoLogoUrl: string = '';
 
   constructor(
     private fb: FormBuilder,
     private cartService: CartService,
     private productService: ProductService,
     private router: Router,
-    private pedidoService: PedidoService
+    private pedidoService: PedidoService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -65,6 +69,9 @@ export class CheckoutComponent implements OnInit {
     this.loadCartData();
     this.calculateTotals();
     this.loadQrUrls();
+  }
+
+  ngAfterViewInit(): void {
     this.setupFileHandling();
   }
 
@@ -72,10 +79,7 @@ export class CheckoutComponent implements OnInit {
    * Configura los event listeners para el manejo de archivos
    */
   private setupFileHandling(): void {
-    // Configurar event listeners después de que la vista se inicialice
-    setTimeout(() => {
-      this.setupDragAndDrop();
-    }, 100);
+    this.setupDragAndDrop();
   }
 
   /**
@@ -131,6 +135,11 @@ export class CheckoutComponent implements OnInit {
         <rect x="40" y="145" width="100" height="8" fill="#2563EB"/>
       </svg>
     `);
+
+    // Logos de las empresas - usando imágenes reales
+    this.yapeLogoUrl = '/images/yape.png';
+    this.plinLogoUrl = '/images/plin.jpeg';
+    this.bancoLogoUrl = '/images/transferencia.png';
   }
 
   private initializeForm(): void {
@@ -212,8 +221,16 @@ export class CheckoutComponent implements OnInit {
    * Abre el selector de archivos
    */
   openFileSelector(): void {
-    if (this.fileInput) {
-      this.fileInput.nativeElement.click();
+    const fileInput = document.getElementById('comprobante-file') as HTMLInputElement;
+    if (fileInput) {
+      console.log('Abriendo selector de archivos');
+      fileInput.click();
+    } else {
+      console.log('fileInput no encontrado por ID');
+      // Fallback al ViewChild
+      if (this.fileInput) {
+        this.fileInput.nativeElement.click();
+      }
     }
   }
 
@@ -221,9 +238,14 @@ export class CheckoutComponent implements OnInit {
    * Maneja la selección de archivos desde el input
    */
   onFileSelected(event: Event): void {
+    console.log('onFileSelected llamado');
     const input = event.target as HTMLInputElement;
+    console.log('input.files:', input.files);
     if (input.files && input.files.length > 0) {
+      console.log('Procesando archivo:', input.files[0].name);
       this.handleFileSelection(input.files[0]);
+    } else {
+      console.log('No hay archivos seleccionados');
     }
   }
 
@@ -235,7 +257,21 @@ export class CheckoutComponent implements OnInit {
       this.selectedFile = file;
       this.fileName = file.name;
       this.fileSize = this.formatFileSize(file.size);
+
+      // Forzar detección de cambios para actualizar la vista inmediatamente
+      this.cdr.detectChanges();
+
       this.updateFilePreview();
+
+      // Resetear el input después de un breve delay para permitir seleccionar el mismo archivo nuevamente
+      setTimeout(() => {
+        const fileInput = document.getElementById('comprobante-file') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        } else if (this.fileInput) {
+          this.fileInput.nativeElement.value = '';
+        }
+      }, 100);
     }
   }
 
@@ -243,19 +279,29 @@ export class CheckoutComponent implements OnInit {
    * Valida el archivo seleccionado
    */
   private validateFile(file: File): boolean {
+    console.log('Validando archivo:', file.name, 'tipo:', file.type, 'tamaño:', file.size);
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
-    if (!allowedTypes.includes(file.type)) {
+    // Verificar por tipo MIME o extensión
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    const isValidType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension);
+    console.log('Extensión:', fileExtension, 'isValidType:', isValidType);
+
+    if (!isValidType) {
+      console.log('Tipo no válido');
       alert('Tipo de archivo no permitido. Solo se permiten JPG, PNG y PDF.');
       return false;
     }
 
     if (file.size > maxSize) {
+      console.log('Archivo demasiado grande');
       alert('El archivo es demasiado grande. Máximo 5MB.');
       return false;
     }
 
+    console.log('Archivo válido');
     return true;
   }
 
@@ -281,6 +327,8 @@ export class CheckoutComponent implements OnInit {
       filePreview.classList.remove('hidden');
       dropZone.style.display = 'none';
     }
+    // Angular maneja automáticamente la visibilidad con *ngIf="selectedFile"
+    // No se necesita manipulación manual del DOM
   }
 
   /**
@@ -291,16 +339,20 @@ export class CheckoutComponent implements OnInit {
     this.fileName = '';
     this.fileSize = '';
 
-    const filePreview = document.getElementById('file-preview');
-    const dropZone = document.getElementById('drop-zone');
+    // Forzar detección de cambios para actualizar la vista inmediatamente
+    this.cdr.detectChanges();
 
-    if (filePreview && dropZone) {
-      filePreview.classList.add('hidden');
+    // Asegurar que la zona de drop esté visible
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
       dropZone.style.display = 'block';
     }
 
     // Limpiar el input
-    if (this.fileInput) {
+    const fileInput = document.getElementById('comprobante-file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    } else if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
   }
@@ -432,7 +484,7 @@ export class CheckoutComponent implements OnInit {
   /**
    * Verifica si el método de pago requiere comprobante
    */
-  private requiresComprobante(metodoPago: string): boolean {
+  requiresComprobante(metodoPago: string): boolean {
     return ['yape', 'plin', 'transferencia'].includes(metodoPago);
   }
 }

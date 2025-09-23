@@ -82,7 +82,7 @@
       '/Admin/comprobante'])}">
         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/pedido']" routerLinkActive="active"><i class="bx bx-user me-1" ></i> Pedidos</a></li>
-          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/venta']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Venta Directa</a></li>
+          <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/venta']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Venta</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/cliente']" routerLinkActive="active"><i class="bx bx-user me-1"></i> Clientes</a></li>
           <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/comprobante']" routerLinkActive="active"><i class="bx bx-credit-card me-1"></i> Comprobantes</a></li>
         </ul>
@@ -109,10 +109,8 @@
     <i class="bx bx-chevron-down toggle-icon"></i>
   </a>
   <div class="collapse" id="configMenu" [ngClass]="{'show': isRutaActiva([
-      '/Admin/persona',
       '/Admin/usuario'])}">
     <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small submenu">
-      <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/persona']" routerLinkActive="active"><i class="bx bx-id-card me-1" ></i> Persona</a></li>
       <li><a href="#" class="nav-link text-white" [routerLink]="['/Admin/usuario']" routerLinkActive="active"><i class="bx bx-group me-1"></i> Usuarios</a></li>
     </ul>
   </div>
